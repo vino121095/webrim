@@ -4,6 +4,7 @@ const session = require('express-session');
 const db = require('./config/db.js');
 require('dotenv').config(); 
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 
@@ -11,12 +12,26 @@ app.use(express.urlencoded({extended : true}));
 app.use(express.json());
 app.use(cors({ 
   origin: '*' 
-  //   origin: 'https://develop.rimhub.in'
+  // origin: 'https://develop.rimhub.in'
 }));
 
+// Define the path for the uploads directory
+const uploadsDir = path.join(__dirname, 'uploads');
+
+// Function to create the uploads directory if it doesn't exist
+const createUploadsDir = () => {
+    if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+        console.log('Uploads directory created:', uploadsDir);
+    } else {
+        console.log('Uploads directory already exists:', uploadsDir);
+    }
+};
+
+createUploadsDir();
+
 // Serve static files from the 'uploads' directory
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.get('/uploads', (req, res) => res.sendFile(path.join(__dirname, 'uploads', 'pattern.png')));
+app.use('/uploads', express.static(uploadsDir));
 
 app.use(
   session({

@@ -1,8 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const SearchBarLocation = () => {
+const SearchBarLocation = ({ onLocationSearch }) => {
   const navigate = useNavigate();
+  const [searchLocation, setSearchLocation] = useState("");
+
+  const handleLocationSearch = () => {
+    // Pass the search location to the parent component
+    onLocationSearch(searchLocation);
+  };
+
   return (
     <div className="searchBarLocation container mt-5">
       <div className="row align-items-center justify-content-center">
@@ -11,8 +18,8 @@ const SearchBarLocation = () => {
           <button
             className="btn text-white px-4 d-flex align-items-center justify-content-center w-100 forum-button"
             style={{
-              backgroundColor: "#0000ff", // Button background color
-              height: "60px", // Matches input height
+              backgroundColor: "#0000ff",
+              height: "60px",
               fontSize: "24px",
               borderRadius: "10px",
             }}
@@ -25,12 +32,12 @@ const SearchBarLocation = () => {
         {/* Search Input and Location Links */}
         <div className="col-12 col-md location_searchbar">
           <div
-            className="border d-flex align-items-center px-3 flex-nowrap" // Add flex-nowrap to prevent wrapping
+            className="border d-flex align-items-center px-3 flex-nowrap"
             style={{
-              height: "60px", // Same height as the Forum button
+              height: "60px",
               borderColor: "#e9e9e9",
               borderRadius: "20px",
-              overflowX: "auto", // Allow horizontal scrolling if necessary
+              overflowX: "auto",
             }}
           >
             <ul className="d-flex list-unstyled align-items-center mb-0 w-100">
@@ -40,16 +47,27 @@ const SearchBarLocation = () => {
                   type="text"
                   className="form-control shadow-none"
                   placeholder="Enter Location..."
-                  style={{ height: "100%" }} // Full height of the container
+                  value={searchLocation}
+                 onChange={(e) => setSearchLocation(e.target.value)}
+                  onKeyUp={(e) => {
+                    // if (e.key === 'Enter') {
+                    //   handleLocationSearch();
+                    // }
+                    handleLocationSearch();
+                  }}
+                  style={{ height: "100%" }}
                 />
               </li>
 
-              {/* Icons and Location Links */}
+              {/* Search Button */}
+
+              {/* Quick Location Links */}
               <li className="px-2">
                 <a
                   href="#"
                   className="text-dark text-decoration-none d-flex align-items-center"
-                  style={{ whiteSpace: "nowrap" }} // Prevent wrapping
+                  style={{ whiteSpace: "nowrap" }}
+                  onClick={() => onLocationSearch("nearme")}
                 >
                   <i className="bi bi-crosshair me-2 text-dark"></i>
                   <span>Near Me</span>
@@ -65,7 +83,11 @@ const SearchBarLocation = () => {
                 "Pune",
               ].map((location, index) => (
                 <li key={index} className="px-2">
-                  <a href="#" className="text-dark text-decoration-none">
+                  <a 
+                    href="#" 
+                    className="text-dark text-decoration-none"
+                    onClick={() => onLocationSearch(location)}
+                  >
                     {location}
                   </a>
                 </li>

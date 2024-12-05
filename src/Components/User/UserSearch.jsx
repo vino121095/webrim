@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 
-const UserSearch = () => {
+const UserSearch = ({onSearch}) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    if (onSearch) {
+      onSearch(value);
+    }
+  };
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
   useEffect(() => {
@@ -26,6 +34,8 @@ const UserSearch = () => {
             type="text"
             className="form-control border-0 shadow-none px-3"
             placeholder="Search"
+            value={searchTerm}
+            onChange={handleSearch}
             style={{ flex: 1 }}
           />
 
