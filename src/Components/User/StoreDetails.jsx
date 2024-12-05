@@ -15,10 +15,10 @@ const StoreDetails = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [showPhoneNumber, setShowPhoneNumber] = useState(false);
+    const [visiblePhoneDistributorId, setVisiblePhoneDistributorId] = useState(null);
 
-    const handleViewNumber = () => {
-        setShowPhoneNumber(true);
+    const handleViewNumber = (distributorId) => {
+        setVisiblePhoneDistributorId(distributorId);
     };
 
     useEffect(() => {
@@ -70,18 +70,18 @@ const StoreDetails = () => {
     const handleSearch = (searchTerm) => {
         const query = searchTerm.toLowerCase();
         setSearchQuery(query);
-    
+
         const filtered = distributors.filter((distributor) =>
-          distributor.companyname?.toLowerCase().includes(query)
+            distributor.companyname?.toLowerCase().includes(query)
         );
         setFilteredDistributors(filtered);
-      };
+    };
 
     if (loading) {
         return (
             <>
                 <NavBar />
-                 <UserSearch onSearch={handleSearch} />
+                <UserSearch onSearch={handleSearch} />
                 <SearchBarLocation onLocationSearch={handleLocationSearch} />
                 <div className="container mt-5 text-center">
                     <div className="spinner-border" role="status">
@@ -129,9 +129,9 @@ const StoreDetails = () => {
                                         <h5 className="card-title fw-bolder">{distributor.companyname || 'Smart Accessories'}</h5>
                                         <h6 className="card-text mt-1">{distributor.location || 'Gandhipuram Coimbatore'}</h6>
                                         <div className="text-center mt-auto">
-                                            {!showPhoneNumber ? (
+                                            {visiblePhoneDistributorId !== distributor.did ? (
                                                 <button
-                                                    onClick={handleViewNumber}
+                                                    onClick={() => handleViewNumber(distributor.did)}
                                                     className="btn w-100 fw-semibold view-mobile-no"
                                                 >
                                                     <img src={phone} alt="Phone" /> View Mobile Number
@@ -149,7 +149,7 @@ const StoreDetails = () => {
                                             <a
                                                 href="#"
                                                 className="btn w-100 fw-semibold contact-supplier-btn"
-                                                onClick={() => navigate(`/contact-supplier/${distributor.id}`)}
+                                                onClick={() => navigate("/user/FeedViews")}
                                             >
                                                 Contact Supplier
                                             </a>
