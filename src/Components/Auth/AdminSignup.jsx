@@ -5,7 +5,7 @@ import logo from '../User/Assets/RimLogo.png';
 import { useNavigate } from 'react-router-dom';
 import baseurl from '../ApiService/ApiService';
 import { Eye, EyeOff } from 'lucide-react';
-
+import Swal from 'sweetalert2';
 const AdminSignup = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -105,8 +105,15 @@ const AdminSignup = () => {
       });
       
       if (response.status === 201) {
-        navigate('/Auth/login');
-        alert('Registration successful! Please log in.');
+        Swal.fire({
+          icon: 'success',
+          title: 'Registration Successful',
+          text: 'Please log in.',
+          confirmButtonText: 'Go to Login',
+          confirmButtonColor: '#3085d6'
+        }).then(() => {
+          navigate('/Auth/login');
+        });
       }
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Registration failed. Please try again.';

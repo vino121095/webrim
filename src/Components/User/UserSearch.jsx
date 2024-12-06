@@ -70,6 +70,8 @@ const UserSearch = ({onSearch}) => {
             type="text"
             className="form-control border-0 shadow-none px-3"
             placeholder="Search"
+            value={searchTerm}
+            onChange={handleSearch}
             style={{ flex: 1 }}
           />
 

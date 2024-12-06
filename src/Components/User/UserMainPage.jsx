@@ -1,8 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "./NavBar";
-import UserSearch from "./UserSearch";
-import SearchBarLoction from "./SearchBarLoction";
+
 import Card from "./Card";
 
 const UserMainPage = () => {
@@ -29,8 +28,6 @@ const UserMainPage = () => {
   return (
     <>
       <NavBar />
-      <UserSearch />
-      <SearchBarLoction onLocationSearch={handleLocationSearch}/>
       <Card />
     </>
   );

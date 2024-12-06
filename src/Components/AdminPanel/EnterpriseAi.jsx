@@ -3,6 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import Compressor from "../User/Assets/compressor-img.png";
 import axios from "axios";
+import Swal from 'sweetalert2';
 import baseurl from '../ApiService/ApiService';
 import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, Title } from 'chart.js';
@@ -195,7 +196,13 @@ const EnterpriseAi = () => {
     event.preventDefault();
 
     if (!selectedProduct || !formData.quantity || !formData.name || !formData.phone_number) {
-      alert("Please fill in all required fields.");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Incomplete Form',
+        text: 'Please fill in all required fields.',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3085d6'
+      });
       return;
     }
 
@@ -210,7 +217,13 @@ const EnterpriseAi = () => {
     try {
       const response = await axios.post(`${baseurl}/api/forum`, submissionData);
       if (response.status === 201 && response.data?.message === "Forum created successfully") {
-        alert("Requirement submitted successfully!");
+        Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          text: response.data.message,
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#3085d6'
+        });
         setFormData({
           quantity: "",
           name: "",
@@ -222,13 +235,25 @@ const EnterpriseAi = () => {
         setSelectedProductImage("");
         setIsModalOpen(false);
       } else {
-        alert("Submission failed. Please try again.");
+        Swal.fire({
+          icon: 'error',
+          title: 'Submission Failed',
+          text: response.data.message,
+          confirmButtonText: 'Retry',
+          confirmButtonColor: '#d33'
+        });
       }
-    } catch (error) {
-      console.error("Submission Error:", error);
-      alert("Failed to submit. Please check your network or contact support.");
+      } catch (error) {
+        console.error("Submission Error:", error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Submission Error',
+          text: 'Failed to submit. Please check your network or contact support.',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#d33'
+        });
+      }
     }
-  };
 
 
   return (
@@ -254,7 +279,12 @@ const EnterpriseAi = () => {
           },
           {
             title: 'Total Sales',
-            value: `Rs ${stats.totalSales.toFixed(2)}`,
+            value: (
+              <div className="flex items-center">
+                <i className="bi bi-currency-rupee mr-1"></i>
+                {stats.totalSales.toFixed(2)}
+              </div>
+            ),
             percentage: '4.3% Down from yesterday',
             icon: 'bi-graph-up',
             iconClass: 'text-success',
@@ -419,7 +449,7 @@ const EnterpriseAi = () => {
             <option>Month</option>
           </select>
         </div>
-        <h3>Rs-975,993</h3>
+        <h3><i class="bi bi-currency-rupee"></i> 975,993</h3>
         <Pie data={data} options={options}/>
         <div className="center-label" style={centerLabelStyle}>
           <p>

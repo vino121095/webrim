@@ -10,6 +10,8 @@ router.post('/placeOrder', generateOrderId, addOrderDate,  orderValidator, Order
 // Route to get all orders
 router.get('/orders', OrderController.getAllOrders);
 
+router.get('/ordersfornotify', OrderController.getAllOrdersForNotify);
+
 // Route to get orders by user ID
 router.get('/userOrdersById/:id', OrderController.getOrdersByUserId);
 

@@ -57,7 +57,7 @@ const Technicians = () => {
     {/* Search box and Add Technician button */}
     <div className="row mb-3">
       {/* Search box */}
-      <div className="col-12 col-md-8 mb-2">
+      <div className="col-8 col-md-8">
         <input
           type="text"
           className="form-control rounded-2 px-4"
@@ -71,12 +71,15 @@ const Technicians = () => {
         />
       </div>
       {/* Add Technician button */}
-      <div className="col-12 col-md-4 mb-2">
+      <div className="col-4 col-md-4">
       <button
-        className="btn pe-3 d-flex align-items-center gap-2 add-technician-button"
+        id="addProductBtn"
+        className="btn p-3 d-flex align-items-center justify-content-center"
         onClick={handleAddTechnician}
       >
-        <Plus size={18} /> Add Technician
+        <i className="bi bi-plus-circle me-2"></i>
+          <span className="d-none d-sm-inline">Add Technicians</span>
+          <span className="d-inline d-sm-none">Add</span>
       </button>
       </div>
     </div>

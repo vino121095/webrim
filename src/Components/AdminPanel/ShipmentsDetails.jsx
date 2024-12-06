@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import baseurl from '../ApiService/ApiService';
 import { useParams, useNavigate } from 'react-router-dom';
-
+import Swal from 'sweetalert2';
 const ShipmentsDetails = () => {
   const { id } = useParams(); 
   const navigate = useNavigate();
@@ -68,16 +68,31 @@ const ShipmentsDetails = () => {
         dispatch_address: formData.dispatchAddress,
         transport: formData.transport,
       };
-
+    
       const response = await axios.post(`${baseurl}/api/shipments`, shipmentData);
       const shipment = response.data.shipment;
       console.log('Shipment created successfully:', shipment);
       const sid = shipment.sid;
-      alert('Shipment created successfully!');
-      navigate(`/AdminDashboard/ShipmentConfirmForm/${sid}`); 
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: 'Shipment created successfully!',
+        confirmButtonText: 'Proceed',
+        confirmButtonColor: '#3085d6'
+      }).then(() => {
+        navigate(`/AdminDashboard/ShipmentConfirmForm/${sid}`);
+      });
     } catch (error) {
       console.error('Error creating shipment:', error);
-      alert('Failed to create shipment');
+      
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to create shipment',
+        confirmButtonText: 'Close',
+        confirmButtonColor: '#d33'
+      });
     }
   };
 

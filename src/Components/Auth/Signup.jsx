@@ -5,7 +5,7 @@ import './Auth.css';
 import logo from '../User/Assets/RimLogo.png';
 import baseurl from '../ApiService/ApiService';
 import { Eye, EyeOff } from 'lucide-react';
-
+import Swal from 'sweetalert2';
 const Signup = () => {
   const [formData, setFormData] = useState({
     username: '',
@@ -15,7 +15,6 @@ const Signup = () => {
   });
 
   const [errors, setErrors] = useState({});
-  const [showPopup, setShowPopup] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
@@ -83,8 +82,15 @@ const Signup = () => {
 
     try {
       const response = await axios.post(`${baseurl}/api/registerUser`, formData);
+      
       if (response.status === 201) {
-        setShowPopup(true);
+        Swal.fire({
+          icon: 'success',
+          title: response.data.message || 'Registration Successful',
+          text: 'Your account has been created!',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#3085d6'
+        });
         setFormData({
           username: '',
           email: '',
@@ -93,18 +99,26 @@ const Signup = () => {
         });
         setErrors({});
       } else {
-        alert(response.data.message || 'Registration failed.');
+        Swal.fire({
+          icon: 'error',
+          title: 'Registration Failed',
+          text: response.data.message || 'Registration failed.',
+          confirmButtonText: 'Try Again',
+          confirmButtonColor: '#d33'
+        });
       }
     } catch (error) {
       console.error('Error:', error);
-      alert(error.response?.data?.message || 'An error occurred. Please try again.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: error.response?.data?.message || 'An error occurred. Please try again.',
+        confirmButtonText: 'Retry',
+        confirmButtonColor: '#d33'
+      });
     }
   };
 
-  const handlePopupClose = () => {
-    setShowPopup(false);
-    navigate('/Auth/Login');
-  };
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
@@ -192,16 +206,6 @@ const Signup = () => {
           <img src={logo} alt="Logo" className="rim-logo" />
         </div>
       </div>
-
-      {showPopup && (
-        <div className="popup-overlay">
-          <div className="popup">
-            <h3>Registration Successful</h3>
-            <p>Your account has been successfully created.</p>
-            <button onClick={handlePopupClose} className="popup-button">OK</button>
-          </div>
-        </div>
-      )}
     </>
   );
 };

@@ -90,7 +90,7 @@ const AdminSideBar = ({ handleBackClick }) => {
                 className="d-flex align-items-center justify-content-between py-2 text-dark text-decoration-none cursor-pointer"
                 onClick={toggleProductsDropdown}
               >
-                <div className="d-flex align-items-center">
+                <div className="d-flex align-items-center product-nav-link">
                   <img src={Product} alt="" className="me-3" /> 
                   Products
                 </div>
@@ -205,7 +205,6 @@ const AdminSideBar = ({ handleBackClick }) => {
               <a
                 href=""
                 className="d-flex align-items-center py-2 text-dark text-decoration-none"
-
                 data-bs-toggle="modal"
                 data-bs-target="#logoutModal"
               >
@@ -367,7 +366,7 @@ const AdminSideBar = ({ handleBackClick }) => {
         aria-hidden="true"
         data-bs-backdrop="false"
       >
-        <div className="modal-dialog modal-dialog-centered modal-md">
+        <div className="modal-dialog modal-dialog-centered modal-sm">
           <div className="modal-content logout-modal-content" style={{ height: '300px', display: 'flex', justifyContent: 'center' }}>
             {/* <div className="modal-header">
               <h5 className="modal-title" id="logoutModalLabel">
@@ -380,28 +379,33 @@ const AdminSideBar = ({ handleBackClick }) => {
                 aria-label="Close"
               ></button>
             </div> */}
-            <div className="modal-body">
-            <div className="text-center mb-4">
-        <p className="text-dark fw-bold">Log Out</p>
-        <p className="text-muted mb-0">Hi {LoggedUser?.email || 'User@email.com'}</p>
-      </div>
+            <div className="modal-body mt-4">
+              <div className="text-center mb-4">
+                <p className="" style={{ color: "#0024FF" }}>
+                  <LogOut size={50} />
+                </p>
+                <p className="fw-bold fs-lg" style={{ color: "#0024FF", fontSize: '24px'}}>Log Out</p>
+                <p className="text-muted mb-0">
+                  Hi {LoggedUser?.email || "User@email.com"}
+                </p>
+              </div>
             </div>
-          <div className="text-center d-flex justify-content-center align-items-center flex-column mb-4">
-        <button
-          type="button"
-          className="btn btn-light w-50 mb-3 py-2"
-          data-bs-dismiss="modal"
-        >
-          No
-        </button>
-        <button
-          type="button"
-          className="btn btn-danger mb-3 w-50 py-2 logout-btn"
-          onClick={handleLogout}
-          data-bs-dismiss="modal"
-        >
-          Yes
-        </button>
+            <div className="text-center d-flex justify-content-center align-items-center flex-column mb-4">
+              <button
+                type="button"
+                className="btn btn-light w-50 mb-3 py-2"
+                data-bs-dismiss="modal"
+              >
+                No
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger mb-3 w-50 py-2 logout-btn"
+                onClick={handleLogout}
+                data-bs-dismiss="modal"
+              >
+                Yes
+              </button>
             </div>
           </div>
         </div>

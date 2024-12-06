@@ -3,7 +3,7 @@ import axios from "axios";
 import NavBar from "./NavBar";
 import baseurl from "../ApiService/ApiService";
 import Compressor from "./Assets/compressor-img.png";
-
+import Swal from "sweetalert2";
 const FeedViews = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [products, setProducts] = useState([]);
@@ -47,7 +47,7 @@ const FeedViews = () => {
   useEffect(() => {
     fetchForums();
   }, []);
-  
+
 
   // Handle input change
   const handleInputChange = (event) => {
@@ -60,7 +60,12 @@ const FeedViews = () => {
     event.preventDefault();
 
     if (!selectedProduct || !formData.quantity || !formData.name || !formData.phone_number) {
-      alert("Please fill in all required fields.");
+      Swal.fire({
+        icon: 'error',
+        title: 'Incomplete Form',
+        text: 'Please fill in all required fields.',
+        confirmButtonText: 'OK'
+      });
       return;
     }
 
@@ -76,7 +81,12 @@ const FeedViews = () => {
     try {
       const response = await axios.post(`${baseurl}/api/forum`, submissionData);
       if (response.status === 201 && response.data?.message === "Forum created successfully") {
-        alert("Requirement submitted successfully!");
+        Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          text: 'Requirement submitted successfully!',
+          confirmButtonText: 'OK'
+        });
         setFormData({
           quantity: "",
           name: "",
@@ -88,11 +98,21 @@ const FeedViews = () => {
         setSelectedProductImage("");
         setIsModalOpen(false);
       } else {
-        alert("Submission failed. Please try again.");
+        Swal.fire({
+          icon: 'error',
+          title: 'Submission Failed',
+          text: 'Submission failed. Please try again.',
+          confirmButtonText: 'OK'
+        });
       }
     } catch (error) {
       console.error("Submission Error:", error);
-      alert("Failed to submit. Please check your network or contact support.");
+      Swal.fire({
+        icon: 'error',
+        title: 'Submission Error',
+        text: 'Failed to submit. Please check your network or contact support.',
+        confirmButtonText: 'OK'
+      });
     }
   };
 
@@ -111,28 +131,54 @@ const FeedViews = () => {
   const handleTakeForum = async (forumId) => {
     // Check if user and user.uid exist
     if (!user || !user.uid) {
-      alert('Please log in to take this forum listing');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Login Required',
+        text: 'Please log in to take this forum listing',
+        confirmButtonText: 'OK'
+      });
       return;
     }
-  
+
     try {
       const response = await axios.post(`${baseurl}/api/forumtake/${forumId}`, {
         distributor_id: user.uid
       });
-      alert(response.data.message);
-      
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: response.data.message,
+        confirmButtonText: 'OK'
+      });
+
       fetchForums();
     } catch (error) {
       // More detailed error handling
       if (error.response) {
         // The request was made and the server responded with a status code
-        alert(error.response.data.message || 'Failed to take forum listing');
+        Swal.fire({
+          icon: 'error',
+          title: 'Submission Failed',
+          text: error.response.data.message || 'Failed to take forum listing',
+          confirmButtonText: 'OK'
+        });
       } else if (error.request) {
         // The request was made but no response was received
-        alert('No response received from server');
+        Swal.fire({
+          icon: 'error',
+          title: 'Connection Error',
+          text: 'No response received from server',
+          confirmButtonText: 'OK'
+        });
       } else {
         // Something happened in setting up the request
-        alert('Error processing your request');
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Error processing your request',
+          confirmButtonText: 'OK'
+        });
       }
       console.error('Forum take error:', error);
     }
@@ -158,14 +204,19 @@ const FeedViews = () => {
               </div>
             </div>
           </div>
-          <div className="col-12 col-md-4 col-lg-2 text-center text-md-start">
-            <button
-              className="btn btn-primary d-flex align-items-center justify-content-center rounded-3 w-100 add-post-button"
-              onClick={toggleModal}
-            >
-              <i className="bi bi-box me-2"></i> Add Post
-            </button>
-          </div>
+          {user.role === 'distributor' ? (
+            <div></div>
+          ) : (
+            <div className="col-12 col-md-4 col-lg-2 text-center text-md-start">
+              <button
+                className="btn btn-primary d-flex align-items-center justify-content-center rounded-3 w-100 add-post-button"
+                onClick={toggleModal}
+              >
+                <i className="bi bi-box me-2"></i> Add Post
+              </button>
+            </div>
+          )}
+
         </div>
       </div>
 
@@ -190,7 +241,7 @@ const FeedViews = () => {
                       className="img-fluid rounded"
                       style={{ width: "30%", objectFit: "cover" }}
                     />
-                     <div className="card-body w-100 justify-content-around">
+                    <div className="card-body w-100 justify-content-around">
                       <p className="d-flex justify-content-between">
                         <span className="fw-bold text-left">Product Name: </span>
                         <span className="text-left">{matchingProduct?.product_name || "N/A"}</span>
@@ -211,18 +262,18 @@ const FeedViews = () => {
                         <span className="fw-bold">Close Date: </span>
                         <span>{forum.close_date || "No Date"}</span>
                       </p>
-                        
+
                       {user && user.role === 'distributor' && (
-                  <div className="w-100 d-flex justify-content-end">
-                    <button 
-                      className="btn w-25" 
-                      style={{background: '#F24E1E', color: 'white'}}
-                      onClick={() => handleTakeForum(forum.fid)}
-                    >
-                      Take
-                    </button>
-                  </div>
-                )}
+                        <div className="w-100 d-flex justify-content-end">
+                          <button
+                            className="btn w-25"
+                            style={{ background: '#F24E1E', color: 'white' }}
+                            onClick={() => handleTakeForum(forum.fid)}
+                          >
+                            Take
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

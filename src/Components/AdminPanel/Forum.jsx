@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import baseurl from "../ApiService/ApiService";
+import Swal from "sweetalert2";
 import Compressor from "../User/Assets/compressor-img.png";
 
 const Forum = () => {
@@ -33,23 +34,40 @@ const Forum = () => {
   // Handle taking a forum listing
   const handleTakeForum = async (forumId) => {
     if (!user || !user.uid) {
-      alert("Please log in to take this forum listing");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Login Required',
+        text: 'Please log in to take this forum listing',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3085d6'
+      });
       return;
     }
-
     try {
       const response = await axios.post(`${baseurl}/api/forumtake/${forumId}`, {
         distributor_id: user.uid,
       });
-      alert(response.data.message);
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: response.data.message,
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3085d6'
+      });
+      
       fetchAllForums(); // Refresh the forums list
     } catch (error) {
-      alert(
-        error.response?.data.message || "Failed to take forum listing"
-      );
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.response?.data.message || "Failed to take forum listing",
+        confirmButtonText: 'Close',
+        confirmButtonColor: '#d33'
+      });
       console.error("Forum take error:", error);
     }
-  };
+  }
 
   // Fetch forums and products on component mount
   useEffect(() => {

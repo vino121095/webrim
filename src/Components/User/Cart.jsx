@@ -18,9 +18,8 @@ const Cart = () => {
       navigate("/");
     } else if (LoggedUser.role === "admin") {
       navigate("/AdminDashboard/EnterpriseAi");
-    }
-    else if (LoggedUser.role === "technician") {
-      navigate('/User/StoreDetails');
+    } else if (LoggedUser.role === "technician") {
+      navigate("/User/StoreDetails");
     }
   }, [navigate]);
 
@@ -103,7 +102,9 @@ const Cart = () => {
     <>
       <NavBar />
       <div className="container my-4">
-        <h2 className="text-center mb-4">Your Cart: {cartItems.length} items</h2>
+        <h2 className="text-center mb-4">
+          Your Cart: {cartItems.length} items
+        </h2>
         <div className="row">
           {/* Cart Items Section */}
           <div className="col-lg-8 carttable d-none d-sm-block border">
@@ -133,7 +134,9 @@ const Cart = () => {
                       />
                       <div>
                         <h5 className="mb-0">{item.product.product_name}</h5>
-                        <p className="text-muted mb-0">{item.product.brand_name}</p>
+                        <p className="text-muted mb-0">
+                          {item.product.brand_name}
+                        </p>
                       </div>
                     </td>
                     <td>
@@ -159,7 +162,8 @@ const Cart = () => {
                       </div>
                     </td>
                     <td>
-                      Rs {(item.product.mrp_rate * item.quantity).toFixed(2)}
+                      <i class="bi bi-currency-rupee"></i>{" "}
+                      {(item.product.mrp_rate * item.quantity).toFixed(2)}
                     </td>
                     <td>
                       <button
@@ -202,21 +206,39 @@ const Cart = () => {
                       className="ms-2 mb-5 trash"
                       onClick={() => handleRemoveItem(item.cid)}
                     >
-                      <i className="bi bi-trash cart-remove-item "></i>
+                      <i className="bi bi-trash cart-remove-item"></i>
                     </button>
-                    <select
-                      className="form-select "
-                      value={item.quantity}
-                      onChange={(e) =>
-                        handleQuantityChange(item.cid, parseInt(e.target.value))
-                      }
-                    >
-                      {[...Array(10).keys()].map((item) => (
-                      <option key={item.quantity + 1} value={item.quantity + 1}>
-                        {item.quantity + 1}
-                      </option>
-                      ))}
-                    </select>
+                    {item.quantity < 10 ? (
+                      <select
+                        className="form-select"
+                        value={item.quantity}
+                        onChange={(e) =>
+                          handleQuantityChange(
+                            item.cid,
+                            parseInt(e.target.value)
+                          )
+                        }
+                      >
+                        {[...Array(10).keys()].map((quantity) => (
+                          <option key={quantity + 1} value={quantity + 1}>
+                            {quantity + 1}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="number"
+                        className="form-control"
+                        value={item.quantity}
+                        min="10"
+                        onChange={(e) =>
+                          handleQuantityChange(
+                            item.cid,
+                            parseInt(e.target.value)
+                          )
+                        }
+                      />
+                    )}
                   </div>
                 </div>
                 <hr /> {/* Add horizontal line */}
@@ -234,12 +256,15 @@ const Cart = () => {
               </div>
               <div className="d-flex justify-content-between">
                 <span>Total MRP</span>
-                <span>Rs {totalAmount.toFixed(2)}</span>
+                <span>
+                  {" "}
+                  <i class="bi bi-currency-rupee"></i> {totalAmount.toFixed(2)}
+                </span>
               </div>
               <div className="d-flex justify-content-between fw-bold">
                 <span>Total Cart Value</span>
                 <span className="text-primary">
-                  Rs {totalAmount.toFixed(2)}
+                  <i class="bi bi-currency-rupee"></i> {totalAmount.toFixed(2)}
                 </span>
               </div>
               <button

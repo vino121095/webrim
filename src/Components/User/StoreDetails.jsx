@@ -72,7 +72,7 @@ const StoreDetails = () => {
         setSearchQuery(query);
 
         const filtered = distributors.filter((distributor) =>
-            distributor.companyname?.toLowerCase().includes(query)
+            distributor.companyname?.toLowerCase().includes(query) || distributor.location?.toLowerCase().includes(query.toLowerCase())
         );
         setFilteredDistributors(filtered);
     };
@@ -96,7 +96,7 @@ const StoreDetails = () => {
         return (
             <>
                 <NavBar />
-                <UserSearch />
+                <UserSearch onSearch={handleSearch} />
                 <SearchBarLocation onLocationSearch={handleLocationSearch} />
                 <div className="container mt-5 text-center text-danger">
                     {error}
@@ -108,7 +108,7 @@ const StoreDetails = () => {
     return (
         <>
             <NavBar />
-            <UserSearch />
+            <UserSearch onSearch={handleSearch} />
             <SearchBarLocation onLocationSearch={handleLocationSearch} />
             <div className="container mt-5 mb-3">
                 {filteredDistributors.length === 0 ? (
@@ -134,7 +134,7 @@ const StoreDetails = () => {
                                                     onClick={() => handleViewNumber(distributor.did)}
                                                     className="btn w-100 fw-semibold view-mobile-no"
                                                 >
-                                                    <img src={phone} alt="Phone" /> View Mobile Number
+                                                    <img src={phone} alt="Phone" className="view-mob-num"/> View Mobile Number
                                                 </button>
                                             ) : (
                                                 <a
