@@ -17,7 +17,9 @@ const ForumTake = sequelize.define('ForumTake', {
         references: {
             model: Forum,
             key: 'fid'
-        }
+        },
+        onDelete: 'CASCADE', // Add this to handle deletion
+        onUpdate: 'CASCADE'  // Add this to handle updates
     },
     distributor_id: {
         type: DataTypes.INTEGER,
@@ -25,7 +27,9 @@ const ForumTake = sequelize.define('ForumTake', {
         references: {
             model: User,
             key: 'uid'
-        }
+        },
+        onDelete: 'CASCADE', // Add this to handle deletion
+        onUpdate: 'CASCADE'  // Add this to handle updates
     },
     taken_at: {
         type: DataTypes.DATE,
@@ -40,22 +44,30 @@ const ForumTake = sequelize.define('ForumTake', {
 // Associations
 User.hasMany(ForumTake, {
     foreignKey: 'distributor_id',
-    as: 'forumTakes'
+    as: 'forumTakes',
+    onDelete: 'CASCADE', // Add this to handle deletion
+    onUpdate: 'CASCADE'  // Add this to handle updates
 });
 
 ForumTake.belongsTo(User, {
     foreignKey: 'distributor_id',
-    as: 'distributor'
+    as: 'distributor',
+    onDelete: 'CASCADE', // Add this to handle deletion
+    onUpdate: 'CASCADE'  // Add this to handle updates
 });
 
 Forum.hasMany(ForumTake, {
     foreignKey: 'fid',
-    as: 'takes'
+    as: 'takes',
+    onDelete: 'CASCADE', // Add this to handle deletion
+    onUpdate: 'CASCADE'  // Add this to handle updates
 });
 
 ForumTake.belongsTo(Forum, {
     foreignKey: 'forum_id', 
     as: 'forum', 
+    onDelete: 'CASCADE', // Add this to handle deletion
+    onUpdate: 'CASCADE'  // Add this to handle updates
   });
 
 module.exports = ForumTake;

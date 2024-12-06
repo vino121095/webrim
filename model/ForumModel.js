@@ -17,7 +17,9 @@ const Forum = sequelize.define('Forum', {
         references: {
             model: User,
             key: 'uid'
-        }
+        },
+        onDelete: 'CASCADE', // Add this to handle deletion
+        onUpdate: 'CASCADE'  // Add this to handle updates
     },
     product_id: { // Add this field to link to the Product
         type: DataTypes.INTEGER,
@@ -25,7 +27,9 @@ const Forum = sequelize.define('Forum', {
         references: {
             model: Product,
             key: 'pid' // Assuming 'pid' is the primary key in your Product model
-        }
+        },
+        onDelete: 'CASCADE', // Add this to handle deletion
+        onUpdate: 'CASCADE'  // Add this to handle updates
     },
     product_name: {
         type: DataTypes.STRING,
@@ -60,23 +64,31 @@ const Forum = sequelize.define('Forum', {
 // User associations
 User.hasMany(Forum, {
     foreignKey: 'user_id',
-    as: 'forums'
+    as: 'forums',
+    onDelete: 'CASCADE', // Add this to handle deletion
+    onUpdate: 'CASCADE'  // Add this to handle updates
 });
 
 Forum.belongsTo(User, {
     foreignKey: 'user_id',
-    as: 'user'
+    as: 'user',
+    onDelete: 'CASCADE', // Add this to handle deletion
+    onUpdate: 'CASCADE'  // Add this to handle updates
 });
 
 // Product associations
 Product.hasMany(Forum, {
     foreignKey: 'product_id',
-    as: 'forums'
+    as: 'forums',
+    onDelete: 'CASCADE', // Add this to handle deletion
+    onUpdate: 'CASCADE'  // Add this to handle updates
 });
 
 Forum.belongsTo(Product, {
     foreignKey: 'product_id',
-    as: 'product'
+    as: 'product',
+    onDelete: 'CASCADE', // Add this to handle deletion
+    onUpdate: 'CASCADE'  // Add this to handle updates
 });
 
 module.exports = Forum;

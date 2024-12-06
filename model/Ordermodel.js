@@ -20,7 +20,9 @@ const Order = db.define('orders', {
         references: {
             model: User, 
             key: 'uid'
-        }
+        },
+        onDelete: 'CASCADE', // Add this to handle deletion
+        onUpdate: 'CASCADE'  // Add this to handle updates
     },
     order_date: {
         type: DataTypes.STRING,
@@ -42,6 +44,8 @@ const Order = db.define('orders', {
 
 Order.belongsTo(User, {
     foreignKey: 'user_id',
-    as: 'user'
+    as: 'user',
+    onDelete: 'CASCADE', // Add this to handle deletion
+    onUpdate: 'CASCADE'  // Add this to handle updates
 });
 module.exports = Order;

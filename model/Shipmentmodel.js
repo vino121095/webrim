@@ -21,7 +21,9 @@ const Shipment = sequelize.define('Shipment', {
         references: {
             model: Order,
             key: 'order_id'
-        }
+        },
+        onDelete: 'CASCADE', // Add this to handle deletion
+        onUpdate: 'CASCADE'  // Add this to handle updates
     },
     distributor_name: {
         type: DataTypes.STRING,
@@ -86,7 +88,8 @@ const Shipment = sequelize.define('Shipment', {
 // Define associations
 Shipment.belongsTo(Order, {
     foreignKey: 'order_id',
-    onDelete: 'CASCADE'
+    onDelete: 'CASCADE', // Add this to handle deletion
+    onUpdate: 'CASCADE'  // Add this to handle updates
 });
 
 // Method to validate shipment items

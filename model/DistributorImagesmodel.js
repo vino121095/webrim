@@ -15,7 +15,8 @@ const DistributorImage = sequelize.define('DistributorImage', {
             model: 'distributors', 
             key: 'did'
         },
-        onDelete: 'CASCADE'
+        onDelete: 'CASCADE', // Add this to handle deletion
+        onUpdate: 'CASCADE'  // Add this to handle updates
     },
     image_path: {
         type: DataTypes.STRING,
@@ -29,13 +30,17 @@ const DistributorImage = sequelize.define('DistributorImage', {
 Distributor.hasMany(DistributorImage, { 
     foreignKey: 'distributor_id',  
     sourceKey: 'did',
-    as: 'image'         
+    as: 'image',
+    onDelete: 'CASCADE', // Add this to handle deletion
+    onUpdate: 'CASCADE'  // Add this to handle updates         
 });
 
 DistributorImage.belongsTo(Distributor, { 
     foreignKey: 'distributor_id', 
     targetKey: 'did',
-    as: 'distributor'  
+    as: 'distributor',
+    onDelete: 'CASCADE', // Add this to handle deletion
+    onUpdate: 'CASCADE'  // Add this to handle updates  
 });
 
 module.exports = DistributorImage;
