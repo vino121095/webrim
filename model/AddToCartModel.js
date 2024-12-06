@@ -13,7 +13,7 @@ const AddToCart = sequelize.define('AddToCart', {
   },
   user_id: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
   },
   product_id: {
     type: DataTypes.STRING,
@@ -45,8 +45,25 @@ const AddToCart = sequelize.define('AddToCart', {
 });
 
 // Associations
-User.hasMany(AddToCart, { foreignKey: 'user_id', as: 'cartItems', sourceKey: 'uid' });
-AddToCart.belongsTo(User, { foreignKey: 'user_id', as: 'user', targetKey : 'uid' });
-AddToCart.belongsTo(Products, { foreignKey: 'product_id', as: 'product', targetKey: 'product_id'});
+User.hasMany(AddToCart, { 
+  foreignKey: 'user_id', 
+  as: 'cartItems', 
+  sourceKey: 'uid',
+  onDelete: 'CASCADE', // Add this to handle deletion
+  onUpdate: 'CASCADE'  // Add this to handle updates
+  });
+AddToCart.belongsTo(User, { 
+  foreignKey: 'user_id', 
+  as: 'user', targetKey : 'uid',
+  onDelete: 'CASCADE', // Add this to handle deletion
+  onUpdate: 'CASCADE'  // Add this to handle updates
+   });
+AddToCart.belongsTo(Products, { 
+  foreignKey: 'product_id', 
+  as: 'product', 
+  targetKey: 'product_id',
+  onDelete: 'CASCADE', // Add this to handle deletion
+  onUpdate: 'CASCADE'  // Add this to handle updates
+});
 
 module.exports = AddToCart;

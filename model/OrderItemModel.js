@@ -17,6 +17,8 @@ const OrderItem = sequelize.define('OrderItem', {
             model: Order,
             key: 'order_id',
         },
+        onDelete: 'CASCADE', // Add this to handle deletion
+        onUpdate: 'CASCADE'  // Add this to handle updates
     },
     product_id: {
         type: DataTypes.STRING,
@@ -25,6 +27,8 @@ const OrderItem = sequelize.define('OrderItem', {
             model: Product,
             key: 'product_id',
         },
+        onDelete: 'CASCADE', // Add this to handle deletion
+        onUpdate: 'CASCADE'  // Add this to handle updates
     },
     quantity: {
         type: DataTypes.INTEGER,
@@ -45,24 +49,32 @@ const OrderItem = sequelize.define('OrderItem', {
 Order.hasMany(OrderItem, {
     foreignKey: 'order_id',
     sourceKey: 'order_id',
+    onDelete: 'CASCADE', // Add this to handle deletion
+    onUpdate: 'CASCADE'  // Add this to handle updates
 });
 
 // A product can have many order items
 Product.hasMany(OrderItem, {
     foreignKey: 'product_id',
     sourceKey: 'product_id',
+    onDelete: 'CASCADE', // Add this to handle deletion
+    onUpdate: 'CASCADE'  // Add this to handle updates
 });
 
 // Each order item belongs to an order
 OrderItem.belongsTo(Order, {
     foreignKey: 'order_id',
     targetKey: 'order_id',
+    onDelete: 'CASCADE', // Add this to handle deletion
+    onUpdate: 'CASCADE'  // Add this to handle updates
 });
 
 // Each order item belongs to a product
 OrderItem.belongsTo(Product, {
     foreignKey: 'product_id',
     targetKey: 'product_id',
+    onDelete: 'CASCADE', // Add this to handle deletion
+    onUpdate: 'CASCADE'  // Add this to handle updates
 });
 
 module.exports = OrderItem;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import "./User.css"; 
+import "./User.css";
 import NavBar from "./NavBar";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -7,10 +7,10 @@ import baseurl from "../ApiService/ApiService";
 
 const Cart = () => {
   const navigate = useNavigate();
-  const [cartItems, setCartItems] = useState([]); 
-  const [totalAmount, setTotalAmount] = useState(0); 
-  const LoggedUser = JSON.parse(localStorage.getItem("userData")); 
-  const userId = LoggedUser?.uid; 
+  const [cartItems, setCartItems] = useState([]);
+  const [totalAmount, setTotalAmount] = useState(0);
+  const LoggedUser = JSON.parse(localStorage.getItem("userData"));
+  const userId = LoggedUser?.uid;
 
   // Redirect non-users to login
   useEffect(() => {
@@ -19,7 +19,7 @@ const Cart = () => {
     } else if (LoggedUser.role === "admin") {
       navigate("/AdminDashboard/EnterpriseAi");
     }
-    else if(LoggedUser.role === "technician"){
+    else if (LoggedUser.role === "technician") {
       navigate('/User/StoreDetails');
     }
   }, [navigate]);
@@ -34,7 +34,7 @@ const Cart = () => {
             ...item,
           }));
           setCartItems(items);
-          calculateTotal(items); 
+          calculateTotal(items);
         } catch (error) {
           console.error("Error fetching cart data:", error);
         }
@@ -198,25 +198,25 @@ const Cart = () => {
                     </p>
                   </div>
                   <div>
-                  <button
-                    className="ms-2 mb-5 trash"
-                    onClick={() => handleRemoveItem(item.cid)}
-                  >
-                    <i className="bi bi-trash cart-remove-item "></i>
-                  </button>
-                  <select
-                    className="form-select "
-                    value={item.quantity}
-                    onChange={(e) =>
-                      handleQuantityChange(item.cid, parseInt(e.target.value))
-                    }
-                  >
-                    {[...Array(10).keys()].map((i) => (
-                      <option key={i + 1} value={i + 1}>
-                        {i + 1}
+                    <button
+                      className="ms-2 mb-5 trash"
+                      onClick={() => handleRemoveItem(item.cid)}
+                    >
+                      <i className="bi bi-trash cart-remove-item "></i>
+                    </button>
+                    <select
+                      className="form-select "
+                      value={item.quantity}
+                      onChange={(e) =>
+                        handleQuantityChange(item.cid, parseInt(e.target.value))
+                      }
+                    >
+                      {[...Array(10).keys()].map((item) => (
+                      <option key={item.quantity + 1} value={item.quantity + 1}>
+                        {item.quantity + 1}
                       </option>
-                    ))}
-                  </select>
+                      ))}
+                    </select>
                   </div>
                 </div>
                 <hr /> {/* Add horizontal line */}
