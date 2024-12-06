@@ -15,7 +15,8 @@ const ProductImage = sequelize.define('ProductImage', {
             model: Product,       
             key: 'pid',         
         },
-        onDelete: 'CASCADE',    
+        onDelete: 'CASCADE', // Add this to handle deletion
+        onUpdate: 'CASCADE'  // Add this to handle updates    
     },
     image_path: {
         type: DataTypes.STRING,
@@ -30,13 +31,17 @@ const ProductImage = sequelize.define('ProductImage', {
 Product.hasMany(ProductImage, { 
     foreignKey: 'product_id',  
     sourceKey: 'pid', 
-    as: 'images'        
+    as: 'images',
+    onDelete: 'CASCADE', // Add this to handle deletion
+    onUpdate: 'CASCADE'  // Add this to handle updates        
 });
 
 ProductImage.belongsTo(Product, { 
     foreignKey: 'product_id',   
     targetKey: 'pid',
-    as: 'product'    
+    as: 'product',
+    onDelete: 'CASCADE', // Add this to handle deletion
+    onUpdate: 'CASCADE'  // Add this to handle updates    
 });
 
 module.exports = ProductImage;

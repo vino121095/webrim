@@ -22,12 +22,15 @@ const UserMainPage = () => {
       navigate('/');
     }
   }, [navigate]);  // Removed LoggedUser from dependency array
+  const handleLocationSearch = (location) => {
+    // console.log("Location:", location);
+};
 
   return (
     <>
       <NavBar />
       <UserSearch />
-      <SearchBarLoction />
+      <SearchBarLoction onLocationSearch={handleLocationSearch}/>
       <Card />
     </>
   );

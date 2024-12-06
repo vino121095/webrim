@@ -25,7 +25,7 @@ const NavBar = () => {
   const [loggedUser, setLoggedUser] = useState({});
   const navigate = useNavigate();
   const [location, setLocation] = useState("Fetching location...");
-  const [map, setMap] = useState(null);
+  const [ismap, setMap] = useState({});
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   useEffect(() => {
     const handleResize = () => setScreenWidth(window.innerWidth);
@@ -86,7 +86,7 @@ const NavBar = () => {
   };
   const handleLogout = () => {
     localStorage.removeItem("userData");
-    navigate("/");
+    navigate("/Auth/Login");
     alert("Logout successfully");
   };
 
@@ -102,12 +102,16 @@ const NavBar = () => {
   };
 
   useEffect(() => {
-    const fetchCurrentLocation = () => {
+    const fetchCurrentLocation = async() => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           async (position) => {
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
+            setMap({
+              latitude,
+              longitude
+            })
             console.log(latitude)
             console.log(longitude)
   
