@@ -5,6 +5,7 @@ import logo from '../User/Assets/RimLogo.png';
 import { useNavigate } from 'react-router-dom';
 import baseurl from '../ApiService/ApiService';
 import { Eye, EyeOff } from 'lucide-react';
+import Swal from 'sweetalert2';
 const Login = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -103,22 +104,46 @@ const Login = () => {
       
       if (response.data.message === 'Login successful') {
         localStorage.setItem('userData', JSON.stringify(response.data.data));
-        if (response.data.role === 'admin') {
-          navigate('/AdminDashboard/EnterpriseAi');
-        }
-        else if(response.data.role === 'technician'){
-          navigate('/User/StoreDetails');
-        }
-         else {
-          navigate('/');
-        }
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Login Successful',
+          text: 'Welcome back!',
+          showConfirmButton: false,
+          timer: 1500
+        });
+    
+        // Navigate based on role after a short delay
+        setTimeout(() => {
+          if (response.data.role === 'admin') {
+            navigate('/AdminDashboard/EnterpriseAi');
+          }
+          else if(response.data.role === 'technician'){
+            navigate('/User/StoreDetails');
+          }
+          else {
+            navigate('/');
+          }
+        }, 1500);
       } else {
         // Handle login failure
-        alert('Invalid email or password');
+        Swal.fire({
+          icon: 'error',
+          title: 'Login Failed',
+          text: 'Invalid email or password',
+          confirmButtonText: 'Try Again',
+          confirmButtonColor: '#d33'
+        });
       }
     } catch (error) {
       console.error('Login error:', error);
-      alert('Login failed. Please try again.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: 'Login failed. Please try again.',
+        confirmButtonText: 'Retry',
+        confirmButtonColor: '#d33'
+      });
     }
   };
 

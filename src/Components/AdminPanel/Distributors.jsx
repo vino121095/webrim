@@ -146,9 +146,9 @@ const Distributors = () => {
       
         // SweetAlert for success
         Swal.fire({
-          title: "Good job!",
+          title: iconType() === 'success' ? "Good job!" : 'Oops',
           text: response.data.message || "Distributor added successfully!",
-          icon: iconType, 
+          icon: iconType(), 
           confirmButtonColor: "#F24E1E",
         });
       
@@ -251,11 +251,15 @@ const Distributors = () => {
     const newFiles = files.filter((file) => !existingFileNames.includes(file.name));
   
     if (newFiles.length === 0) {
-      alert("File already added");
+      Swal.fire({
+        icon: 'info',
+        title: 'Oops...',
+        text: 'File already added',
+        confirmButtonText: 'OK'
+      });
     } else {
       setImageFiles((prevFiles) => [...prevFiles, ...newFiles]);
     }
-  
     // Reset file input value to allow re-upload of the same file
     e.target.value = '';
   };
@@ -299,7 +303,7 @@ const Distributors = () => {
       {/* Search and Add Section */}
       <div className="searches row align-items-center gx-3 mt-3 mb-3">
         {/* Search Input */}
-        <div className="col-12 col-md-8">
+        <div className="col-8 col-md-8">
           <div className="input-group">
             <input
               type="text"
@@ -313,13 +317,15 @@ const Distributors = () => {
         </div>
 
         {/* Add Product Button */}
-        <div className="col-12 col-md-4 mt-3 mt-md-0">
+        <div className="col-4 col-md-4">
           <button
             id="addProductBtn"
             className="btn p-3 d-flex align-items-center justify-content-center"
             onClick={toggleModal}
           >
-            <i className="bi bi-plus-circle me-2"></i> Add Distributor
+            <i className="bi bi-plus-circle me-2"></i>
+            <span className="d-none d-sm-inline">Add Distributor</span>
+            <span className="d-inline d-sm-none">Add</span>
           </button>
         </div>
       </div>
@@ -544,8 +550,8 @@ const Distributors = () => {
                     </div>
 
                     {/* Image Upload Section */}
-                    <div className="col-12">
-                      <label className="form-label">Images</label>
+                    <div className="d-flex justify-content-center flex-column align-items-center">
+                      <label className="form-label">Upload Images</label>
                       <div className="d-flex gap-3 flex-wrap">
                         {/* Existing Images */}
                         {existingImages.map((image, index) => (
@@ -621,7 +627,7 @@ const Distributors = () => {
                   </div>
 
                   <div className="text-center mt-4">
-                    <button type="submit" className="btn btn-danger px-4">
+                    <button type="submit" className="btn px-4" style={{background: '#F24E1E', color: 'white'}}>
                       {currentDistributor?.did ? "Update" : "Submit"}
                     </button>
                   </div>

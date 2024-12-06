@@ -77,6 +77,9 @@ a.navbar-brand{
     color:white;
 }
 
+.product-nav-link{
+  cursor: pointer;
+}
 /* Search Input */
 #productSearchBox {
     height: 48px;
@@ -365,6 +368,13 @@ a.navbar-brand{
   .gap-3 {
     gap: 10px;
   }
+  /* distributors */
+
+  .modal-content.distributor-form
+  {
+    width: 100% !important;
+  }
+
 
   /* Notification */
   .notification-icon{

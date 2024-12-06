@@ -7,6 +7,7 @@ import UserLogo from "../User/Assets/user-logo.png";
 import hamburger from "../User/Assets/hamburger.png";
 import ProfilePic from "../User/Assets/user-logo.png";
 import axios from "axios";
+import Swal from "sweetalert2";
 import baseurl from "../ApiService/ApiService";
 import { useNavigate } from "react-router-dom";
 import { X, Info } from 'lucide-react';
@@ -85,9 +86,26 @@ const NavBar = () => {
     setSelectedNotification(notification);
   };
   const handleLogout = () => {
-    localStorage.removeItem("userData");
-    navigate("/Auth/Login");
-    alert("Logout successfully");
+    Swal.fire({
+      title: 'Are you sure you want to logout?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, Logout',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.removeItem("userData");
+        navigate("/Auth/Login");
+        Swal.fire({
+          icon: 'success',
+          title: 'Logged Out',
+          text: 'You have been logged out successfully!',
+          confirmButtonText: 'OK'
+        });
+      }
+    });
   };
 
   const getIcon = (type) => {
@@ -181,27 +199,33 @@ const NavBar = () => {
   
     fetchCurrentLocation();
   }, []); // Empty dependency array
-
+const handleMoveToMain = ()=>{
+  navigate('/')
+}
   return (
     <nav>
       {screenWidth > 768 ? (
-        <div className="navbar py-2 container-fluid d-flex align-items-center">
-          <div className="d-flex align-items-center">
+        <div className="navbar py-2 container-fluid">
+          <div className="d-flex align-items-center position-absolute start-0 ms-4">
             <a href="" className="text-decoration-none">
               <i className="bi bi-geo-alt-fill text-danger"></i>{" "}
               <span style={{ color: "black" }}>{location}</span>
               <div id="map"></div>
             </a>
           </div>
-          <div className="d-flex align-items-center">
-            <a href="/"><img src={RIM} alt="RIM Logo" style={{ height: "50px" }} /></a>
+
+          <div className="d-flex align-items-center justify-content-center w-100">
+            <a href="/">
+              <img src={RIM} alt="RIM Logo" style={{ height: "50px" }} />
+            </a>
           </div>
-          <div className="d-flex align-items-center gap-3 position-relative">
+
+          <div className="d-flex align-items-center gap-3 position-absolute end-0 me-4">
             <img
               src={notify}
+              style={{ width: "24px", height: "24px", cursor: "pointer" }}
               alt="Notifications"
               onClick={handleClickNotify}
-              style={{ cursor: "pointer" }}
             />
             <img
               src={UserLogo}
@@ -244,9 +268,12 @@ const NavBar = () => {
                         </a>
                       </>
                     )}
-                    <a className="dropdown-item text-danger" onClick={handleLogout}>
+                    <a href="#"
+                      className="dropdown-item text-danger"
+                      onClick={handleLogout}
+                    >
                       <MdOutlineLogout className="me-2" />
-                      Logout - 1
+                      Logout
                     </a>
                   </>
                 )}
@@ -257,7 +284,7 @@ const NavBar = () => {
       ) : (
         <div>
           {/* Mobile Navigation Bar */}
-          <div className="Mob-nav bg-white d-flex justify-content-between align-items-center px-3 py-2">
+          <div className="Mob-nav bg-white d-flex justify-content-between align-items-center px-3 py-2 container-fluid">
             {/* Hamburger Menu Button */}
             <button
               className="navbar-toggler border-0"
@@ -275,24 +302,28 @@ const NavBar = () => {
             </button>
 
             {/* Mobile Logo */}
-            <img src={RIM} alt="RIM Logo" className="mobile-logo" />
-            <div className="d-flex justify-content-around align-items-center gap-3"> <img
-              src={notify}
-              alt="Notifications"
-              onClick={handleClickNotify}
-              style={{ cursor: "pointer" }}
-            />
-            {/* Profile Picture */}
-            <img
-              src={ProfilePic}
-              alt="Profile"
-              style={{
-                width: "30px",
-                height: "30px",
-                borderRadius: "50%",
-              }}
-            /></div>
-           
+            <div className="d-flex align-items-center justify-content-center w-100"onClick={handleMoveToMain}>
+            <img src={RIM} alt="RIM Logo" className="mobile-logo"  />
+            </div>
+            <div className="d-flex align-items-center gap-3 position-absolute end-0 me-3">
+              {" "}
+              <img
+                src={notify}
+                alt="Notifications"
+                onClick={handleClickNotify}
+                style={{ cursor: "pointer" }}
+              />
+              {/* Profile Picture */}
+              <img
+                src={ProfilePic}
+                alt="Profile"
+                style={{
+                  width: "30px",
+                  height: "30px",
+                  borderRadius: "50%",
+                }}
+              />
+            </div>
           </div>
 
           {/* Offcanvas Sidebar */}

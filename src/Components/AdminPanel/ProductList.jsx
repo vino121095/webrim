@@ -60,65 +60,36 @@ const ProductList = () => {
   };
 
   const handleEditProduct = async (product) => {
-    // First show confirmation dialog
-    const result = await Swal.fire({
-        title: "Do you want to edit this product?",
-        showDenyButton: true,
-        showCancelButton: true,
-        confirmButtonText: "Yes, edit",
-        denyButtonText: `No, don't edit`,
-        icon: "question"
-    });
-
-    if (result.isConfirmed) {
-        // Proceed with opening the edit modal
-        setCurrentProduct(product);
-        setExistingImages(
-            product.images.map((img, index) => ({
-                id: index,
-                image_path: img.image_path,
-            }))
-        );
-        setIsModalOpen(true);
-        setError("");
-        
-        // Show success message
-        await Swal.fire({
-            title: "Ready to edit!",
-            text: "You can now make your changes.",
-            icon: "success",
-            confirmButtonColor: '#F24E1E'
-        });
-    } else if (result.isDenied) {
-        // User chose not to edit
-        await Swal.fire({
-            title: "Cancelled",
-            text: "No changes will be made",
-            icon: "info",
-            confirmButtonColor: '#F24E1E'
-        });
-    }
-};
+    setCurrentProduct(product);
+    setExistingImages(
+        product.images.map((img, index) => ({
+            id: index,
+            image_path: img.image_path,
+        })) || []
+    );
+    setIsModalOpen(true);
+    setError("");
+ };
 
 // You might also want a separate function for saving changes
-const handleSaveChanges = async () => {
-    const result = await Swal.fire({
-        title: "Do you want to save the changes?",
-        showDenyButton: true,
-        showCancelButton: true,
-        confirmButtonText: "Save",
-        confirmButtonColor: '#F24E1E',
-        denyButtonText: `Don't save`
-    });
+// const handleSaveChanges = async () => {
+//     const result = await Swal.fire({
+//         title: "Do you want to save the changes?",
+//         showDenyButton: true,
+//         showCancelButton: true,
+//         confirmButtonText: "Save",
+//         confirmButtonColor: '#F24E1E',
+//         denyButtonText: `Don't save`
+//     });
 
-    if (result.isConfirmed) {
-        // Call your save function here
-        // await handleSubmit();  // Your existing submit function
-        await Swal.fire("Saved!", "", "success");
-    } else if (result.isDenied) {
-        await Swal.fire("Changes are not saved", "", "info");
-    }
-};
+//     if (result.isConfirmed) {
+//         // Call your save function here
+//         // await handleSubmit();  // Your existing submit function
+//         await Swal.fire("Saved!", "", "success");
+//     } else if (result.isDenied) {
+//         await Swal.fire("Changes are not saved", "", "info");
+//     }
+// };
 
   const handleDeleteProduct = async (product) => {
     // Show confirmation SweetAlert
@@ -305,7 +276,7 @@ const handleSaveChanges = async () => {
     <>
       <div className="searches row align-items-center gx-3 mt-3">
         {/* Search Input */}
-        <div className="col-12 col-md-8">
+        <div className="col-8">
           <div className="input-group">
             <input
               type="text"
@@ -322,15 +293,17 @@ const handleSaveChanges = async () => {
         </div>
 
         {/* Add Product Button */}
-        <div className="col-12 col-md-4 mt-3 mt-md-0">
-          <button
-            id="addProductBtn"
-            className="btn w-50 d-flex align-items-center justify-content-center"
-            onClick={() => toggleModal()}
-          >
-            <i className="bi bi-plus-circle me-2"></i> Add Product
-          </button>
-        </div>
+        <div className="col-4">
+        <button
+          id="addProductBtn"
+          className="btn p-3 d-flex align-items-center justify-content-center"
+          onClick={() => toggleModal()}
+        >
+          <i className="bi bi-plus-circle me-2"></i>
+          <span className="d-none d-sm-inline">Add Product</span>
+          <span className="d-inline d-sm-none">Add</span>
+        </button>
+      </div>
       </div>
 
       {/* Responsive Table */}
@@ -660,6 +633,7 @@ const handleSaveChanges = async () => {
                     </label>
                   </div>
                 </div>
+                <div className="text-center">
                 <button
                   type="button"
                   className="btn-save"
@@ -667,6 +641,7 @@ const handleSaveChanges = async () => {
                 >
                   {currentProduct?.pid ? "Update" : "Save"}
                 </button>
+                </div>
               </div>
             </form>
           </div>

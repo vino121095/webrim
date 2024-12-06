@@ -15,13 +15,13 @@ exports.registerUser = async (req, res) => {
     const { username, email, password, confirm_password } = req.body;
 
     if (password !== confirm_password) {
-        return res.status(400).json({ message: 'Passwords do not match' });
+        return res.json({ message: 'Passwords do not match' });
     }
 
     try {
         const existingUser = await User.findOne({ where: { email } });
         if (existingUser) {
-            return res.status(400).json({ message: 'User with this useremail already exists' });
+            return res.json({ message: 'User with this useremail already exists' });
         }
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = await User.create({ 
@@ -50,7 +50,7 @@ exports.registerAdmin = async(req, res)=>{
     try {
         const existingUser = await Admin.findOne({ where: { email } });
         if (existingUser) {
-            return res.status(400).json({ message: 'User with this useremail already exists' });
+            return res.json({ message: 'User with this useremail already exists' });
         }
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = await Admin.create({ 
@@ -78,7 +78,7 @@ exports.loginUser = async (req, res) => {
         const admin = await Admin.findOne({ where: { email } });;
 
         if (!user && !admin) {
-            return res.status(400).json({ message: 'Invalid email or password' });
+            return res.json({ message: 'Invalid email or password' });
         }
 
         let role;
@@ -96,7 +96,7 @@ exports.loginUser = async (req, res) => {
         }
 
         if (!isMatch) {
-            return res.status(400).json({ message: 'Invalid email or password' });
+            return res.json({ message: 'Invalid email or password' });
         }
 
         // Generate JWT token
@@ -182,7 +182,7 @@ exports.getAllUsers = async (req, res) => {
 
         // Check if any users exist
         if (!users || users.length === 0) {
-            return res.status(404).json({
+            return res.json({
                 message: 'No users found'
             });
         }

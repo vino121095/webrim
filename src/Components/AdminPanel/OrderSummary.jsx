@@ -110,12 +110,12 @@ const OrderSummary = () => {
     <div className="container mt-4">
       <div className="searches row align-items-center gx-3 mt-3 mb-3">
         {/* Search Input - Updated */}
-        <div className="col-12 col-md-8">
+        <div className="col-8 col-md-8">
           <div className="input-group">
             <input
               type="text"
               className="form-control"
-              placeholder="Search by Order ID, Customer Name, or Status"
+              placeholder="Search"
               value={searchTerm}
               onChange={handleSearchChange}
             />
@@ -123,12 +123,14 @@ const OrderSummary = () => {
         </div>
 
         {/* Add Product Button */}
-        <div className="col-12 col-md-4 mt-3 mt-md-0">
+        <div className="col-4 col-md-4">
           <button
             id="addProductBtn"
-            className="btn p-3 d-flex align-items-center justify-content-center"
+            className="btn p-3 p-md-3 d-flex align-items-center justify-content-center"
           >
-            <i className="bi bi-plus-circle me-2"></i> Add Product
+            <i className="bi bi-plus-circle me-2"></i>
+            <span className="d-none d-sm-inline">Add Product</span>
+            <span className="d-inline d-sm-none">Add</span>
           </button>
         </div>
       </div>

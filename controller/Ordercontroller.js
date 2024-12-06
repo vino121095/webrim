@@ -99,6 +99,52 @@ exports.getAllOrders = async (req, res) => {
         });
     }
 };
+
+exports.getAllOrdersForNotify = async (req, res) => {
+    try {
+        const orders = await Order.findAll({
+            include: [
+                {
+                    model: User, 
+                    as: 'user',
+                    attributes: ['username']
+                },
+                {
+                    model: OrderItem,
+                    include: [{
+                        model: Product,
+                        include: [{
+                            model: ProductImage,
+                            as: 'images',
+                            attributes: ['image_path']
+                        }]
+                    }]
+                }
+            ],
+            order: [
+                ['updatedAt', 'DESC'], // Orders updated most recently first
+                ['createdAt', 'DESC']  // Fallback to creation date if no updates
+            ]
+        });
+
+        if (!orders || orders.length === 0) {
+            return res.json({
+                message: 'No orders found'
+            });
+        }
+        res.status(200).json({
+            message: 'Orders retrieved successfully',
+            data: orders
+        });
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        res.status(500).json({
+            error: 'Failed to retrieve orders',
+            details: error.message
+        });
+    }
+};
+
  
 // Get orders by user ID
 exports.getOrdersByUserId = async (req, res) => {

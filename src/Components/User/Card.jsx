@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { useNavigate } from 'react-router-dom';
+import UserSearch from "./UserSearch";
+import SearchBarLoction from "./SearchBarLoction";
 import axios from 'axios';
 import baseurl from '../ApiService/ApiService';
-
+import Swal from 'sweetalert2';
 const Card = () => {
   const [products, setProducts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const navigate = useNavigate();
   const LoggedUser = JSON.parse(localStorage.getItem('userData'));
   const [formData, setFormData] = useState({
@@ -23,9 +26,11 @@ const Card = () => {
       try {
         const response = await axios.get(`${baseurl}/api/getAllProducts`);
         setProducts(response.data || []);
+        setFilteredProducts(response.data || []);
       } catch (error) {
         console.error('Error fetching products:', error);
         setProducts([]);
+        setFilteredProducts([]);
       }
     };
     fetchProducts();
@@ -57,7 +62,13 @@ const Card = () => {
     event.preventDefault();
 
     if (!selectedProduct || !formData.quantity || !formData.distributor_name || !formData.distributor_location || !formData.phone_number) {
-      alert("Please fill in all required fields.");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Incomplete Form',
+        text: 'Please fill in all required fields.',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3085d6'
+      });
       return;
     }
 
@@ -72,38 +83,82 @@ const Card = () => {
         distributor_location: formData.distributor_location,
         phone_number: formData.phone_number,
       });
-
-
+    
       if (cartResponse.status === 201) {
-        alert("Product added to cart successfully!");
-        setIsModalOpen(false);
-        navigate('/User/Cart');
+        Swal.fire({
+          icon: 'success',
+          title: 'Success',
+          text: "Product added to cart successfully!",
+          confirmButtonText: 'Go to Cart',
+          cancelButtonText: 'Continue Shopping',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            navigate('/User/Cart');
+          } else {
+            setIsModalOpen(false);
+          }
+        });
       } else {
-        alert("Submission failed. Please try again.");
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: "Submission failed. Please try again.",
+          confirmButtonText: 'Retry',
+          confirmButtonColor: '#d33'
+        });
       }
     } catch (error) {
       console.error("Submission Error:", error);
-      alert("Failed to submit. Please check your network or contact support.");
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: "Failed to submit. Please check your network or contact support.",
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#d33'
+      });
     }
+  };
+  const handleSearch = (searchTerm) => {
+    if (!searchTerm) {
+      setFilteredProducts(products);
+      return;
+    }
+
+    const filtered = products.filter((product) => {
+      if (LoggedUser?.role === 'technician') {
+        return product.companyname?.toLowerCase().includes(searchTerm.toLowerCase());
+      } else if (LoggedUser?.role === 'distributor') {
+        return product.product_name?.toLowerCase().includes(searchTerm.toLowerCase()) || product.brand_name?.toLowerCase().includes(searchTerm.toLowerCase());;
+      }
+      return true;
+    });
+
+    setFilteredProducts(filtered);
   };
 
   return (
-    <div className="container mt-5 mb-3">
-      <div className="row g-4">
-        {products.length > 0 ? (
-          products.map((product) => (
-            <div key={product.pid} className="col-6 col-sm-6 col-md-4 col-lg-3">
-              <div className="card product-card h-100">
-                <img
-                  src={`${baseurl}/${product.images[0]?.image_path || 'default.jpg'}`}
-                  className="card-img-top img-fluid rounded-3 p-3"
-                  alt={product.product_name}
-                />
-                <div className="card-body d-flex flex-column">
+    <>
+      <UserSearch onSearch={handleSearch} />
+      <SearchBarLoction />
+      <div className="container mt-5 mb-3">
+        <div className="row g-4">
+          {filteredProducts.length > 0 ? (
+            filteredProducts.map((product) => (
+              <div key={product.pid} className="col-6 col-sm-6 col-md-4 col-lg-3">
+                <div className="card product-card h-100">
+                  <img
+                    src={`${baseurl}/${product.images[0]?.image_path || 'default.jpg'}`}
+                    className="card-img-top img-fluid rounded-3 p-3"
+                    alt={product.product_name}
+                  />
+                  <div className="card-body d-flex flex-column">
                   <h5 className="card-title">{product.product_name}</h5>
                   <span></span>
-                  <h5 className="card-text mt-3">Rs-{product.mrp_rate}</h5>
-                  <div className='mb-3 d-flex justify-content-between'><small className="">{product.brand_name}</small>
+                  <h5 className="card-text mt-3"><i class="bi bi-currency-rupee"></i> {product.mrp_rate}</h5>
+                  <div className='d-block d-lg-flex align-items-center justify-content-between'><small className="">{product.brand_name}</small>
                     <p className={product.stocks === 0 ? 'text-danger' : ''}>
                       Stocks : {product.stocks === 0 ? 'Out of stock' : product.stocks}
                     </p>
@@ -120,84 +175,86 @@ const Card = () => {
                   </div>
                 </div>
               </div>
-              ))
-              ) : (
-              <p>No products available</p>
-        )}
-            </div>
-      { isModalOpen && selectedProduct && (
-              <div className="modal-overlay">
-                <div className="modal-content">
-                  <span className="close-button" onClick={toggleModal}>
-                    &times;
-                  </span>
-                  <h4 className="sideHeading mb-4">
-                    Tell us what you need, and we'll help you get quotes
-                  </h4>
-                  <form onSubmit={handleSubmit}>
-                    <div className="mb-3">
-                      <label>Product Name</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={selectedProduct.product_name}
-                        readOnly
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label>Quantity</label>
-                      <input
-                        type="number"
-                        name="quantity"
-                        className="form-control"
-                        placeholder="Enter Quantity"
-                        value={formData.quantity}
-                        onChange={handleInputChange}
-                        min="1"
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label>Distributor Name</label>
-                      <input
-                        type="text"
-                        name="distributor_name"
-                        className="form-control"
-                        placeholder="Enter Your Name"
-                        value={formData.distributor_name}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label>Distributor Location</label>
-                      <input
-                        type="text"
-                        name="distributor_location"
-                        className="form-control"
-                        placeholder="Enter Your Location"
-                        value={formData.distributor_location}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label>Distributor Phone Number</label>
-                      <input
-                        type="tel"
-                        name="phone_number"
-                        className="form-control"
-                        placeholder="Enter Your Phone Number"
-                        value={formData.phone_number}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                    <button type="submit" className="btn btn-primary">
-                      Submit Requirement
-                    </button>
-                  </form>
+            ))
+          ) : (
+            <p>No products available</p>
+          )}
+        </div>
+
+        {isModalOpen && selectedProduct && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <span className="close-button" onClick={toggleModal}>
+                &times;
+              </span>
+              <h4 className="sideHeading mb-4">
+                Tell us what you need, and we'll help you get quotes
+              </h4>
+              <form onSubmit={handleSubmit}>
+                <div className="mb-3">
+                  <label>Product Name</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={selectedProduct.product_name}
+                    readOnly
+                  />
                 </div>
-              </div>
-            )}
+                <div className="mb-3">
+                  <label>Quantity</label>
+                  <input
+                    type="number"
+                    name="quantity"
+                    className="form-control"
+                    placeholder="Enter Quantity"
+                    value={formData.quantity}
+                    onChange={handleInputChange}
+                    min="1"
+                  />
+                </div>
+                <div className="mb-3">
+                  <label>Distributor Name</label>
+                  <input
+                    type="text"
+                    name="distributor_name"
+                    className="form-control"
+                    placeholder="Enter Your Name"
+                    value={formData.distributor_name}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="mb-3">
+                  <label>Distributor Location</label>
+                  <input
+                    type="text"
+                    name="distributor_location"
+                    className="form-control"
+                    placeholder="Enter Your Location"
+                    value={formData.distributor_location}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="mb-3">
+                  <label>Distributor Phone Number</label>
+                  <input
+                    type="tel"
+                    name="phone_number"
+                    className="form-control"
+                    placeholder="Enter Your Phone Number"
+                    value={formData.phone_number}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <button type="submit" className="btn btn-primary">
+                  Submit Requirement
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
-      );
+    </>
+  );
 };
 
       export default Card;

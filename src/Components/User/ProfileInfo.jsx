@@ -4,7 +4,7 @@ import baseurl from '../ApiService/ApiService'
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-
+import Swal from 'sweetalert2';
 const ProfileInfo = () => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('userData'));
@@ -75,16 +75,26 @@ const ProfileInfo = () => {
         ...formData,
         credit_limit: parseFloat(formData.credit_limit)
       };
-
+    
       // Make API call
       const response = await axios.put(`${baseurl}/api/user/${user.uid}`, submitData);
       
       // Handle successful response
-      alert('Profile updated successfully!');
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: 'Profile updated successfully!',
+        confirmButtonText: 'OK'
+      });
       console.log('Response:', response.data);
     } catch (error) {
       console.error('Error updating profile:', error);
-      alert('Failed to update profile. Please try again.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Update Failed',
+        text: 'Failed to update profile. Please try again.',
+        confirmButtonText: 'OK'
+      });
     }
   };
   const customStyle = {
