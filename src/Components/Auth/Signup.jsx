@@ -91,6 +91,7 @@ const Signup = () => {
           confirmButtonText: 'OK',
           confirmButtonColor: '#3085d6'
         });
+        navigate('/Auth/Login');
         setFormData({
           username: '',
           email: '',

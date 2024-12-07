@@ -441,7 +441,7 @@ const AdminNavBar = () => {
         tabIndex="-1"
         aria-labelledby="logoutModalLabel"
         aria-hidden="true"
-        data-bs-backdrop="false"
+        // data-bs-backdrop="false"
       >
         <div className="modal-dialog modal-dialog-centered modal-sm">
           <div className="modal-content logout-modal-content" style={{ height: '300px', display: 'flex', justifyContent: 'center' }}>

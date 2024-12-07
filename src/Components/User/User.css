@@ -64,9 +64,42 @@
   }
 
   .add-post-button {
+    background-color: #F24E1E;
+    color: white;
     height: 45px;
   }
+  .add-post-button:hover{
+    background-color: #F24E1E;
+    color: white;
+  }
+  .add-post-button:active{
+    background-color: #F24E1E !important;
+    color: white !important;
+  }
+  .requirment-btn{
+    background-color: #F24E1E !important;
+    color: white !important;
+  }
+  .profile-update-btn{
+    background-color: #F24E1E !important;
+  }
+  /* Location search  bar */
+  .location_search_links li a:hover{
+    color: #0024FF !important;
+  }
 
+  .feed_views_search div{
+    justify-content: flex-start !important;
+    margin-top: 0 !important;
+  }
+  .feed_views_search .inner_div{
+    width: 100% !important;
+  }
+  .container.feed_views_main{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
   /* Feed Views */
   .modal-overlay {
     position: fixed;
@@ -151,6 +184,29 @@
   @media (max-width: 992px) {
     .forum-button{
       margin-bottom: 30%;
+    }
+    .feed_views_search .inner_div{
+      width: 100% !important;
+    }
+    .feed_views_search{
+      width: 100% !important;
+    }
+    .container.feed_views_main{
+      width: 100% !important;
+      /* margin: 0 !important; */
+    }
+    .feed_views_search div {
+      justify-content: center !important;
+    }
+    .add-post-btn-div{
+      width: 100% !important;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px !important;
+    }
+    .add-post-button{
+      width: 50% !important;
     }
   }
 
