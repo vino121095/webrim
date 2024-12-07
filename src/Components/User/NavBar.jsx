@@ -311,7 +311,7 @@ const handleMoveToMain = ()=>{
                 src={notify}
                 alt="Notifications"
                 onClick={handleClickNotify}
-                style={{ cursor: "pointer" }}
+                style={{ width: "24px", height: "24px", cursor: "pointer" }}
               />
               {/* Profile Picture */}
               <img
@@ -403,7 +403,7 @@ const handleMoveToMain = ()=>{
                     {/* Logout Link */}
                     <li className="py-2">
                       <a
-                        href="/"
+                        href="#"
                         className="text-white text-decoration-none px-3 d-flex align-items-center"
                         onClick={handleLogout}
                       >

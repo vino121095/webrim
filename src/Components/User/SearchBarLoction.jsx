@@ -40,7 +40,7 @@ const SearchBarLocation = ({ onLocationSearch }) => {
               overflowX: "auto",
             }}
           >
-            <ul className="d-flex list-unstyled align-items-center mb-0 w-100">
+            <ul className="d-flex list-unstyled align-items-center mb-0 w-100 location_search_links">
               {/* Search Input */}
               <li className="flex-grow-1">
                 <input
@@ -69,7 +69,7 @@ const SearchBarLocation = ({ onLocationSearch }) => {
                   style={{ whiteSpace: "nowrap" }}
                   onClick={() => onLocationSearch("nearme")}
                 >
-                  <i className="bi bi-crosshair me-2 text-dark"></i>
+                  <i className="bi bi-crosshair me-2"></i>
                   <span>Near Me</span>
                 </a>
               </li>

@@ -109,7 +109,6 @@ const ProfileInfo = () => {
   };
 
   const profileUpdateBtn = {
-    backgroundColor: '#28a745',
     color: 'white',
     padding: '10px 20px',
     fontSize: '15px',
@@ -268,7 +267,7 @@ const ProfileInfo = () => {
             </div>
           </div>
 
-          <button type="submit" className="btn" style={profileUpdateBtn}>
+          <button type="submit" className="btn profile-update-btn" style={profileUpdateBtn}>
             Update
           </button>
         </form>

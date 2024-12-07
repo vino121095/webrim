@@ -45,10 +45,10 @@ const Card = () => {
   // Open modal and set selected product
   const handleAddToCartClick = (product) => {
     setSelectedProduct(product);
-    setFormData(prevData => ({
-      ...prevData,
-      quantity: 1,
-    }));
+    // setFormData(prevData => ({
+    //   ...prevData,
+    //   quantity: 1,
+    // }));
     setIsModalOpen(true);
   };
 
@@ -78,7 +78,7 @@ const Card = () => {
         user_id: LoggedUser.uid,
         product_id: selectedProduct.product_id,
         product_name: selectedProduct.product_name,
-        quantity: formData.quantity,
+        quantity:  Number(formData.quantity),
         distributor_name: formData.distributor_name,
         distributor_location: formData.distributor_location,
         phone_number: formData.phone_number,
@@ -138,11 +138,14 @@ const Card = () => {
 
     setFilteredProducts(filtered);
   };
+  const handleLocationSearch = (location) => {
+   
+  };
 
   return (
     <>
       <UserSearch onSearch={handleSearch} />
-      <SearchBarLoction />
+      <SearchBarLoction onLocationSearch={handleLocationSearch} />
       <div className="container mt-5 mb-3">
         <div className="row g-4">
           {filteredProducts.length > 0 ? (

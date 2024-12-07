@@ -70,7 +70,10 @@ const StoreDetails = () => {
     const handleSearch = (searchTerm) => {
         const query = searchTerm.toLowerCase();
         setSearchQuery(query);
-
+        if (!query) {
+            setFilteredDistributors(distributors);
+            return;
+        }
         const filtered = distributors.filter((distributor) =>
             distributor.companyname?.toLowerCase().includes(query) || distributor.location?.toLowerCase().includes(query.toLowerCase())
         );
