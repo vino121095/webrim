@@ -394,10 +394,26 @@ a.navbar-brand{
   .setting-user{
     background-color: #f34e1e;
   }
+  .setting-sidebar{
+    height: 100% !important;
+  }
+  .setting-sidebar a{
+    height: 25% !important;
+  }
   .setting-sidebar a:hover{
     background-color: #f1f1f1;
   }
-  
+  .settings-checkbox:checked{
+    background-color: #F24E1E !important;
+    border-color: #F24E1E !important;
+  }
+  .settings-icon{
+    background-color: rgba(242, 78, 30, 0.1) !important;
+    height: max-content !important;
+    i{
+      color: #F24E1E !important;
+    }
+  }
   /* Product view details */
   /* Container for overall layout */
 .product-details-container {

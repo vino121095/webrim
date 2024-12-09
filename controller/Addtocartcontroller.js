@@ -10,7 +10,7 @@ exports.addToCart = async (req, res) => {
     product_name, 
     quantity, 
     distributor_name, 
-    distributor_location, 
+    // distributor_location, 
     phone_number 
   } = req.body;
 
@@ -53,7 +53,7 @@ exports.addToCart = async (req, res) => {
         product_name,
         quantity, 
         distributor_name, 
-        distributor_location, 
+        // distributor_location, 
         phone_number 
       });
     }
