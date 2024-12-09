@@ -403,7 +403,7 @@ const EnterpriseAi = () => {
 
       {/* Order Summary and Charts Row */}
       <div className="row">
-      <div className="col-md-4 mb-4">
+      <div className="col-md-4">
           <div className="card h-100">
             <div className="card-body">
               <h5 className="card-title mb-4">Order Summary</h5>

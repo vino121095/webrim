@@ -33,9 +33,10 @@ const Technicians = () => {
 
   const filteredTechnicians = technicians.filter((technician) =>
     Object.values(technician).some((value) =>
-      value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      value && value.toString().toLowerCase().includes(searchTerm.toLowerCase())
     )
   );
+  
 
   const indexOfLastTechnician = currentPage * itemsPerPage;
   const indexOfFirstTechnician = indexOfLastTechnician - itemsPerPage;

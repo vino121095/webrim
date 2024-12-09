@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import NavBar from "./NavBar";
+import UserSearch from "./UserSearch";
 import baseurl from "../ApiService/ApiService";
 import Compressor from "./Assets/compressor-img.png";
 import Swal from "sweetalert2";
@@ -8,6 +9,8 @@ const FeedViews = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredForums, setFilteredForums] = useState([]);
   const [selectedProductImage, setSelectedProductImage] = useState("");
   const user = JSON.parse(localStorage.getItem('userData'));
   const [formData, setFormData] = useState({
@@ -38,7 +41,8 @@ const FeedViews = () => {
   const fetchForums = async () => {
     try {
       const response = await axios.get(`${baseurl}/api/forums`);
-      setForums(response.data?.data || []);
+      const userForums = response.data?.data.filter(forum => forum.user_id === user.uid);
+      user.role === 'technician' ? setForums(userForums || []) : setForums(response.data?.data || []);
     } catch (error) {
       console.error("Error fetching forums:", error);
     }
@@ -183,13 +187,30 @@ const FeedViews = () => {
       console.error('Forum take error:', error);
     }
   };
+  
+  const handleSearch = (searchTerm) => {
+    const query = searchTerm.toLowerCase();
+    setSearchQuery(query);
+    
+    if (!query) {
+      setFilteredForums(forums);
+      return;
+    }
+    
+    const filtered = forums.filter((forum) =>
+      forum.product_name?.toLowerCase().includes(query) ||
+      forum.name?.toLowerCase().includes(query)
+    );
+    
+    setFilteredForums(filtered);
+  };
 
   return (
     <>
       <NavBar />
-      <div className="container py-3">
-        <div className="row justify-content-center align-items-center mt-4">
-          <div className="col-12 col-md-8 col-lg-6 mb-3 mb-md-0">
+      <div className="container py-3 feed_views_main">
+        <div className="row w-100 justify-content-evenly align-items-center mt-4">
+          {/* <div className="col-12 col-md-8 col-lg-6 mb-3 mb-md-0">
             <div className="feedviews-search-bar d-flex align-items-center border rounded-4 px-3">
               <input
                 type="text"
@@ -203,13 +224,15 @@ const FeedViews = () => {
                 <i className="bi bi-search"></i>
               </div>
             </div>
-          </div>
+          </div> */}
+          <div className="col-10  w-75 feed_views_search" > <UserSearch onSearch={handleSearch} /></div>
+         
           {user.role === 'distributor' ? (
             <div></div>
           ) : (
-            <div className="col-12 col-md-4 col-lg-2 text-center text-md-start">
+            <div className="col-12 col-md-2 col-lg-2 text-center text-md-start add-post-btn-div">
               <button
-                className="btn btn-primary d-flex align-items-center justify-content-center rounded-3 w-100 add-post-button"
+                className="btn d-flex align-items-center justify-content-center rounded-3 w-100 add-post-button"
                 onClick={toggleModal}
               >
                 <i className="bi bi-box me-2"></i> Add Post
@@ -223,7 +246,7 @@ const FeedViews = () => {
       <div className="container mt-4">
         <div className="row justify-content-center">
           {forums.length > 0 ? (
-            forums.map((forum) => {
+            (searchQuery ? filteredForums : forums).map((forum) => {
               const matchingProduct = products.find(
                 (product) => product.product_name === forum.product_name
               );
@@ -345,7 +368,7 @@ const FeedViews = () => {
                   onChange={handleInputChange}
                 />
               </div>
-              <button type="submit" className="btn btn-primary">
+              <button type="submit" className="btn requirment-btn">
                 Submit Requirement
               </button>
             </form>

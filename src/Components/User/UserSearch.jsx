@@ -1,39 +1,113 @@
-import React, { useState, useEffect } from 'react';
-
-const UserSearch = ({onSearch}) => {
+import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
+const UserSearch = ({ onSearch }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const handleSearch = (e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    if (onSearch) {
-      onSearch(value);
-    }
-  };
+  const [isListening, setIsListening] = useState(false);
+  const [spokenWords, setSpokenWords] = useState([]);
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
-
+  const location = useLocation();
+  const recognitionRef = useRef(null);
+  const user = JSON.parse(localStorage.getItem('userData'));
   useEffect(() => {
     const handleResize = () => setScreenWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Initialize Speech Recognition
+  const initSpeechRecognition = () => {
+    // Check browser compatibility
+    const SpeechRecognition =
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert('Speech Recognition is not supported in this browser.');
+      return null;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.lang = 'en-US'; // You can change the language
+    recognition.interimResults = false;
+
+    // Handle successful speech recognition
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript.trim();
+
+      // Update search term and trigger search
+      setSearchTerm(transcript);
+      handleSearch(transcript);
+
+      // Stop listening
+      setIsListening(false);
+    };
+
+    // Handle errors
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+      setSpokenWords([]);
+    };
+
+    // Handle end of speech recognition
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    return recognition;
+  };
+
+  const handleSearch = (input) => {
+    let value;
+
+    if (typeof input === "string") {
+      value = input;
+    } else {
+      value = input.target.value;
+    }
+
+    setSearchTerm(value);
+
+    if (onSearch) {
+      onSearch(value);
+    }
+  };
+
+  const handleVoiceSearch = () => {
+    // Lazy initialize speech recognition
+    if (!recognitionRef.current) {
+      recognitionRef.current = initSpeechRecognition();
+    }
+
+    if (recognitionRef.current) {
+      if (isListening) {
+        recognitionRef.current.stop();
+        setIsListening(false);
+        setSpokenWords([]);
+      } else {
+        recognitionRef.current.start();
+        setIsListening(true);
+        setSpokenWords([]);
+      }
+    }
+  };
+
   return (
     <>
       {screenWidth > 768 ? (
         <div
-          className="w-50 d-flex align-items-center border px-3 mt-5"
+          className="w-100 d-flex align-items-center justify-content-center mt-5"
           style={{
             height: "50px",
-            width: "100%",
-            borderRadius: "20px",
-            marginLeft: "25%",
           }}
         >
+          <div className={`d-flex align-items-center border px-3 ${user.role === 'distributor' && location.pathname === '/user/FeedViews' ? 'w-100' : 'w-50'} inner_div`} style={{borderRadius: "20px"}}> 
           {/* Search Input */}
           <input
             type="text"
             className="form-control border-0 shadow-none px-3"
-            placeholder="Search"
+            placeholder={isListening ? "Listening..." : "Search"}
             value={searchTerm}
             onChange={handleSearch}
             style={{ flex: 1 }}
@@ -42,43 +116,69 @@ const UserSearch = ({onSearch}) => {
           {/* Icons Container */}
           <div className="d-flex align-items-center gap-3">
             {/* Close Icon */}
-            <i className="bi bi-x-lg"></i>
+            <i className="bi bi-x-lg"
+              onClick={() => {
+                handleSearch("");
+              }}
+              style={{ cursor: "pointer" }}
+            ></i>
 
             {/* Divider */}
             <div className="vr" style={{ height: "40px", backgroundColor: "#808080" }}></div>
 
             {/* Microphone Icon */}
-            <i className="bi bi-mic-fill"></i>
+            <i
+              className={`bi ${isListening ? 'bi-mic-fill text-danger' : 'bi-mic'}`}
+              onClick={handleVoiceSearch}
+              style={{
+                cursor: "pointer",
+                color: isListening ? 'red' : 'inherit'
+              }}
+            ></i>
 
             {/* Search Icon */}
             <i className="bi bi-search"></i>
           </div>
+          </div>
         </div>
       ) : (
         <div
-          className="d-flex align-items-center border px-3"
+          className="d-flex align-items-center justify-content-center"
           style={{
             height: "40px",
-            width: "50%",
+            width: "100%",
             marginTop: "3%",
-            borderRadius: "20px",
-            marginLeft: "25%",
           }}
         >
           {/* Search Input */}
-          <input
-            type="text"
-            className="form-control border-0 shadow-none px-3"
-            placeholder="Search"
-            value={searchTerm}
-            onChange={handleSearch}
-            style={{ flex: 1 }}
-          />
+          <div className='d-flex align-items-center border px-3 inner_div'
+            style={{ borderRadius: "20px", width: '80%' }}
+          >
+            <input
+              type="text"
+              className="form-control border-0 shadow-none px-3"
+              placeholder={isListening ? "Listening..." : "Search"}
+              value={searchTerm}
+              onChange={handleSearch}
+              style={{ flex: 1 }}
+            />
 
-          {/* Icons Container */}
-          <div className="d-flex align-items-center gap-3">
-            {/* Search Icon */}
-            <i className="bi bi-search"></i>
+            {/* Icons Container */}
+            <div className="d-flex align-items-center gap-3">
+              {/* Search Icon */}
+              <i className="bi bi-search"></i>
+              <div className="vr" style={{ height: "40px", backgroundColor: "#808080" }}></div>
+
+              {/* Microphone Icon */}
+              <i
+                className={`bi ${isListening ? 'bi-mic-fill text-danger' : 'bi-mic'}`}
+                onClick={handleVoiceSearch}
+                style={{
+                  cursor: "pointer",
+                  color: isListening ? 'red' : 'inherit'
+                }}
+              ></i>
+            </div>
           </div>
         </div>
       )}
