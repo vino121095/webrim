@@ -15,10 +15,10 @@
     padding: 0 2% 0 2%;
   }
 
-  .mobile-logo{
+  /* .mobile-logo{
     width: 18% !important;
     height: 15% !important;
-  }
+  } */
   
   .navbar img {
     display: block;
@@ -99,6 +99,19 @@
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+  .addtocart-count{
+    position: relative !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px !important;
+    height: 50px !important;
+  }
+  .addtocart-count-icon{
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
   }
   /* Feed Views */
   .modal-overlay {

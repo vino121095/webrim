@@ -17,8 +17,7 @@ const Card = () => {
   const [formData, setFormData] = useState({
     quantity: 1,
     distributor_name: LoggedUser?.username || "",
-    distributor_location: "",
-    phone_number: LoggedUser?.mobile_number || "",
+    phone_number: LoggedUser?.mobile_number || ""
   });
 
   useEffect(() => {
@@ -43,44 +42,40 @@ const Card = () => {
   };
 
   // Open modal and set selected product
-  const handleAddToCartClick = (product) => {
-    setSelectedProduct(product);
-    // setFormData(prevData => ({
+  // const handleAddToCartClick = (product) => {
+  //   setSelectedProduct(product);
+  //   // setFormData(prevData => ({
+  //   //   ...prevData,
+  //   //   quantity: 1,
+  //   // }));
+  //   setIsModalOpen(true);
+  // };
+  const handleAddToCartClick = async(product)=>{
+    // setSelectedProduct(product);
+    //   setFormData(prevData => ({
     //   ...prevData,
     //   quantity: 1,
     // }));
-    setIsModalOpen(true);
-  };
-
-  // Close modal
-  const toggleModal = () => {
-    setIsModalOpen(!isModalOpen);
-  };
-
-  // Handle form submission
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    if (!selectedProduct || !formData.quantity || !formData.distributor_name || !formData.distributor_location || !formData.phone_number) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Incomplete Form',
-        text: 'Please fill in all required fields.',
-        confirmButtonText: 'OK',
-        confirmButtonColor: '#3085d6'
-      });
-      return;
-    }
+    // if (!selectedProduct || !formData.quantity || !formData.distributor_name || !formData.distributor_location || !formData.phone_number) {
+    //   Swal.fire({
+    //     icon: 'warning',
+    //     title: 'Incomplete Form',
+    //     text: 'Please fill in all required fields.',
+    //     confirmButtonText: 'OK',
+    //     confirmButtonColor: '#3085d6'
+    //   });
+    //   return;
+    // }
 
     try {
       // First, add to cart
       const cartResponse = await axios.post(`${baseurl}/api/addtocart`, {
         user_id: LoggedUser.uid,
-        product_id: selectedProduct.product_id,
-        product_name: selectedProduct.product_name,
-        quantity:  Number(formData.quantity),
+        product_id: product.product_id,
+        product_name: product.product_name,
+        quantity:  formData.quantity,
         distributor_name: formData.distributor_name,
-        distributor_location: formData.distributor_location,
+        // distributor_location: LoggedUser.location,
         phone_number: formData.phone_number,
       });
     
@@ -120,7 +115,76 @@ const Card = () => {
         confirmButtonColor: '#d33'
       });
     }
-  };
+  }
+  // Close modal
+  // const toggleModal = () => {
+  //   setIsModalOpen(!isModalOpen);
+  // };
+
+  // Handle form submission
+  // const handleSubmit = async (event) => {
+  //   event.preventDefault();
+
+  //   if (!selectedProduct || !formData.quantity || !formData.distributor_name || !formData.distributor_location || !formData.phone_number) {
+  //     Swal.fire({
+  //       icon: 'warning',
+  //       title: 'Incomplete Form',
+  //       text: 'Please fill in all required fields.',
+  //       confirmButtonText: 'OK',
+  //       confirmButtonColor: '#3085d6'
+  //     });
+  //     return;
+  //   }
+
+  //   try {
+  //     // First, add to cart
+  //     const cartResponse = await axios.post(`${baseurl}/api/addtocart`, {
+  //       user_id: LoggedUser.uid,
+  //       product_id: selectedProduct.product_id,
+  //       product_name: selectedProduct.product_name,
+  //       quantity:  Number(formData.quantity),
+  //       distributor_name: formData.distributor_name,
+  //       distributor_location: formData.distributor_location,
+  //       phone_number: formData.phone_number,
+  //     });
+    
+  //     if (cartResponse.status === 201) {
+  //       Swal.fire({
+  //         icon: 'success',
+  //         title: 'Success',
+  //         text: "Product added to cart successfully!",
+  //         confirmButtonText: 'Go to Cart',
+  //         cancelButtonText: 'Continue Shopping',
+  //         showCancelButton: true,
+  //         confirmButtonColor: '#3085d6',
+  //         cancelButtonColor: '#d33'
+  //       }).then((result) => {
+  //         if (result.isConfirmed) {
+  //           navigate('/User/Cart');
+  //         } else {
+  //           setIsModalOpen(false);
+  //         }
+  //       });
+  //     } else {
+  //       Swal.fire({
+  //         icon: 'error',
+  //         title: 'Oops...',
+  //         text: "Submission failed. Please try again.",
+  //         confirmButtonText: 'Retry',
+  //         confirmButtonColor: '#d33'
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error("Submission Error:", error);
+  //     Swal.fire({
+  //       icon: 'error',
+  //       title: 'Error',
+  //       text: "Failed to submit. Please check your network or contact support.",
+  //       confirmButtonText: 'OK',
+  //       confirmButtonColor: '#d33'
+  //     });
+  //   }
+  // };
   const handleSearch = (searchTerm) => {
     if (!searchTerm) {
       setFilteredProducts(products);
@@ -161,10 +225,10 @@ const Card = () => {
                   <h5 className="card-title">{product.product_name}</h5>
                   <span></span>
                   <h5 className="card-text mt-3"><i class="bi bi-currency-rupee"></i> {product.mrp_rate}</h5>
-                  <div className='d-block d-lg-flex align-items-center justify-content-between'><small className="">{product.brand_name}</small>
-                    <p className={product.stocks === 0 ? 'text-danger' : ''}>
+                  <div className='d-block d-lg-flex align-items-center justify-content-between mb-3'><small className="">{product.brand_name}</small>
+                    {/* <p className={product.stocks === 0 ? 'text-danger' : ''}>
                       Stocks : {product.stocks === 0 ? 'Out of stock' : product.stocks}
-                    </p>
+                    </p> */}
                   </div>
                     <div className="text-center mt-auto">
                       <a
@@ -184,7 +248,7 @@ const Card = () => {
           )}
         </div>
 
-        {isModalOpen && selectedProduct && (
+        {/* {isModalOpen && selectedProduct && (
           <div className="modal-overlay">
             <div className="modal-content">
               <span className="close-button" onClick={toggleModal}>
@@ -254,7 +318,7 @@ const Card = () => {
               </form>
             </div>
           </div>
-        )}
+        )} */}
       </div>
     </>
   );

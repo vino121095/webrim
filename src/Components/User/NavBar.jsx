@@ -10,7 +10,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import baseurl from "../ApiService/ApiService";
 import { useNavigate } from "react-router-dom";
-import { X, Info } from 'lucide-react';
+import { X, Info, ShoppingCart } from 'lucide-react';
 import { MdOutlineLogout, MdLogin, MdShoppingCart, MdAccountCircle, MdHistory, MdLogout } from "react-icons/md";
 import { LuUserCircle } from "react-icons/lu";
 
@@ -27,6 +27,7 @@ const NavBar = () => {
   const navigate = useNavigate();
   const [location, setLocation] = useState("Fetching location...");
   const [ismap, setMap] = useState({});
+  const [cartcount, setCartCount] = useState([]);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   useEffect(() => {
     const handleResize = () => setScreenWidth(window.innerWidth);
@@ -36,6 +37,23 @@ const NavBar = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  useEffect(() => {
+    if (loggedUser.uid) {
+      fetchCartData();
+    }
+  }, [loggedUser]);
+
+  const fetchCartData = async () => {
+    try {
+      const response = await axios.get(baseurl + `/api/user/${loggedUser.uid}`);
+      const items = response.data.map((item) => ({
+        ...item,
+      }));
+      setCartCount(items);
+    } catch (error) {
+      console.error("Error fetching cart data:", error);
+    }
+  };
   const fetchNotifications = async () => {
     setLoading(true);
     try {
@@ -221,6 +239,14 @@ const handleMoveToMain = ()=>{
           </div>
 
           <div className="d-flex align-items-center gap-3 position-absolute end-0 me-4">
+            {loggedUser && loggedUser.role === "distributor" && (
+              <div className="addtocart-count"> 
+                <span className="bg-danger text-white px-2 border rounded-circle addtocart-count-icon">{cartcount.length}</span>
+                <a href="/User/Cart" className="text-decoration-none">
+              <span><ShoppingCart className="me-2" color="#000"/></span>
+            </a>
+            </div>
+            )}
             <img
               src={notify}
               style={{ width: "24px", height: "24px", cursor: "pointer" }}
@@ -284,28 +310,38 @@ const handleMoveToMain = ()=>{
       ) : (
         <div>
           {/* Mobile Navigation Bar */}
-          <div className="Mob-nav bg-white d-flex justify-content-between align-items-center px-3 py-2 container-fluid">
+          <div className="Mob-nav bg-white d-flex justify-content-between align-items-center px-3 py-3 container-fluid">
             {/* Hamburger Menu Button */}
-            <button
+            <div className="" style={{width:'30px', height:'30px'}}> <button
               className="navbar-toggler border-0"
               type="button"
               data-bs-toggle="offcanvas"
               data-bs-target="#userSidebar"
               aria-controls="userSidebar"
+              style={{ width: "24px", height: "24px" }}
             >
               <img
                 src={hamburger}
                 alt="Menu"
                 className="img-fluid"
-                style={{ width: "24px", height: "24px" }}
+                
               />
-            </button>
+            </button></div>
+           
 
             {/* Mobile Logo */}
-            <div className="d-flex align-items-center justify-content-center w-100"onClick={handleMoveToMain}>
-            <img src={RIM} alt="RIM Logo" className="mobile-logo"  />
+            <div className="d-flex align-items-center justify-content-center" style={{width:'70px', height:'50px'}} onClick={handleMoveToMain}>
+            <img src={RIM} alt="RIM Logo" className="" style={{width:'70px', height:'50px'}}  />
             </div>
-            <div className="d-flex align-items-center gap-3 position-absolute end-0 me-3">
+            <div className="d-flex align-items-center gap-3 me-3">
+            {loggedUser && loggedUser.role === "distributor" && (
+              <div className="addtocart-count"> 
+                <span className="bg-danger text-white px-2 border rounded-circle addtocart-count-icon">{cartcount.length}</span>
+                <a href="/User/Cart" className="text-decoration-none">
+              <span><ShoppingCart className="me-2" color="#000"/></span>
+            </a>
+            </div>
+            )}
               {" "}
               <img
                 src={notify}

@@ -35,10 +35,10 @@ const addToCartValidationRules = () => {
       .isString()
       .trim(),
     
-    body('distributor_location')
-      .isString()
-      .trim()
-      .withMessage('Distributor location must not exceed 255 characters.'),
+    // body('distributor_location')
+    //   .isString()
+    //   .trim()
+    //   .withMessage('Distributor location must not exceed 255 characters.'),
     
     body('phone_number')
       .optional()
