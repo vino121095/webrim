@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-
+import { useLocation } from 'react-router-dom';
 const UserSearch = ({ onSearch }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [spokenWords, setSpokenWords] = useState([]);
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+  const location = useLocation();
   const recognitionRef = useRef(null);
   const user = JSON.parse(localStorage.getItem('userData'));
   useEffect(() => {
@@ -101,7 +102,7 @@ const UserSearch = ({ onSearch }) => {
             height: "50px",
           }}
         >
-          <div className={`d-flex align-items-center border px-3 ${user.role === 'distributor' ? 'w-100' : 'w-50'} inner_div`} style={{borderRadius: "20px"}}> 
+          <div className={`d-flex align-items-center border px-3 ${user.role === 'distributor' && location.pathname === '/user/FeedViews' ? 'w-100' : 'w-50'} inner_div`} style={{borderRadius: "20px"}}> 
           {/* Search Input */}
           <input
             type="text"
