@@ -11,5 +11,6 @@ router.get('/getShipment/:id',shipmentController.getShipmentById);
 
 router.post('/shipments', shipmentValidationRules(), validateShipment, generateShipmentId, shipmentController.createShipments);
 
+router.delete('/deleteShipment/:sid', shipmentController.deleteShipment);
 
 module.exports = router;

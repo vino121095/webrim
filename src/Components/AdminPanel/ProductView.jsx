@@ -40,7 +40,7 @@ const ProductView = () => {
               <div className="card-body d-flex flex-column">
                 <h5 className="card-title">{product.product_name}</h5>
                 <hr className="my-2" />
-                <h6 className="mb-2">Rs-{product.mrp_rate}</h6>
+                <h6 className="mb-2"><i class="bi bi-currency-rupee"></i> {product.mrp_rate}</h6>
                 <p className="text-muted mb-3">
                   <small>{product.brand_name}</small>
                 </p>

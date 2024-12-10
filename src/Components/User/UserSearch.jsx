@@ -7,7 +7,7 @@ const UserSearch = ({ onSearch }) => {
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
   const location = useLocation();
   const recognitionRef = useRef(null);
-  const user = JSON.parse(localStorage.getItem('userData'));
+  const user = JSON.parse(localStorage.getItem('userData')) || {};
   useEffect(() => {
     const handleResize = () => setScreenWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);

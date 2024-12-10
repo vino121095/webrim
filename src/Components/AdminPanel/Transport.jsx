@@ -395,48 +395,104 @@ const handleDeleteTransport = async (transport) => {
       </div>
 
       {/* Pagination */}
-       <div className="container d-flex justify-content-between align-items-center mt-4">
-        <div className="showing-entries">
-          Showing {filteredTransports.length > 0 ? indexOfFirstItem + 1 : 0} to{" "}
-          {Math.min(indexOfLastItem, filteredTransports.length)} of{" "}
-          {filteredTransports.length} entries
-        </div>
-        <nav aria-label="Transport pagination">
-          <ul className="pagination mb-0">
-            <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-              <button 
-                className="page-link" 
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
+      <div
+  className="productPagination container d-flex mt-2"
+  style={{
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  }}
+>
+  <div className="showing-entries">
+    Showing {filteredTransports.length > 0 ? indexOfFirstItem + 1 : 0} to{" "}
+    {Math.min(indexOfLastItem, filteredTransports.length)} of{" "}
+    {filteredTransports.length} entries
+  </div>
+  <nav aria-label="Transport pagination">
+    <ul className="pagination mb-0 justify-content-center align-items-center" style={{ gap: "5px" }}>
+      <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+        <button 
+          className="page-link" 
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          <ChevronLeft size={20} />
+        </button>
+      </li>
+
+      {/* First page */}
+      <li className={`page-item ${currentPage === 1 ? 'active' : ''}`}>
+        <button
+          className="page-link"
+          onClick={() => handlePageChange(1)}
+        >
+          1
+        </button>
+      </li>
+
+      {/* Show dots if there are many pages before current page */}
+      {currentPage > 3 && (
+        <li className="page-item disabled">
+          <span className="page-link">...</span>
+        </li>
+      )}
+
+      {/* Pages around current page */}
+      {[...Array(totalPages)].map((_, index) => {
+        const pageNumber = index + 1;
+        if (
+          pageNumber !== 1 &&
+          pageNumber !== totalPages &&
+          Math.abs(currentPage - pageNumber) <= 1
+        ) {
+          return (
+            <li 
+              key={pageNumber}
+              className={`page-item ${currentPage === pageNumber ? 'active' : ''}`}
+            >
+              <button
+                className="page-link"
+                onClick={() => handlePageChange(pageNumber)}
               >
-                <ChevronLeft size={20} />
+                {pageNumber}
               </button>
             </li>
-            {getPageNumbers().map(number => (
-              <li 
-                key={number} 
-                className={`page-item ${currentPage === number ? 'active' : ''}`}
-              >
-                <button
-                  className="page-link"
-                  onClick={() => handlePageChange(number)}
-                >
-                  {number}
-                </button>
-              </li>
-            ))}
-            <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-              <button 
-                className="page-link" 
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                <ChevronRight size={20} />
-              </button>
-            </li>
-          </ul>
-        </nav>
-      </div>
+          );
+        }
+        return null;
+      })}
+
+      {/* Show dots if there are many pages after current page */}
+      {currentPage < totalPages - 2 && (
+        <li className="page-item disabled">
+          <span className="page-link">...</span>
+        </li>
+      )}
+
+      {/* Last page */}
+      {totalPages > 1 && (
+        <li className={`page-item ${currentPage === totalPages ? 'active' : ''}`}>
+          <button
+            className="page-link"
+            onClick={() => handlePageChange(totalPages)}
+          >
+            {totalPages}
+          </button>
+        </li>
+      )}
+
+      <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+        <button 
+          className="page-link" 
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          <ChevronRight size={20} />
+        </button>
+      </li>
+    </ul>
+  </nav>
+</div>
 
       {/* View Transport Modal */}
       {isViewModalOpen && viewTransport && (

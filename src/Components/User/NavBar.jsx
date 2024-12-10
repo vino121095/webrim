@@ -331,7 +331,7 @@ const handleMoveToMain = ()=>{
 
             {/* Mobile Logo */}
             <div className="d-flex align-items-center justify-content-center" style={{width:'70px', height:'50px'}} onClick={handleMoveToMain}>
-            <img src={RIM} alt="RIM Logo" className="" style={{width:'70px', height:'50px'}}  />
+            <img src={RIM} alt="RIM Logo" className="" style={{width:'70px', height:'40px'}}  />
             </div>
             <div className="d-flex align-items-center gap-3 me-3">
             {loggedUser && loggedUser.role === "distributor" && (

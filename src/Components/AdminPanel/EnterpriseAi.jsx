@@ -95,7 +95,7 @@ const EnterpriseAi = () => {
     datasets: [
       {
         data: [11, 58, 24], // The data for the chart (percentages)
-        backgroundColor: ['#3498db', '#f39c12', '#95a5a6'], // Colors for each segment
+        backgroundColor: ['#D8E6FF', '#D8E6FF', '#F24E1E'], // Colors for each segment
         hoverOffset: 4,
       },
     ],

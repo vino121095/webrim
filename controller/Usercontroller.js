@@ -203,3 +203,29 @@ exports.getAllUsers = async (req, res) => {
         });
     }
 };
+
+// Delete User by UID
+exports.deleteUser = async (req, res) => {
+    const { id: uid } = req.params; // Extract uid from request parameters
+
+    try {
+        // Check if the user exists
+        const user = await User.findOne({ where: { uid } });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Delete the user
+        await user.destroy();
+
+        res.status(204).json({
+            message: 'User deleted successfully',
+            data: { uid }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+

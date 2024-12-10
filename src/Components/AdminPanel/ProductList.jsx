@@ -43,9 +43,15 @@ const ProductList = () => {
   }, [searchQuery, products]);
 
   const filterProducts = () => {
-    const filtered = products.filter(product =>
-      product.product_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.product_id.toString().toLowerCase().includes(searchQuery.toLowerCase())
+    const filtered = products.filter(
+      (product) =>
+        product.product_name
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        product.product_id
+          .toString()
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())
     );
     setFilteredProducts(filtered);
     setCurrentPage(1); // Reset to first page when search query changes
@@ -62,73 +68,73 @@ const ProductList = () => {
   const handleEditProduct = async (product) => {
     setCurrentProduct(product);
     setExistingImages(
-        product.images.map((img, index) => ({
-            id: index,
-            image_path: img.image_path,
-        })) || []
+      product.images.map((img, index) => ({
+        id: index,
+        image_path: img.image_path,
+      })) || []
     );
     setIsModalOpen(true);
     setError("");
- };
+  };
 
-// You might also want a separate function for saving changes
-// const handleSaveChanges = async () => {
-//     const result = await Swal.fire({
-//         title: "Do you want to save the changes?",
-//         showDenyButton: true,
-//         showCancelButton: true,
-//         confirmButtonText: "Save",
-//         confirmButtonColor: '#F24E1E',
-//         denyButtonText: `Don't save`
-//     });
+  // You might also want a separate function for saving changes
+  // const handleSaveChanges = async () => {
+  //     const result = await Swal.fire({
+  //         title: "Do you want to save the changes?",
+  //         showDenyButton: true,
+  //         showCancelButton: true,
+  //         confirmButtonText: "Save",
+  //         confirmButtonColor: '#F24E1E',
+  //         denyButtonText: `Don't save`
+  //     });
 
-//     if (result.isConfirmed) {
-//         // Call your save function here
-//         // await handleSubmit();  // Your existing submit function
-//         await Swal.fire("Saved!", "", "success");
-//     } else if (result.isDenied) {
-//         await Swal.fire("Changes are not saved", "", "info");
-//     }
-// };
+  //     if (result.isConfirmed) {
+  //         // Call your save function here
+  //         // await handleSubmit();  // Your existing submit function
+  //         await Swal.fire("Saved!", "", "success");
+  //     } else if (result.isDenied) {
+  //         await Swal.fire("Changes are not saved", "", "info");
+  //     }
+  // };
 
   const handleDeleteProduct = async (product) => {
     // Show confirmation SweetAlert
     const result = await Swal.fire({
-        title: "Are you sure?",
-        text: "You won't be able to revert this!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: '#F24E1E',
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Yes, delete it!"
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#F24E1E",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
     });
 
     // If user confirmed
     if (result.isConfirmed) {
-        try {
-            await axios.delete(`${baseurl}/api/deleteProductById/${product.pid}`);
-            
-            // Show success message
-            await Swal.fire({
-                title: "Deleted!",
-                text: "Product has been deleted successfully.",
-                icon: "success"
-            });
-            
-            // Refresh product list
-            fetchProducts();
-        } catch (error) {
-            console.error("Error deleting product:", error);
-            
-            // Show error message
-            await Swal.fire({
-                title: "Error!",
-                text: "Failed to delete product.",
-                icon: "error"
-            });
-        }
+      try {
+        await axios.delete(`${baseurl}/api/deleteProductById/${product.pid}`);
+
+        // Show success message
+        await Swal.fire({
+          title: "Deleted!",
+          text: "Product has been deleted successfully.",
+          icon: "success",
+        });
+
+        // Refresh product list
+        fetchProducts();
+      } catch (error) {
+        console.error("Error deleting product:", error);
+
+        // Show error message
+        await Swal.fire({
+          title: "Error!",
+          text: "Failed to delete product.",
+          icon: "error",
+        });
+      }
     }
-};
+  };
 
   const handleDeleteImage = async (imageIndex) => {
     setExistingImages(
@@ -168,18 +174,16 @@ const ProductList = () => {
         setError("Please upload at least one image file.");
         return;
       }
-    } 
-    else if(imageFiles.length > 3 && existingImages.length > 3){
+    } else if (imageFiles.length > 3 && existingImages.length > 3) {
       setError("Please upload max 3 image file.");
       return;
-    }else {
+    } else {
       // New product case
       // Validate that at least one new image is uploaded
       if (imageFiles.length === 0) {
         setError("Please upload at least one image file.");
         return;
-      }
-      else if(imageFiles.length > 3){
+      } else if (imageFiles.length > 3) {
         setError("Please upload max 3 image file.");
         return;
       }
@@ -207,19 +211,21 @@ const ProductList = () => {
       setImageFiles([]);
       setExistingImages([]);
       setError("");
-      
+
       // Replaced alert with SweetAlert
       Swal.fire({
         title: "Good job!",
-        text: currentProduct?.pid ? "Product updated Successfully" : "Product added Successfully",
+        text: currentProduct?.pid
+          ? "Product updated Successfully"
+          : "Product added Successfully",
         icon: "success",
-        confirmButtonText: 'OK',
-        confirmButtonColor: '#F24E1E',
+        confirmButtonText: "OK",
+        confirmButtonColor: "#F24E1E",
         customClass: {
-        confirmButton: 'custom-swal-button'
-        }
+          confirmButton: "custom-swal-button",
+        },
       });
-      
+
       toggleModal();
     } catch (error) {
       console.error(error);
@@ -294,16 +300,16 @@ const ProductList = () => {
 
         {/* Add Product Button */}
         <div className="col-4">
-        <button
-          id="addProductBtn"
-          className="btn p-3 d-flex align-items-center justify-content-center"
-          onClick={() => toggleModal()}
-        >
-          <i className="bi bi-plus-circle me-2"></i>
-          <span className="d-none d-sm-inline">Add Product</span>
-          <span className="d-inline d-sm-none">Add</span>
-        </button>
-      </div>
+          <button
+            id="addProductBtn"
+            className="btn p-3 d-flex align-items-center justify-content-center"
+            onClick={() => toggleModal()}
+          >
+            <i className="bi bi-plus-circle me-2"></i>
+            <span className="d-none d-sm-inline">Add Product</span>
+            <span className="d-inline d-sm-none">Add</span>
+          </button>
+        </div>
       </div>
 
       {/* Responsive Table */}
@@ -398,7 +404,10 @@ const ProductList = () => {
           {products.length} entries
         </div>
 
-        <Pagination className="justify-content-center" style={{ gap: "10px" }}>
+        <Pagination
+          className="justify-content-center align-items-center"
+          style={{ gap: "5px" }}
+        >
           <Pagination.Prev
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
@@ -406,15 +415,54 @@ const ProductList = () => {
             <MdChevronLeft />
           </Pagination.Prev>
 
-          {[...Array(totalPages)].map((_, index) => (
+          {/* First page */}
+          <Pagination.Item
+            active={currentPage === 1}
+            onClick={() => handlePageChange(1)}
+          >
+            1
+          </Pagination.Item>
+
+          {/* Show dots if there are many pages before current page */}
+          {currentPage > 3 && (
+            <Pagination.Ellipsis disabled>...</Pagination.Ellipsis>
+          )}
+
+          {/* Pages around current page */}
+          {[...Array(totalPages)].map((_, index) => {
+            const pageNumber = index + 1;
+            if (
+              pageNumber !== 1 &&
+              pageNumber !== totalPages &&
+              Math.abs(currentPage - pageNumber) <= 1
+            ) {
+              return (
+                <Pagination.Item
+                  key={pageNumber}
+                  active={currentPage === pageNumber}
+                  onClick={() => handlePageChange(pageNumber)}
+                >
+                  {pageNumber}
+                </Pagination.Item>
+              );
+            }
+            return null;
+          })}
+
+          {/* Show dots if there are many pages after current page */}
+          {currentPage < totalPages - 2 && (
+            <Pagination.Ellipsis disabled>...</Pagination.Ellipsis>
+          )}
+
+          {/* Last page */}
+          {totalPages > 1 && (
             <Pagination.Item
-              key={index + 1}
-              active={currentPage === index + 1}
-              onClick={() => handlePageChange(index + 1)}
+              active={currentPage === totalPages}
+              onClick={() => handlePageChange(totalPages)}
             >
-              {index + 1}
+              {totalPages}
             </Pagination.Item>
-          ))}
+          )}
 
           <Pagination.Next
             onClick={() => handlePageChange(currentPage + 1)}
@@ -432,12 +480,14 @@ const ProductList = () => {
             onClick={(e) => e.stopPropagation()}
             style={{ backgroundColor: "#ffffff", height: "90vh" }}
           >
-            <div className="d-flex justify-content-between"><h2>{currentProduct?.pid ? "Edit Product" : "Add Product"}</h2>
-            <button
-                  type="button"
-                  className="btn-close"
-                  onClick={toggleModal}
-                ></button></div>
+            <div className="d-flex justify-content-between">
+              <h2>{currentProduct?.pid ? "Edit Product" : "Add Product"}</h2>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={toggleModal}
+              ></button>
+            </div>
             {error && (
               <div
                 className="error-message"
@@ -568,7 +618,7 @@ const ProductList = () => {
                   <label>Upload Images</label>
                   <div className="image-upload-section">
                     {/* Existing Images */}
-                     {existingImages.map((image, index) => (
+                    {existingImages.map((image, index) => (
                       <div
                         key={`existing-${index}`}
                         className="position-relative"
@@ -595,29 +645,26 @@ const ProductList = () => {
 
                     {/* New Images */}
                     {imageFiles.map((file, index) => (
-                          <div
-                            key={`new-${index}`}
-                            className="position-relative"
-                          >
-                            <img
-                              src={URL.createObjectURL(file)}
-                              alt={`New ${index}`}
-                              className="rounded"
-                              style={{
-                                width: "100px",
-                                height: "100px",
-                                objectFit: "cover",
-                              }}
-                            />
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-danger position-absolute top-0 end-0"
-                              onClick={() => removeNewImage(index)}
-                            >
-                              <X size={12} />
-                            </button>
-                          </div>
-                        ))}
+                      <div key={`new-${index}`} className="position-relative">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`New ${index}`}
+                          className="rounded"
+                          style={{
+                            width: "100px",
+                            height: "100px",
+                            objectFit: "cover",
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-danger position-absolute top-0 end-0"
+                          onClick={() => removeNewImage(index)}
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
 
                     {/* Upload Button */}
                     <label className="upload-box">
@@ -634,13 +681,13 @@ const ProductList = () => {
                   </div>
                 </div>
                 <div className="text-center">
-                <button
-                  type="button"
-                  className="btn-save"
-                  onClick={handleSubmit}
-                >
-                  {currentProduct?.pid ? "Update" : "Save"}
-                </button>
+                  <button
+                    type="button"
+                    className="btn-save"
+                    onClick={handleSubmit}
+                  >
+                    {currentProduct?.pid ? "Update" : "Save"}
+                  </button>
                 </div>
               </div>
             </form>

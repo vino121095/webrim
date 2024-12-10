@@ -254,7 +254,7 @@ const Card = () => {
               <span className="close-button" onClick={toggleModal}>
                 &times;
               </span>
-              <h4 className="sideHeading mb-4">
+              <h4 className="sideHeading mt-3 mb-4">
                 Tell us what you need, and we'll help you get quotes
               </h4>
               <form onSubmit={handleSubmit}>

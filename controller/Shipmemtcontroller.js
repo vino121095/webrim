@@ -154,3 +154,42 @@ exports.getShipmentById = async (req, res) => {
     }
 };
 
+
+exports.deleteShipment = async (req, res) => {
+    try {
+        const { sid } = req.params;
+
+        // Find the shipment first to ensure it exists
+        const shipment = await Shipment.findOne({ 
+            where: { sid: sid } 
+        });
+
+        if (!shipment) {
+            return res.status(404).json({ 
+                error: 'Shipment not found' 
+            });
+        }
+
+        // Delete the shipment
+        await Shipment.destroy({
+            where: { sid: sid }
+        });
+        await Order.destroy({
+            where: { order_id: shipment.order_id }
+        })
+
+
+        res.status(200).json({ 
+            message: 'Shipment deleted successfully',
+            deletedShipmentId: sid
+        });
+
+    } catch (error) {
+        console.error('Error deleting shipment:', error);
+        res.status(500).json({ 
+            error: 'Failed to delete shipment', 
+            details: error.message 
+        });
+    }
+};
+
