@@ -5,13 +5,17 @@ import UserSearch from "./UserSearch";
 import baseurl from "../ApiService/ApiService";
 import Compressor from "./Assets/compressor-img.png";
 import Swal from "sweetalert2";
+import { PencilLine, Trash2 } from "lucide-react";
+
 const FeedViews = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState("");
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredForums, setFilteredForums] = useState([]);
   const [selectedProductImage, setSelectedProductImage] = useState("");
+  const [editingForum, setEditingForum] = useState(null);
   const user = JSON.parse(localStorage.getItem('userData'));
   const [formData, setFormData] = useState({
     quantity: "",
@@ -20,24 +24,28 @@ const FeedViews = () => {
   });
   const [forums, setForums] = useState([]);
 
-  // Toggle modal visibility
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
   };
+
+  const toggleEditModal = () => {
+    setIsEditModalOpen(!isEditModalOpen);
+  };
+
   const fetchProducts = async () => {
     try {
       const response = await axios.get(`${baseurl}/api/getAllProducts`);
       setProducts(response.data || []);
     } catch (error) {
       console.error("Error fetching products:", error);
-      setProducts([]); // Fallback to empty array in case of error
+      setProducts([]);
     }
   };
 
-  // Fetch products
   useEffect(() => {
     fetchProducts();
   }, []);
+
   const fetchForums = async () => {
     try {
       const response = await axios.get(`${baseurl}/api/forums`);
@@ -47,19 +55,16 @@ const FeedViews = () => {
       console.error("Error fetching forums:", error);
     }
   };
-  // Fetch forums
+
   useEffect(() => {
     fetchForums();
   }, []);
 
-
-  // Handle input change
   const handleInputChange = (event) => {
     const { name, value } = event.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  // Handle form submission
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -91,16 +96,8 @@ const FeedViews = () => {
           text: 'Requirement submitted successfully!',
           confirmButtonText: 'OK'
         });
-        setFormData({
-          quantity: "",
-          name: "",
-          phone_number: "",
-        });
-        fetchProducts();
+        resetForm();
         fetchForums();
-        setSelectedProduct("");
-        setSelectedProductImage("");
-        setIsModalOpen(false);
       } else {
         Swal.fire({
           icon: 'error',
@@ -120,7 +117,57 @@ const FeedViews = () => {
     }
   };
 
-  // Handle product selection
+  const handleEditSubmit = async (event) => {
+    event.preventDefault();
+
+    if (!editingForum || !formData.quantity || !formData.name || !formData.phone_number) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Incomplete Form',
+        text: 'Please fill in all required fields.',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
+    const updateData = {
+      product_name : formData.product_name,
+      quantity: formData.quantity,
+      name: formData.name,
+      phone_number: formData.phone_number,
+    };
+
+    try {
+      const response = await axios.put(`${baseurl}/api/forum/${editingForum.fid}`, updateData);
+      if (response.status === 200) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          text: 'Forum updated successfully!',
+          confirmButtonText: 'OK'
+        });
+        resetForm();
+        setIsEditModalOpen(false);
+        fetchForums();
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Update Failed',
+          text: 'Update failed. Please try again.',
+          confirmButtonText: 'OK'
+        });
+      }
+    } catch (error) {
+      console.error("Update Error:", error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Update Error',
+        text: 'Failed to update. Please check your network or contact support.',
+        confirmButtonText: 'OK'
+      });
+    }
+  };
+
   const handleProductChange = (event) => {
     const selectedProductName = event.target.value;
     setSelectedProduct(selectedProductName);
@@ -131,9 +178,64 @@ const FeedViews = () => {
       setSelectedProductImage(selectedProduct.image_path);
     }
   };
+
+  const handleEditForum = (forum) => {
+    setEditingForum(forum);
+    setFormData({
+      product_name: forum.product_name,
+      quantity: forum.quantity,
+      name: forum.name,
+      phone_number: forum.phone_number,
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteForum = async (forumId) => {
+    try {
+      const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+      });
+
+      if (result.isConfirmed) {
+        await axios.delete(`${baseurl}/api/forum/${forumId}`);
+        Swal.fire(
+          'Deleted!',
+          'Your forum has been deleted.',
+          'success'
+        );
+        fetchForums();
+      }
+    } catch (error) {
+      console.error("Delete Error:", error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Delete Error',
+        text: 'Failed to delete. Please try again.',
+        confirmButtonText: 'OK'
+      });
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      quantity: "",
+      name: "",
+      phone_number: "",
+    });
+    setSelectedProduct("");
+    setSelectedProductImage("");
+    setEditingForum(null);
+  };
+
   const availableProducts = products.filter(product => product.stocks > 0);
+  
   const handleTakeForum = async (forumId) => {
-    // Check if user and user.uid exist
     if (!user || !user.uid) {
       Swal.fire({
         icon: 'warning',
@@ -158,9 +260,7 @@ const FeedViews = () => {
 
       fetchForums();
     } catch (error) {
-      // More detailed error handling
       if (error.response) {
-        // The request was made and the server responded with a status code
         Swal.fire({
           icon: 'error',
           title: 'Submission Failed',
@@ -168,7 +268,6 @@ const FeedViews = () => {
           confirmButtonText: 'OK'
         });
       } else if (error.request) {
-        // The request was made but no response was received
         Swal.fire({
           icon: 'error',
           title: 'Connection Error',
@@ -176,7 +275,6 @@ const FeedViews = () => {
           confirmButtonText: 'OK'
         });
       } else {
-        // Something happened in setting up the request
         Swal.fire({
           icon: 'error',
           title: 'Error',
@@ -210,23 +308,10 @@ const FeedViews = () => {
       <NavBar />
       <div className="container py-3 feed_views_main">
         <div className="row w-100 justify-content-evenly align-items-center mt-4">
-          {/* <div className="col-12 col-md-8 col-lg-6 mb-3 mb-md-0">
-            <div className="feedviews-search-bar d-flex align-items-center border rounded-4 px-3">
-              <input
-                type="text"
-                className="form-control border-0 shadow-none px-3"
-                placeholder="Search"
-              />
-              <div className="d-flex align-items-center gap-3">
-                <i className="bi bi-x-lg"></i>
-                <div className="vr"></div>
-                <i className="bi bi-mic-fill"></i>
-                <i className="bi bi-search"></i>
-              </div>
-            </div>
-          </div> */}
-          <div className="col-10  w-75 feed_views_search" > <UserSearch onSearch={handleSearch} /></div>
-         
+          <div className="col-10 w-75 feed_views_search">
+            <UserSearch onSearch={handleSearch} />
+          </div>
+          
           {user.role === 'distributor' ? (
             <div></div>
           ) : (
@@ -239,7 +324,6 @@ const FeedViews = () => {
               </button>
             </div>
           )}
-
         </div>
       </div>
 
@@ -277,14 +361,27 @@ const FeedViews = () => {
                         <span className="fw-bold">Post by: </span>
                         <span>{forum.name || "Unknown"}</span>
                       </p>
-                      {/* <p className="d-flex justify-content-between">
-                        <span className="fw-bold">Distributor Location: </span>
-                        <span>{forum.location || "Not Provided"}</span>
-                      </p> */}
                       <p className="d-flex justify-content-between">
                         <span className="fw-bold">Close Date: </span>
                         <span>{forum.close_date || "No Date"}</span>
                       </p>
+
+                      {user && user.role === 'technician' && (
+                        <div className="d-flex gap-3 w-100 d-flex justify-content-end">
+                           <button
+                             className="btn btn-link p-0"
+                             onClick={() => handleEditForum(forum)}
+                           >
+                             <PencilLine size={20} className="text-info" />
+                           </button>
+                           <button
+                             className="btn btn-link p-0"
+                             onClick={() => handleDeleteForum(forum.fid)}
+                           >
+                             <Trash2 size={20} className="text-danger" />
+                           </button>
+                        </div>
+                      )}
 
                       {user && user.role === 'distributor' && (
                         <div className="w-100 d-flex justify-content-end">
@@ -308,13 +405,14 @@ const FeedViews = () => {
         </div>
       </div>
 
+      {/* Add Forum Modal */}
       {isModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
             <span className="close-button" onClick={toggleModal}>
               &times;
             </span>
-            <h4 className="sideHeading mb-4">
+            <h4 className="sideHeading mt-3 mb-4">
               Tell us what you need, and we'll help you get quotes
             </h4>
             <form onSubmit={handleSubmit}>
@@ -370,6 +468,67 @@ const FeedViews = () => {
               </div>
               <button type="submit" className="btn requirment-btn">
                 Submit Requirement
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Forum Modal */}
+      {isEditModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <span className="close-button" onClick={toggleEditModal}>
+              &times;
+            </span>
+            <h4 className="sideHeading mt-3 mb-4">
+              Edit Your Forum Requirement
+            </h4>
+            <form onSubmit={handleEditSubmit}>
+              <div className="mb-3">
+                <label>Product Name</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={editingForum?.product_name || ''}
+                  disabled
+                />
+              </div>
+              <div className="mb-3">
+                <label>Quantity</label>
+                <input
+                  type="number"
+                  name="quantity"
+                  className="form-control"
+                  placeholder="Enter Quantity"
+                  value={formData.quantity}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="mb-3">
+                <label>Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  className="form-control"
+                  placeholder="Enter Your Name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="mb-3">
+                <label>Phone Number</label>
+                <input
+                  type="tel"
+                  name="phone_number"
+                  className="form-control"
+                  placeholder="Enter Your Phone Number"
+                  value={formData.phone_number}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <button type="submit" className="btn requirment-btn">
+                Update Requirement
               </button>
             </form>
           </div>

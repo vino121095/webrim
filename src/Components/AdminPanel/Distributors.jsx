@@ -408,36 +408,76 @@ const Distributors = () => {
 
       {/* Pagination */}
       <div className="distributorpagination container d-flex mt-2 justify-content-between">
-        <div className="results-count text-center mb-3">
-          Showing{" "}
-          {currentDistributors.length === 0 ? "0" : indexOfFirstDistributor + 1}{" "}
-          to {Math.min(indexOfLastDistributor, distributors.length)} of{" "}
-          {distributors.length} entries
-        </div>
-        <Pagination className="justify-content-center" style={{ gap: "10px" }}>
-          <Pagination.Prev
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
+  <div className="results-count text-center mb-3">
+    Showing{" "}
+    {currentDistributors.length === 0 ? "0" : indexOfFirstDistributor + 1}{" "}
+    to {Math.min(indexOfLastDistributor, distributors.length)} of{" "}
+    {distributors.length} entries
+  </div>
+  <Pagination 
+    className="justify-content-center align-items-center" 
+    style={{ gap: "5px" }}
+  >
+    <Pagination.Prev
+      onClick={() => handlePageChange(currentPage - 1)}
+      disabled={currentPage === 1}
+    >
+      <MdChevronLeft />
+    </Pagination.Prev>
+
+    {/* First page */}
+    <Pagination.Item
+      active={currentPage === 1}
+      onClick={() => handlePageChange(1)}
+    >
+      1
+    </Pagination.Item>
+
+    {/* Show dots if there are many pages before current page */}
+    {currentPage > 3 && <Pagination.Ellipsis disabled>...</Pagination.Ellipsis>}
+
+    {/* Pages around current page */}
+    {[...Array(totalPages)].map((_, index) => {
+      const pageNumber = index + 1;
+      if (
+        pageNumber !== 1 &&
+        pageNumber !== totalPages &&
+        Math.abs(currentPage - pageNumber) <= 1
+      ) {
+        return (
+          <Pagination.Item
+            key={pageNumber}
+            active={currentPage === pageNumber}
+            onClick={() => handlePageChange(pageNumber)}
           >
-            <MdChevronLeft />
-          </Pagination.Prev>
-          {[...Array(totalPages)].map((_, index) => (
-            <Pagination.Item
-              key={index + 1}
-              active={currentPage === index + 1}
-              onClick={() => handlePageChange(index + 1)}
-            >
-              {index + 1}
-            </Pagination.Item>
-          ))}
-          <Pagination.Next
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            <MdChevronRight />
-          </Pagination.Next>
-        </Pagination>
-      </div>
+            {pageNumber}
+          </Pagination.Item>
+        );
+      }
+      return null;
+    })}
+
+    {/* Show dots if there are many pages after current page */}
+    {currentPage < totalPages - 2 && <Pagination.Ellipsis disabled>...</Pagination.Ellipsis>}
+
+    {/* Last page */}
+    {totalPages > 1 && (
+      <Pagination.Item
+        active={currentPage === totalPages}
+        onClick={() => handlePageChange(totalPages)}
+      >
+        {totalPages}
+      </Pagination.Item>
+    )}
+
+    <Pagination.Next
+      onClick={() => handlePageChange(currentPage + 1)}
+      disabled={currentPage === totalPages}
+    >
+      <MdChevronRight />
+    </Pagination.Next>
+  </Pagination>
+</div>
 
       {/* Modal */}
       {isModalOpen && (

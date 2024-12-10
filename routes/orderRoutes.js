@@ -7,6 +7,10 @@ const {generateOrderId, addOrderDate} = require('../middlewares/generateUinqueId
 // Route to place an order with validation
 router.post('/placeOrder', generateOrderId, addOrderDate,  orderValidator, OrderController.createOrder);
 
+router.put('/cancelOrder/:id', OrderController.cancelOrder);
+
+router.put('/completeOrder/:id', OrderController.completeOrder);
+
 // Route to get all orders
 router.get('/orders', OrderController.getAllOrders);
 

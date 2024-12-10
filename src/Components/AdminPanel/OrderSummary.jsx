@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Pagination } from 'react-bootstrap';
+import { Pagination, Modal, Button } from 'react-bootstrap';
 import { MdChevronLeft, MdChevronRight } from 'react-icons/md';
 import axios from 'axios';
 import baseurl from '../ApiService/ApiService';
@@ -14,6 +14,7 @@ const OrderSummary = () => {
   const [selectedOrderOid, setSelectedOrderOid] = useState(null);
   const [showShipmentDetails, setShowShipmentDetails] = useState(false);
   const [searchTerm, setSearchTerm] = useState(''); // New state for search
+  const [selectedOrder, setSelectedOrder] = useState({});
   const itemsPerPage = 6;
   const navigate = useNavigate();
 
@@ -68,6 +69,18 @@ const OrderSummary = () => {
     navigate(`/AdminDashboard/Shipments/${oid}`); 
   };
 
+  const [show, setShow] = useState(false);
+
+  // Option 1: Simple close function
+  const handleClose = () => {
+    setShow(false);
+  };
+
+  // Option 2: Open modal function
+  const handleShow = () => {
+    setShow(true);
+  };
+
   const statusStyles = {
     'Received': {
       color: '#267309',
@@ -90,7 +103,7 @@ const OrderSummary = () => {
       padding: '6px 12px',
       display: 'inline-block'
     },
-    'Canceled': {
+    'Cancelled': {
       color: '#808080',
       background: '#E5E7E5',
       borderRadius: '10px',
@@ -105,6 +118,29 @@ const OrderSummary = () => {
       display: 'inline-block'
     }
   };
+  const handleChangeStatus = (order)=>{
+    setSelectedOrder(order);
+    handleShow();
+  }
+
+  const handleCancel = async()=>{
+    try {
+      const response = await axios.put(`${baseurl}/api/cancelOrder/${selectedOrder.oid}`);
+      setOrders(response.data.data || []);
+      setShow(false);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    }
+  }
+  const handleComplete = async()=>{
+    try {
+      const response = await axios.put(`${baseurl}/api/completeOrder/${selectedOrder.oid}`);
+      setOrders(response.data.data || []);
+      setShow(false);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    }
+  }
 
   return (
     <div className="container mt-4">
@@ -138,7 +174,7 @@ const OrderSummary = () => {
       {/* Order Tabs */}
       <div className="mb-4">
         <ul className="nav nav-tabs">
-          {['All Orders', 'Received', 'Shipping', 'Complaint', 'Canceled', 'Done'].map((filter) => (
+          {['All Orders', 'Received', 'Shipping', 'Complaint', 'Cancelled', 'Done'].map((filter) => (
             <li className="nav-item" key={filter}>
               <button
                 className={`nav-link ${activeFilter === filter ? 'active' : ''}`}
@@ -174,7 +210,7 @@ const OrderSummary = () => {
                   <td className="py-3 px-4">{order.order_date}</td>
                   <td className="py-3 px-4">{order.total_amount}</td>
                   <td className="py-3 px-4">
-                    <span style={statusStyles[order.status] || {}}>
+                    <span style={statusStyles[order.status] || {}} onClick={()=>handleChangeStatus(order)}>
                       {order.status}
                     </span>
                   </td>
@@ -236,6 +272,52 @@ const OrderSummary = () => {
           onClose={() => setShowShipmentDetails(false)}
         />
       )}
+
+       <Modal show={show} onHide={handleClose} centered>
+      <Modal.Header closeButton>
+        <Modal.Title>Order #{selectedOrder.order_id} Actions</Modal.Title>
+      </Modal.Header>
+      
+      <Modal.Body>
+        <div className="mb-3">
+          <strong>Current Status:</strong> 
+          <span 
+            className="ml-2" 
+            // style={selectedOrder.status || {}}
+          >
+            {selectedOrder.status}
+          </span>
+        </div>
+
+        {selectedOrder.status === "Shipping" && (
+          <div className='d-flex justify-content-around'><Button 
+          variant="danger" onClick={handleCancel}
+        >
+          Cancel
+        </Button>
+        <Button 
+            variant="success" onClick={handleComplete}
+          >
+            Done
+          </Button>
+        </div>
+         
+        )}
+         {selectedOrder.status === "Received" && (
+          <Button  onClick={handleCancel}
+            variant="danger" 
+          >
+            Cancel
+          </Button>
+        )}
+      </Modal.Body>
+      
+      <Modal.Footer>
+        <Button variant="secondary" onClick={handleClose}>
+          Close
+        </Button>
+      </Modal.Footer>
+    </Modal>
     </div>
   );
 };

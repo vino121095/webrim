@@ -36,6 +36,14 @@ const Order = db.define('orders', {
         type: DataTypes.ENUM('Received', 'Shipping', 'Done', 'Cancelled', 'Complaint'), // Consider using ENUM for predefined statuses
         allowNull: false,
         defaultValue: 'Received'
+    },
+    cancelAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+    },
+    completeAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
     }
 }, {
     tableName: 'orders',

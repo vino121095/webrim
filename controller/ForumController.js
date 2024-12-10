@@ -31,6 +31,75 @@ const viewForums = async (req, res) => {
   }
 };
 
+// Edit/Update Forum
+const updateForum = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const updateData = req.body;
+    // Find the forum by ID and update it
+    const forum = await Forum.findOne(
+      {
+        where: {fid:id}
+      }
+    );
+    
+    // Check if forum exists
+    if (!forum) {
+      return res.status(404).json({ 
+        message: 'Forum not found' 
+      });
+    }
+    await Forum.update(updateData,{
+      where: {
+        fid: id
+      }
+    })
+    
+    return res.status(200).json({ 
+      message: 'Forum updated successfully', 
+      data: forum 
+    });
+  } catch (error) {
+    console.error('Error updating forum:', error);
+    return res.status(500).json({ 
+      message: 'Failed to update forum', 
+      error: error.message 
+    });
+  }
+};
+
+// Delete Forum
+const deleteForum = async (req, res) => {
+  try {
+    const id = req.params.id;
+    
+    // Find and delete the forum
+    const forum = await Forum.findOne({
+      where:{fid:id}
+    });
+    
+    // Check if forum exists
+    if (!forum) {
+      return res.status(404).json({ 
+        message: 'Forum not found' 
+      });
+    }
+
+    await forum.destroy();
+    
+    return res.status(200).json({ 
+      message: 'Forum deleted successfully', 
+      data: forum 
+    });
+  } catch (error) {
+    console.error('Error deleting forum:', error);
+    return res.status(500).json({ 
+      message: 'Failed to delete forum', 
+      error: error.message 
+    });
+  }
+};
+
 const takeForum = async (req, res) => {
   const forumId = req.params.id;
   const { distributor_id } = req.body;
@@ -304,6 +373,8 @@ const showNotifyForTechnician = async (req, res) => {
 module.exports = {
   addForum,
   viewForums,
+  updateForum,
+  deleteForum,
   takeForum,
   showNotifyForDistributor,
   showNotifyForTechnician

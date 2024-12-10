@@ -1,14 +1,16 @@
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import baseurl from '../ApiService/ApiService';
 import { useParams, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
-const ShipmentsDetails = () => {
-  const { id } = useParams(); 
+
+const ShipmentsDetails = ({ isEditMode = false, initialShipmentData = null, onClose }) => {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const oid = id;
 
   const [formData, setFormData] = useState({
+    sid: '',
     orderId: '',
     productIds: [],
     distributorName: '',
@@ -17,11 +19,39 @@ const ShipmentsDetails = () => {
     dispatchDate: '',
     dispatchAddress: '',
     transport: '',
+    status: 'Shipment',
   });
+
+  useEffect(() => {
+    if (isEditMode && initialShipmentData) {
+      const formattedDate = initialShipmentData.dispatch_date
+        ? new Date(initialShipmentData.dispatch_date).toISOString().split('T')[0]
+        : '';
+
+      setFormData({
+        sid: initialShipmentData.sid || '',
+        orderId: initialShipmentData.order_id || '',
+        productIds: initialShipmentData.shipment_items
+          ? initialShipmentData.shipment_items.map((item) => item.product_id)
+          : [],
+        distributorName: initialShipmentData.distributor_name || '',
+        quantities: initialShipmentData.shipment_items
+          ? initialShipmentData.shipment_items.map((item) => item.quantity)
+          : [],
+        price: initialShipmentData.total_price || '',
+        dispatchDate: formattedDate,
+        dispatchAddress: initialShipmentData.dispatch_address || '',
+        transport: initialShipmentData.transport || '',
+        status: initialShipmentData.status || 'Shipment',
+      });
+    } else if (!isEditMode && id) {
+      fetchOrderDetails();
+    }
+  }, [isEditMode, initialShipmentData, id]);
 
   const fetchOrderDetails = async () => {
     try {
-      const response = await axios.get(`${baseurl}/api/order/${oid}`);
+      const response = await axios.get(`${baseurl}/api/order/${id}`);
       const order = response.data.data;
 
       const productIds = order.OrderItems.map((item) => item.product_id);
@@ -41,12 +71,14 @@ const ShipmentsDetails = () => {
       }));
     } catch (error) {
       console.error('Error fetching order details:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to fetch order details',
+        confirmButtonColor: '#d33',
+      });
     }
   };
-
-  useEffect(() => {
-    fetchOrderDetails();
-  }, [oid]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -58,6 +90,7 @@ const ShipmentsDetails = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
       const shipmentData = {
         order_id: formData.orderId,
@@ -67,40 +100,52 @@ const ShipmentsDetails = () => {
         dispatch_date: formData.dispatchDate,
         dispatch_address: formData.dispatchAddress,
         transport: formData.transport,
+        status: formData.status,
       };
-    
-      const response = await axios.post(`${baseurl}/api/shipments`, shipmentData);
-      const shipment = response.data.shipment;
-      console.log('Shipment created successfully:', shipment);
-      const sid = shipment.sid;
-      
-      Swal.fire({
-        icon: 'success',
-        title: 'Success',
-        text: 'Shipment created successfully!',
-        confirmButtonText: 'Proceed',
-        confirmButtonColor: '#3085d6'
-      }).then(() => {
-        navigate(`/AdminDashboard/ShipmentConfirmForm/${sid}`);
-      });
+
+      let response;
+      if (isEditMode) {
+        response = await axios.put(`${baseurl}/api/updateShipment/${formData.sid}`, shipmentData);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Success',
+          text: 'Shipment updated successfully!',
+          confirmButtonColor: '#3085d6',
+        }).then(() => {
+          if (onClose) onClose();
+        });
+      } else {
+        response = await axios.post(`${baseurl}/api/shipments`, shipmentData);
+
+        const shipment = response.data.shipment;
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Success',
+          text: 'Shipment created successfully!',
+          confirmButtonColor: '#3085d6',
+        }).then(() => {
+          if (onClose) {
+            onClose();
+          } else {
+            navigate(`/AdminDashboard/ShipmentConfirmForm/${shipment.sid}`);
+          }
+        });
+      }
     } catch (error) {
-      console.error('Error creating shipment:', error);
-      
+      console.error(`Error ${isEditMode ? 'updating' : 'creating'} shipment:`, error);
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'Failed to create shipment',
-        confirmButtonText: 'Close',
-        confirmButtonColor: '#d33'
+        text: `Failed to ${isEditMode ? 'update' : 'create'} shipment`,
+        confirmButtonColor: '#d33',
       });
     }
   };
 
   return (
-    <div className="card">
-      <div className="card-header d-flex justify-content-between align-items-center">
-        <h4 className="mb-0">Shipment Details</h4>
-      </div>
+    <div className="card border-0">
       <div className="card-body">
         <form onSubmit={handleSubmit}>
           <div className="row mb-3">
@@ -137,6 +182,7 @@ const ShipmentsDetails = () => {
                 name="distributorName"
                 value={formData.distributorName}
                 onChange={handleChange}
+                required
               />
             </div>
             <div className="col-md-6">
@@ -152,7 +198,7 @@ const ShipmentsDetails = () => {
             </div>
           </div>
           <div className="row mb-3">
-          <div className="col-md-6">
+            <div className="col-md-6">
               <label htmlFor="price" className="form-label">Total Price</label>
               <input
                 type="text"
@@ -172,8 +218,11 @@ const ShipmentsDetails = () => {
                 name="dispatchDate"
                 value={formData.dispatchDate}
                 onChange={handleChange}
+                required
               />
             </div>
+          </div>
+          <div className="row mb-3">
             <div className="col-md-6">
               <label htmlFor="dispatchAddress" className="form-label">Dispatch Address</label>
               <textarea
@@ -182,23 +231,26 @@ const ShipmentsDetails = () => {
                 name="dispatchAddress"
                 value={formData.dispatchAddress}
                 onChange={handleChange}
+                required
               ></textarea>
             </div>
+            <div className="col-md-6">
+              <label htmlFor="transport" className="form-label">Transport</label>
+              <input
+                type="text"
+                className="form-control"
+                id="transport"
+                name="transport"
+                value={formData.transport}
+                onChange={handleChange}
+                required
+              />
+            </div>
           </div>
-          <div className="mb-3">
-            <label htmlFor="transport" className="form-label">Transport</label>
-            <input
-              type="text"
-              className="form-control"
-              id="transport"
-              name="transport"
-              value={formData.transport}
-              onChange={handleChange}
-            />
-          </div>
-
           <div className="text-end">
-            <button type="submit" className="btn btn-primary">Submit</button>
+            <button type="submit" className="btn btn-primary">
+              {isEditMode ? 'Update' : 'Create'} Shipment
+            </button>
           </div>
         </form>
       </div>

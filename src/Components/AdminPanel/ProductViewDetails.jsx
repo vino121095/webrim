@@ -41,8 +41,10 @@ const ProductViewDetails = () => {
         {/* Image Section */}
         <div className="col-lg-6 mb-4 h-75">
           <div className="productImageSection bg-white w-100">
+            <div className="text-center pt-4">
             <img src={mainImage} alt="Main Product" className="mainImage img-fluid rounded border" />
-            <div className="thumbnailGallery d-flex justify-content-evenly flex-wrap mt-3">
+            </div>
+            <div className="thumbnailGallery d-flex justify-content-evenly flex-wrap mt-3 pb-4">
               {product.images && product.images.length > 0 ? (
                 product.images.map((img, index) => (
                   <img
@@ -74,8 +76,10 @@ const ProductViewDetails = () => {
         {/* Details Section */}
         <div className="col-lg-6">
           <div className="productInfoSection p-3 rounded shadow-sm bg-white">
-            <h2 className="productName">{product.product_name}</h2>
-            <h3 className="productPrice text-primary">Rs {product.mrp_rate}</h3>
+            <div className="d-flex justify-content-between">
+            <h4 className="productName">{product.product_name}</h4>
+            <h3 className="productPrice text-primary"><i class="bi bi-currency-rupee"></i> {product.mrp_rate}</h3>
+            </div>
             <p><strong>ID Product:</strong> {product.product_id}</p>
 
             <div className="aboutProduct mb-3">

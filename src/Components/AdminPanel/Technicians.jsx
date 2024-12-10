@@ -1,33 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { Pagination } from 'react-bootstrap';
-import { User, Plus } from 'lucide-react';
+import { User, Plus, Eye, PencilLine, Trash2 } from 'lucide-react';
 import { MdChevronLeft, MdChevronRight } from 'react-icons/md';
 import axios from 'axios';
 import baseurl from '../ApiService/ApiService';
 import './AdminPanel.css';
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import Swal from "sweetalert2";
 
 const Technicians = () => {
   const [technicians, setTechnicians] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewTechnician, setViewTechnician] = useState(null);
+  const [loading, setLoading] = useState(false);
   const itemsPerPage = 6;
+
+  // Fetch technicians function moved outside of useEffect to make it accessible in handleDeleteTechnician
+  const fetchTechnicians = async () => {
+    try {
+      const response = await axios.get(baseurl + '/api/allUsers');
+      const filteredTechnicians = (response.data.data || []).filter(
+        technician => technician.role === 'technician'
+      );
+      setTechnicians(filteredTechnicians);
+    } catch (error) {
+      console.error('Error fetching technicians:', error);
+      setTechnicians([]);
+    }
+  };
+
   useEffect(() => {
-    const fetchTechnicians = async () => {
-      try {
-        const response = await axios.get(baseurl + '/api/allUsers');
-        // Filter technicians with role 'technician' right when setting the state
-        const filteredTechnicians = (response.data.data || []).filter(
-          technician => technician.role === 'technician'
-        );
-        setTechnicians(filteredTechnicians);
-      } catch (error) {
-        console.error('Error fetching technicians:', error);
-        setTechnicians([]);
-      }
-    };
-  
     fetchTechnicians();
   }, []);
 
@@ -36,7 +41,6 @@ const Technicians = () => {
       value && value.toString().toLowerCase().includes(searchTerm.toLowerCase())
     )
   );
-  
 
   const indexOfLastTechnician = currentPage * itemsPerPage;
   const indexOfFirstTechnician = indexOfLastTechnician - itemsPerPage;
@@ -49,41 +53,112 @@ const Technicians = () => {
     setCurrentPage(pageNumber);
   };
 
+  const fetchTechnicianDetails = async (uid) => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${baseurl}/api/userprofile/${uid}`);
+      if (response.data && response.data.data) {
+        setViewTechnician(response.data.data);
+        setIsViewModalOpen(true);
+      } else {
+        console.error("Technician details not found");
+      }
+    } catch (error) {
+      console.error('Error fetching technician details:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewTechnician = async (technician) => {
+    await fetchTechnicianDetails(technician.uid);
+  };
+
+  const closeViewModal = () => {
+    setIsViewModalOpen(false);
+    setViewTechnician(null);
+  };
+
   const handleAddTechnician = () => {
     console.log('Add Technician clicked');
   };
 
+  const handleDeleteTechnician = async (uid) => {
+    // Show confirmation SweetAlert
+    const result = await Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#F24E1E",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, delete it!"
+    });
+
+    // If user confirmed
+    if (result.isConfirmed) {
+        try {
+            const response = await axios.delete(
+                `${baseurl}/api/deleteUser/${uid}`
+            );
+
+            if (response.status === 204) {
+                await fetchTechnicians();  // Now fetchTechnicians is defined and accessible
+
+                // Show success message
+                await Swal.fire({
+                    title: "Deleted!",
+                    text: "Technician has been deleted successfully.",
+                    icon: "success",
+                    confirmButtonColor: "#F24E1E"
+                });
+            } else {
+                throw new Error("Failed to delete Technician");
+            }
+        } catch (error) {
+            console.error("Error deleting technician:", error);
+            
+            // Show error message
+            await Swal.fire({
+                title: "Error!",
+                text: error.response?.data?.message || 
+                      "An error occurred while deleting the transport. Please try again later.",
+                icon: "error",
+                confirmButtonColor: "#F24E1E"
+            });
+        }
+    }
+};
+
   return (
     <div className="container mt-4">
-    {/* Search box and Add Technician button */}
-    <div className="row mb-3">
-      {/* Search box */}
-      <div className="col-8 col-md-8">
-        <input
-          type="text"
-          className="form-control rounded-2 px-4"
-          placeholder="Search Technician"
-          id="technicianSearchBox"
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setCurrentPage(1);
-          }}
-        />
+      {/* Search box and Add Technician button */}
+      <div className="row mb-3">
+        <div className="col-8 col-md-8">
+          <input
+            type="text"
+            className="form-control rounded-2 px-4"
+            placeholder="Search Technician"
+            id="technicianSearchBox"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+          />
+        </div>
+        <div className="col-4 col-md-4">
+          <button
+            id="addProductBtn"
+            className="btn p-3 d-flex align-items-center justify-content-center"
+            onClick={handleAddTechnician}
+          >
+            <i className="bi bi-plus-circle me-2"></i>
+            <span className="d-none d-sm-inline">Add Technicians</span>
+            <span className="d-inline d-sm-none">Add</span>
+          </button>
+        </div>
       </div>
-      {/* Add Technician button */}
-      <div className="col-4 col-md-4">
-      <button
-        id="addProductBtn"
-        className="btn p-3 d-flex align-items-center justify-content-center"
-        onClick={handleAddTechnician}
-      >
-        <i className="bi bi-plus-circle me-2"></i>
-          <span className="d-none d-sm-inline">Add Technicians</span>
-          <span className="d-inline d-sm-none">Add</span>
-      </button>
-      </div>
-    </div>
 
       <div className="table-responsive">
         <table className="table table-striped table-hover">
@@ -95,6 +170,7 @@ const Technicians = () => {
               <th className="py-3 px-4">Mobile Number</th>
               <th className="py-3 px-4">City</th>
               <th className="py-3 px-4">State</th>
+              <th className="py-3 px-4">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -114,11 +190,28 @@ const Technicians = () => {
                   <td className="py-3 px-4">{technician.mobile_number || 'Not assigned'}</td>
                   <td className="py-3 px-4">{technician.city || 'Not assigned'}</td>
                   <td className="py-3 px-4">{technician.state || 'Not assigned'}</td>
+                  <td className="py-3 px-4">
+                    <div className="d-flex gap-2">
+                      <button
+                        className="btn btn-link p-0"
+                        onClick={() => handleViewTechnician(technician)}
+                        disabled={loading}
+                      >
+                        <Eye size={20} className="text-primary" />
+                      </button>
+                      <button
+                        className="btn btn-link p-0"
+                        onClick={() => handleDeleteTechnician(technician.uid)}
+                      >
+                        <Trash2 size={20} className="text-danger" />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="text-center">
+                <td colSpan="7" className="text-center">
                   No technicians found.
                 </td>
               </tr>
@@ -127,29 +220,154 @@ const Technicians = () => {
         </table>
       </div>
 
-      <div className="d-flex justify-content-between align-items-center flex-wrap mt-3">
-        <div className="mb-3 mb-md-0">
+      <div className="productPagination container d-flex mt-2" style={{
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+      }}>
+        <div className="results-count text-center mb-3" style={{ gap: "10px" }}>
           Showing {currentTechnicians.length === 0 ? '0' : indexOfFirstTechnician + 1} to{' '}
           {Math.min(indexOfLastTechnician, filteredTechnicians.length)} of {filteredTechnicians.length} entries
         </div>
-        <Pagination className="mb-0">
-          <Pagination.Prev onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
-            <MdChevronLeft />
-          </Pagination.Prev>
-          {[...Array(totalPages)].map((_, index) => (
+        <Pagination>
+          <Pagination.Prev
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          />
+          {[...Array(totalPages)].map((_, pageIndex) => (
             <Pagination.Item
-              key={index + 1}
-              active={currentPage === index + 1}
-              onClick={() => handlePageChange(index + 1)}
+              key={pageIndex}
+              active={pageIndex + 1 === currentPage}
+              onClick={() => handlePageChange(pageIndex + 1)}
             >
-              {index + 1}
+              {pageIndex + 1}
             </Pagination.Item>
           ))}
-          <Pagination.Next onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>
-            <MdChevronRight />
-          </Pagination.Next>
+          <Pagination.Next
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          />
         </Pagination>
       </div>
+      {isViewModalOpen && viewTechnician && (
+        <div className="modal-overlay" onClick={closeViewModal}>
+          <div
+            className="modal-content technician-modal w-75"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              marginTop:'70px',
+              backgroundColor: "#ffffff",
+              height: "87vh",
+              overflowY: "auto", // Makes the modal content scrollable
+            }}
+          >
+            <div className="modal-header d-flex justify-content-between align-items-center mb-4">
+              <h2>Technician Details</h2>
+              <button
+                onClick={closeViewModal}
+                className="btn-close"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="technician-details">
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <div className="detail-group">
+                    <label className="fw-bold">Full Name:</label>
+                    <p className="detail-value">{viewTechnician.full_name || "N/A"}</p>
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="detail-group">
+                    <label className="fw-bold">Username:</label>
+                    <p className="detail-value">{viewTechnician.username || "N/A"}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <div className="detail-group">
+                    <label className="fw-bold">Email:</label>
+                    <p className="detail-value">{viewTechnician.email || "N/A"}</p>
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="detail-group">
+                    <label className="fw-bold">Mobile Number:</label>
+                    <p className="detail-value">{viewTechnician.mobile_number || "N/A"}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <div className="detail-group">
+                    <label className="fw-bold">City:</label>
+                    <p className="detail-value">{viewTechnician.city || "N/A"}</p>
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="detail-group">
+                    <label className="fw-bold">State:</label>
+                    <p className="detail-value">{viewTechnician.state || "N/A"}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <div className="detail-group">
+                    <label className="fw-bold">Company Name:</label>
+                    <p className="detail-value">{viewTechnician.company_name || "N/A"}</p>
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="detail-group">
+                    <label className="fw-bold">Credit Limit:</label>
+                    <p className="detail-value">{viewTechnician.credit_limit || "N/A"}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <div className="detail-group">
+                    <label className="fw-bold">Address:</label>
+                    <p className="detail-value">{viewTechnician.address || "N/A"}</p>
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="detail-group">
+                    <label className="fw-bold">Pincode:</label>
+                    <p className="detail-value">{viewTechnician.pincode || "N/A"}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <div className="detail-group">
+                    <label className="fw-bold">Landmark:</label>
+                    <p className="detail-value">{viewTechnician.landmark || "N/A"}</p>
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="detail-group">
+                    <label className="fw-bold">Created At:</label>
+                    <p className="detail-value">
+                      {viewTechnician.createdAt
+                        ? new Date(viewTechnician.createdAt).toLocaleString()
+                        : "N/A"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
     </div>
   );
 };
