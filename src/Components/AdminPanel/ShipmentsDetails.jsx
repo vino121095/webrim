@@ -1,13 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import baseurl from '../ApiService/ApiService';
 import { useParams, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import { use } from 'react';
 
-const ShipmentsDetails = ({ isEditMode = false, initialShipmentData = null, onClose }) => {
+const ShipmentsDetails = ({ isEditMode = false, initialShipmentData = null, onClose, }) => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [transportOptions, setTransportOptions] = useState([]);
 
   const [formData, setFormData] = useState({
     sid: '',
@@ -15,7 +16,8 @@ const ShipmentsDetails = ({ isEditMode = false, initialShipmentData = null, onCl
     productIds: [],
     distributorName: '',
     quantities: [],
-    price: '',
+    prices: [],
+    productNames: [],
     dispatchDate: '',
     dispatchAddress: '',
     transport: '',
@@ -34,11 +36,16 @@ const ShipmentsDetails = ({ isEditMode = false, initialShipmentData = null, onCl
         productIds: initialShipmentData.shipment_items
           ? initialShipmentData.shipment_items.map((item) => item.product_id)
           : [],
+        productNames: initialShipmentData.shipment_items
+          ? initialShipmentData.shipment_items.map((item) => item.product_name)
+          : [],
         distributorName: initialShipmentData.distributor_name || '',
         quantities: initialShipmentData.shipment_items
           ? initialShipmentData.shipment_items.map((item) => item.quantity)
           : [],
-        price: initialShipmentData.total_price || '',
+        prices: initialShipmentData.shipment_items
+          ? initialShipmentData.shipment_items.map((item) => item.price)
+          : [],
         dispatchDate: formattedDate,
         dispatchAddress: initialShipmentData.dispatch_address || '',
         transport: initialShipmentData.transport || '',
@@ -56,18 +63,17 @@ const ShipmentsDetails = ({ isEditMode = false, initialShipmentData = null, onCl
 
       const productIds = order.OrderItems.map((item) => item.product_id);
       const quantities = order.OrderItems.map((item) => item.quantity);
-
-      const totalPrice = order.OrderItems.reduce(
-        (sum, item) => sum + item.quantity * item.price,
-        0
-      );
+      const prices = order.OrderItems.map((item) => item.price);
+      const productNames = order.OrderItems.map((item) => item.Product.product_name);
 
       setFormData((prevState) => ({
         ...prevState,
         orderId: order.order_id,
         productIds,
         quantities,
-        price: totalPrice.toFixed(2),
+        prices,
+        productNames,
+        transport: order.transport.travels_name
       }));
     } catch (error) {
       console.error('Error fetching order details:', error);
@@ -80,12 +86,40 @@ const ShipmentsDetails = ({ isEditMode = false, initialShipmentData = null, onCl
     }
   };
 
+  const fetchTransportData = async () => {
+    try {
+      const response = await axios.get(`${baseurl}/api/transport`);
+      setTransportOptions(response.data); // Set the transport options
+    } catch (error) {
+      console.error('Error fetching transport data:', error);
+    }
+  };
+  useEffect(() => {
+    fetchTransportData();
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
       ...prevState,
       [name]: value,
     }));
+  };
+
+  const handleCancel = () => {
+    navigate('/AdminDashboard/OrderSummary');
+  };
+
+  // Modified to only allow changes to product names
+  const handleItemChange = (index, field, value) => {
+    if (field === 'productNames') {
+      setFormData((prevState) => {
+        const newState = { ...prevState };
+        newState[field] = [...prevState[field]];
+        newState[field][index] = value;
+        return newState;
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -95,8 +129,10 @@ const ShipmentsDetails = ({ isEditMode = false, initialShipmentData = null, onCl
       const shipmentData = {
         order_id: formData.orderId,
         product_id: formData.productIds,
+        product_names: formData.productNames,
         distributor_name: formData.distributorName,
         quantity: formData.quantities,
+        prices: formData.prices,
         dispatch_date: formData.dispatchDate,
         dispatch_address: formData.dispatchAddress,
         transport: formData.transport,
@@ -118,8 +154,6 @@ const ShipmentsDetails = ({ isEditMode = false, initialShipmentData = null, onCl
       } else {
         response = await axios.post(`${baseurl}/api/shipments`, shipmentData);
 
-        const shipment = response.data.shipment;
-
         Swal.fire({
           icon: 'success',
           title: 'Success',
@@ -129,7 +163,7 @@ const ShipmentsDetails = ({ isEditMode = false, initialShipmentData = null, onCl
           if (onClose) {
             onClose();
           } else {
-            navigate(`/AdminDashboard/ShipmentConfirmForm/${shipment.sid}`);
+            navigate('/AdminDashboard/Shipments');
           }
         });
       }
@@ -157,22 +191,10 @@ const ShipmentsDetails = ({ isEditMode = false, initialShipmentData = null, onCl
                 id="orderId"
                 name="orderId"
                 value={formData.orderId}
-                readOnly
+                onChange={handleChange}
+                disabled={!isEditMode}
               />
             </div>
-            <div className="col-md-6">
-              <label htmlFor="productIds" className="form-label">Product ID(s)</label>
-              <input
-                type="text"
-                className="form-control"
-                id="productIds"
-                name="productIds"
-                value={formData.productIds.join(', ')}
-                readOnly
-              />
-            </div>
-          </div>
-          <div className="row mb-3">
             <div className="col-md-6">
               <label htmlFor="distributorName" className="form-label">Distributor Name</label>
               <input
@@ -185,30 +207,65 @@ const ShipmentsDetails = ({ isEditMode = false, initialShipmentData = null, onCl
                 required
               />
             </div>
-            <div className="col-md-6">
-              <label htmlFor="quantities" className="form-label">Quantity</label>
-              <input
-                type="text"
-                className="form-control"
-                id="quantities"
-                name="quantities"
-                value={formData.quantities.join(', ')}
-                readOnly
-              />
+          </div>
+
+          {/* Shipment Items */}
+          <div className="mb-3">
+            <label className="form-label">Shipment Items</label>
+            <div className="table-responsive">
+              <table className="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>Product Name</th>
+                    <th>Product ID</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {formData.productIds.map((productId, index) => (
+                    <tr key={index}>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={formData.productNames[index] || ''}
+                          onChange={(e) => handleItemChange(index, 'productNames', e.target.value)}
+                          readOnly={!isEditMode}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={productId}
+                          readOnly
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          className="form-control"
+                          value={formData.quantities[index] || ''}
+                          readOnly
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          className="form-control"
+                          value={formData.prices[index] || ''}
+                          readOnly
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
+
           <div className="row mb-3">
-            <div className="col-md-6">
-              <label htmlFor="price" className="form-label">Total Price</label>
-              <input
-                type="text"
-                className="form-control"
-                id="price"
-                name="price"
-                value={formData.price}
-                readOnly
-              />
-            </div>
             <div className="col-md-6">
               <label htmlFor="dispatchDate" className="form-label">Dispatch Date</label>
               <input
@@ -221,7 +278,23 @@ const ShipmentsDetails = ({ isEditMode = false, initialShipmentData = null, onCl
                 required
               />
             </div>
+            <div className="col-md-6">
+              <label htmlFor="status" className="form-label">Status</label>
+              <select
+                className="form-select"
+                id="status"
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                required
+              >
+                <option value="Shipment">Shipment</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Canceled">Canceled</option>
+              </select>
+            </div>
           </div>
+
           <div className="row mb-3">
             <div className="col-md-6">
               <label htmlFor="dispatchAddress" className="form-label">Dispatch Address</label>
@@ -232,23 +305,34 @@ const ShipmentsDetails = ({ isEditMode = false, initialShipmentData = null, onCl
                 value={formData.dispatchAddress}
                 onChange={handleChange}
                 required
+                rows="3"
               ></textarea>
             </div>
             <div className="col-md-6">
               <label htmlFor="transport" className="form-label">Transport</label>
-              <input
-                type="text"
-                className="form-control"
+              <select
+                className="form-select"
                 id="transport"
                 name="transport"
                 value={formData.transport}
                 onChange={handleChange}
                 required
-              />
+              >
+                <option value="" disabled>Select Transport</option>
+                {transportOptions.map((transport) => (
+                  <option key={transport.id} value={transport.travels_name}>
+                    {transport.travels_name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
+
           <div className="text-end">
-            <button type="submit" className="btn btn-primary">
+            <button type="button" className="btn btn-secondary me-2" onClick={handleCancel}>
+              Cancel
+            </button>
+            <button type="submit" className="btn" style={{ background: '#F24E1E', color: 'white' }}>
               {isEditMode ? 'Update' : 'Create'} Shipment
             </button>
           </div>

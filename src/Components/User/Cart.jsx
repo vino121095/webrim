@@ -4,11 +4,14 @@ import NavBar from "./NavBar";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import baseurl from "../ApiService/ApiService";
+import Swal from "sweetalert2";
 
 const Cart = () => {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
+  const [transports, setTransports] = useState([]);
+  const [selectedTransport, setSelectedTransport] = useState('');
   const LoggedUser = JSON.parse(localStorage.getItem("userData"));
   const userId = LoggedUser?.uid;
 
@@ -41,6 +44,36 @@ const Cart = () => {
       fetchCartData();
     }
   }, [userId]);
+
+  const fetchTransport = async () => {
+    try {
+      const response = await axios.get(`${baseurl}/api/transport`);
+      if (response.data && Array.isArray(response.data)) {
+        // const validTransports = response.data.filter(
+        //   (transport) => transport && typeof transport === "object"
+        // );
+        setTransports(response.data);
+      } else {
+        console.error("Invalid response format:", response.data);
+        setTransports([]);
+      }
+    } catch (error) {
+      console.error("Error fetching transports:", error);
+      setTransports([]);
+    }
+  };
+  useEffect(() => {
+    fetchTransport();
+  }, []);
+
+  const handleTransportChange = (e) => {
+    const selectedTid = e.target.value;
+    console.log(selectedTid);
+    const transport = transports.find(t => t.tid === Number(selectedTid));
+    console.log(transport);
+    setSelectedTransport(transport);
+  };
+
 
   // Calculate total cart value
   const calculateTotal = (items) => {
@@ -90,14 +123,74 @@ const Cart = () => {
 
   // Handle checkout
   const handleCheckout = async () => {
-    try {
-      await axios.post(baseurl + "/api/placeOrder", { user_id: userId });
-      navigate("/User/PaymentSuccess");
-    } catch (error) {
-      console.error("Error placing order:", error);
+    if (!selectedTransport) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Transport Selection Required',
+        text: 'Please select a transport before proceeding to checkout.',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3085d6'
+      });
+      return;
     }
-  };
+    if (cartItems.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Empty Cart',
+        text: 'Your cart is empty. Please add items before proceeding to checkout.',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3085d6'
+      });
+      return;
+    }
+    // Calculate total order amount
+  const totalOrderAmount = cartItems.reduce((total, item) => {
+    return total + (item.product.mrp_rate * item.quantity);
+  }, 0);
 
+  try {
+    // Fetch user orders to calculate total order value
+    const response = await axios.get(
+      `${baseurl}/api/userOrdersById/${LoggedUser.uid}`
+    );
+    
+    const previousOrders = response.data.data;
+    
+    // Calculate total amount from previous orders
+    const previousOrderTotal = previousOrders.reduce((total, order) => {
+      if (order.status !== 'Cancelled' && order.status !== 'Done') {
+        return total + parseFloat(order.total_amount);
+      }
+      return total;
+    }, 0);
+
+    // Check if the new order plus previous orders exceed credit limit
+    const totalOrderValue = totalOrderAmount + previousOrderTotal;
+    
+    // Assuming you have the user's credit limit available
+    if (totalOrderValue > parseFloat(LoggedUser.creditlimit)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Credit Limit Exceeded',
+        text: `Your total order value (₹${totalOrderValue.toFixed(2)}) exceeds your credit limit of ₹${parseFloat(LoggedUser.creditlimit).toFixed(2)}`,
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#d33'
+      });
+      return;
+    }
+      await axios.post(baseurl + "/api/placeOrder", { user_id: userId, transport_id: selectedTransport.tid });
+      navigate("/User/PaymentSuccess");
+  }catch (error) {
+    console.error("Error during checkout:", error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Checkout Failed',
+      text: 'An error occurred during checkout. Please try again later.',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#d33'
+    });
+  }
+}
   return (
     <>
       <NavBar />
@@ -248,33 +341,55 @@ const Cart = () => {
 
           {/* Order Summary Section */}
           <div className="col-lg-4">
-            <div className="border p-4 rounded">
-              <h5>Order Summary</h5>
-              <div className="d-flex justify-content-between">
-                <span>Sub total</span>
-                <span>{cartItems.length} items</span>
-              </div>
-              <div className="d-flex justify-content-between">
-                <span>Total MRP</span>
-                <span>
-                  {" "}
-                  <i class="bi bi-currency-rupee"></i> {totalAmount.toFixed(2)}
-                </span>
-              </div>
-              <div className="d-flex justify-content-between fw-bold">
-                <span>Total Cart Value</span>
-                <span className="text-primary">
-                  <i class="bi bi-currency-rupee"></i> {totalAmount.toFixed(2)}
-                </span>
-              </div>
-              <button
-                className="btn btn-success w-100 mt-3"
-                onClick={handleCheckout}
+      <div className="border p-4 rounded">
+        <h5>Order Summary</h5>
+        
+        {/* Transport Dropdown */}
+        <div className="mb-3">
+          <label htmlFor="transportSelect" className="form-label">Select Transport</label>
+          <select 
+            id="transportSelect"
+            className="form-select"
+            value={selectedTransport ? selectedTransport.tid : ''}
+            onChange={handleTransportChange} 
+          >
+            <option value="">Choose Transport</option>
+            {transports.map((transport) => (
+              <option 
+                key={transport.tid} 
+                value={transport.tid}
               >
-                Checkout
-              </button>
-            </div>
-          </div>
+                {transport.travels_name || 'Unnamed Transport'}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="d-flex justify-content-between">
+          <span>Sub total</span>
+          <span>{cartItems.length} items</span>
+        </div>
+        <div className="d-flex justify-content-between">
+          <span>Total MRP</span>
+          <span>
+            <i className="bi bi-currency-rupee"></i> {totalAmount.toFixed(2)}
+          </span>
+        </div>
+        <div className="d-flex justify-content-between fw-bold">
+          <span>Total Cart Value</span>
+          <span className="text-primary">
+            <i className="bi bi-currency-rupee"></i> {totalAmount.toFixed(2)}
+          </span>
+        </div>
+        <button
+          className="btn btn-success w-100 mt-3"
+          onClick={handleCheckout}
+          disabled={!selectedTransport}
+        >
+          Checkout
+        </button>
+      </div>
+    </div>
         </div>
       </div>
     </>

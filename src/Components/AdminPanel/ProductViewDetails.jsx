@@ -41,8 +41,10 @@ const ProductViewDetails = () => {
         {/* Image Section */}
         <div className="col-lg-6 mb-4 h-75">
           <div className="productImageSection bg-white w-100">
-            <div className="text-center pt-4">
-            <img src={mainImage} alt="Main Product" className="mainImage img-fluid rounded border" />
+            <div className="text-center pt-4 d-flex justify-content-center " style={{height: '500px'}}>
+            <img src={mainImage} alt="Main Product" className="mainImage img-fluid rounded border"
+             style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }}
+            />
             </div>
             <div className="thumbnailGallery d-flex justify-content-evenly flex-wrap mt-3 pb-4">
               {product.images && product.images.length > 0 ? (

@@ -8,6 +8,7 @@ import FeedViews from './Components/User/FeedViews';
 import ProfileInfo from './Components/User/ProfileInfo';
 import OrderHistory from './Components/User/OrderHistory';
 import AdminDashboard from './Components/AdminPanel/AdminDashboard';
+import DistributorProductView from './Components/User/DistributorProductView';
 import Cart from './Components/User/Cart';
 import StoreDetails from './Components/User/StoreDetails';
 import PaymentSuccess from './Components/User/PaymentSuccess';
@@ -28,6 +29,7 @@ function App() {
          <Route path='/User/PaymentSuccess' element={<PaymentSuccess/>} />
          <Route path='/User/OrderHistory' element={<OrderHistory/>} />
          <Route path='/AdminDashboard/*' element={<AdminDashboard/>} />
+         <Route path='/User/DistributorProductView/:id' element={<DistributorProductView/>} />
        </Routes>
      </BrowserRouter>
     </>

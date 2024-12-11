@@ -153,7 +153,57 @@ exports.getShipmentById = async (req, res) => {
         });
     }
 };
+exports.updateShipment = async (req, res) => {
+    try {
+        const { sid } = req.params;
+        const { 
+            distributor_name, 
+            dispatch_date, 
+            dispatch_address, 
+            transport,
+            status
+        } = req.body;
 
+        // Check if shipment exists
+        const shipment = await Shipment.findOne({ 
+            where: { sid: sid } 
+        });
+
+        if (!shipment) {
+            return res.status(404).json({ 
+                error: 'Shipment not found' 
+            });
+        }
+
+        // Update shipment details
+        await Shipment.update({
+            distributor_name,
+            dispatch_date,
+            dispatch_address,
+            transport,
+            status
+        }, {
+            where: { sid: sid }
+        });
+
+        // Fetch updated shipment
+        const updatedShipment = await Shipment.findOne({
+            where: { sid: sid }
+        });
+
+        res.status(200).json({
+            message: 'Shipment updated successfully',
+            data: updatedShipment
+        });
+
+    } catch (error) {
+        console.error('Error updating shipment:', error);
+        res.status(500).json({
+            error: 'Failed to update shipment',
+            details: error.message
+        });
+    }
+};
 
 exports.deleteShipment = async (req, res) => {
     try {

@@ -138,16 +138,37 @@ exports.updateDistributor = async (req, res) => {
                 attributes: ['image_path']
             }]
         });
+        const user = await User.findOne({where: {email: distributor.email}});
 
         if (!distributor) {
             return res.status(404).json({ message: 'Distributor not found' });
         }
 
         // Update distributor data if provided
-        if (Object.keys(req.body).length > 0) {
-            await distributor.update(req.body);
+        // if (Object.keys(req.body).length > 0) {
+        //     await distributor.update(req.body);
+        // }
+
+        const updateData = { ...req.body };
+    
+        if ('password' in updateData) {
+            if (!updateData.password || updateData.password.trim() === '') {
+                // If password is empty or just whitespace, remove it from update data
+                // This means the existing password will be retained
+                delete updateData.password;
+            } else {
+                // Hash the new password
+                const saltRounds = 10;
+                updateData.password = await bcrypt.hash(updateData.password, saltRounds);
+            }
         }
 
+        // Perform updates if there are fields to update
+        if (Object.keys(updateData).length > 0) {
+            await distributor.update(updateData);
+            await user.update(updateData);
+        }
+        
         // Handle new image uploads
         if (req.files && req.files.length > 0) {
             // Add new images

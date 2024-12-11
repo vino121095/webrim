@@ -155,7 +155,7 @@
   }
   .card-img-top{
     /* width: 300px; */
-    height: 250px !important;
+    height: auto !important;
   }
   /* Store Details */
   .view-mobile-no{
@@ -251,7 +251,7 @@
     }
     .card-img-top{
      /* width: 300px; */
-     height: 200px !important;
+     height: auto !important;
    }
   }
 
@@ -269,7 +269,7 @@
   }
   .card-img-top{
     /* width: 300px; */
-    height: 200px !important;
+    /* height: 200px !important; */
   }
   .view-mobile-no{
     font-size: 9px !important;

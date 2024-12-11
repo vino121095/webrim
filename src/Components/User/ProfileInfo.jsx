@@ -15,7 +15,7 @@ const ProfileInfo = () => {
     mobile_number: '',
     email: user?.email || '',
     company_name: '',
-    credit_limit: '',
+    creditlimit: '',
     address: '',
     pincode: '',
     landmark: '',
@@ -40,7 +40,7 @@ const ProfileInfo = () => {
           mobile_number: profileData.mobile_number || '',
           email: profileData.email || user.email,
           company_name: profileData.company_name || '',
-          credit_limit: profileData.credit_limit || '',
+          creditlimit: profileData.creditlimit || '',
           address: profileData.address || '',
           pincode: profileData.pincode || '',
           landmark: profileData.landmark || '',
@@ -189,8 +189,9 @@ const ProfileInfo = () => {
               type="number"
               className="form-control"
               id="credit_limit"
-              value={formData.credit_limit}
+              value={formData.creditlimit}
               onChange={handleInputChange}
+              disabled 
               style={customStyle}
             />
           </div>

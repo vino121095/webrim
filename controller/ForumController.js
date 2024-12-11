@@ -3,6 +3,7 @@ const Forum = require('../model/ForumModel');
 const ForumTake = require('../model/ForumTakesmodel');
 const User = require('../model/UserModel');
 const Product = require('../model/Productmodel');
+const cron = require('node-cron');
 
 // Add a new forum
 const addForum = async (req, res) => {
@@ -14,6 +15,24 @@ const addForum = async (req, res) => {
     return res.status(500).json({ message: 'Failed to create forum', error: error.message });
   }
 };
+
+cron.schedule('0 0 * * *', async () => {
+  console.log('Checking for expired forums...');
+  try {
+      const now = new Date();
+      // Delete forums with expired close_date
+      const result = await Forum.destroy({
+          where: {
+              close_date: {
+                  [Sequelize.Op.lt]: now // Expired close_date
+              }
+          }
+      });
+      console.log(`${result} expired forums deleted.`);
+  } catch (error) {
+      console.error('Error during forum cleanup:', error);
+  }
+});
 
 // View all forums
 const viewForums = async (req, res) => {

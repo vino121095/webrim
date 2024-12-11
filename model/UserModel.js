@@ -42,7 +42,7 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  credit_limit: {
+  creditlimit: {
     type: DataTypes.DECIMAL,
     allowNull: true,
     defaultValue: 0.00,

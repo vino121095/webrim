@@ -98,7 +98,7 @@ exports.getCartItems = async (req, res) => {
       });
  
       if (cartItems.length === 0) {
-          return res.status(404).json({ message: 'No cart items found for this user.' });
+          return res.json({ message: 'No cart items found for this user.' });
       }
  
       // Process and return data
