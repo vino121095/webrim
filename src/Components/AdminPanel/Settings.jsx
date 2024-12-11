@@ -83,7 +83,7 @@ const Settings = () => {
           </div>
 
           {/* Settings Sidebar Card */}
-          <div className="card border-0 shadow-sm h-75">
+          <div className="card border-0 shadow-sm">
             <div className="list-group list-group-flush setting-sidebar">
               <a 
                 href="#" 
@@ -145,6 +145,7 @@ const Settings = () => {
                   <div>
                     <h6 className="mb-0">E-mail</h6>
                     <small className="text-muted">Newsletter and Subscribe</small>
+
                   </div>
                 </div>
               </a>
