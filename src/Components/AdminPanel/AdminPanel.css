@@ -414,18 +414,29 @@ a.navbar-brand{
       color: #F24E1E !important;
     }
   }
+  .settings-theme-color{
+    background-color: #F24E1E;
+    color: white;
+  }
   /* Product view details */
   /* Container for overall layout */
 .product-details-container {
   max-width: 1200px;
   margin: auto;
 }
+.table th, .table td {
+  white-space: nowrap !important; /* Prevent text from wrapping */
+}
+
+.table-responsive {
+  overflow-x: auto !important; /* Enable horizontal scroll for small screens */
+}
 
 /* Main product image styling */
-.mainImage {
+/* .mainImage {
   width: 100%;
   object-fit: cover;
-}
+} */
 
 /* Thumbnail gallery styling */
 .thumbnailGallery img {

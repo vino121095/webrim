@@ -44,14 +44,16 @@ const NavBar = () => {
   }, [loggedUser]);
 
   const fetchCartData = async () => {
-    try {
-      const response = await axios.get(baseurl + `/api/user/${loggedUser.uid}`);
-      const items = response.data.map((item) => ({
-        ...item,
-      }));
-      setCartCount(items);
-    } catch (error) {
-      console.error("Error fetching cart data:", error);
+    if(loggedUser.role === 'distributor'){
+      try {
+        const response = await axios.get(baseurl + `/api/user/${loggedUser.uid}`);
+        const items = response.data.map((item) => ({
+          ...item,
+        }));
+        setCartCount(items);
+      } catch (error) {
+        console.error("Error fetching cart data:", error);
+      }
     }
   };
   const fetchNotifications = async () => {

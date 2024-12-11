@@ -21,6 +21,7 @@ const FeedViews = () => {
     quantity: "",
     name: "",
     phone_number: "",
+    close_date: ""
   });
   const [forums, setForums] = useState([]);
 
@@ -85,6 +86,7 @@ const FeedViews = () => {
       quantity: formData.quantity,
       name: formData.name,
       phone_number: formData.phone_number,
+      close_date: formData.close_date
     };
 
     try {
@@ -97,6 +99,7 @@ const FeedViews = () => {
           confirmButtonText: 'OK'
         });
         resetForm();
+        setIsModalOpen(false)
         fetchForums();
       } else {
         Swal.fire({
@@ -131,10 +134,11 @@ const FeedViews = () => {
     }
 
     const updateData = {
-      product_name : formData.product_name,
+      product_name: formData.product_name,
       quantity: formData.quantity,
       name: formData.name,
       phone_number: formData.phone_number,
+      close_date: formData.close_date
     };
 
     try {
@@ -186,6 +190,7 @@ const FeedViews = () => {
       quantity: forum.quantity,
       name: forum.name,
       phone_number: forum.phone_number,
+      close_date: forum.close_date
     });
     setIsEditModalOpen(true);
   };
@@ -234,7 +239,7 @@ const FeedViews = () => {
   };
 
   const availableProducts = products.filter(product => product.stocks > 0);
-  
+
   const handleTakeForum = async (forumId) => {
     if (!user || !user.uid) {
       Swal.fire({
@@ -285,21 +290,21 @@ const FeedViews = () => {
       console.error('Forum take error:', error);
     }
   };
-  
+
   const handleSearch = (searchTerm) => {
     const query = searchTerm.toLowerCase();
     setSearchQuery(query);
-    
+
     if (!query) {
       setFilteredForums(forums);
       return;
     }
-    
+
     const filtered = forums.filter((forum) =>
       forum.product_name?.toLowerCase().includes(query) ||
       forum.name?.toLowerCase().includes(query)
     );
-    
+
     setFilteredForums(filtered);
   };
 
@@ -311,7 +316,7 @@ const FeedViews = () => {
           <div className="col-10 w-75 feed_views_search">
             <UserSearch onSearch={handleSearch} />
           </div>
-          
+
           {user.role === 'distributor' ? (
             <div></div>
           ) : (
@@ -363,23 +368,29 @@ const FeedViews = () => {
                       </p>
                       <p className="d-flex justify-content-between">
                         <span className="fw-bold">Close Date: </span>
-                        <span>{forum.close_date || "No Date"}</span>
+                        <span> {forum.close_date
+                          ? new Date(forum.close_date).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                          })
+                          : 'No Date'}</span>
                       </p>
 
                       {user && user.role === 'technician' && (
                         <div className="d-flex gap-3 w-100 d-flex justify-content-end">
-                           <button
-                             className="btn btn-link p-0"
-                             onClick={() => handleEditForum(forum)}
-                           >
-                             <PencilLine size={20} className="text-info" />
-                           </button>
-                           <button
-                             className="btn btn-link p-0"
-                             onClick={() => handleDeleteForum(forum.fid)}
-                           >
-                             <Trash2 size={20} className="text-danger" />
-                           </button>
+                          <button
+                            className="btn btn-link p-0"
+                            onClick={() => handleEditForum(forum)}
+                          >
+                            <PencilLine size={20} className="text-info" />
+                          </button>
+                          <button
+                            className="btn btn-link p-0"
+                            onClick={() => handleDeleteForum(forum.fid)}
+                          >
+                            <Trash2 size={20} className="text-danger" />
+                          </button>
                         </div>
                       )}
 
@@ -466,6 +477,17 @@ const FeedViews = () => {
                   onChange={handleInputChange}
                 />
               </div>
+              <div className="mb-3">
+                <label>Close Date</label>
+                <input
+                  type="date"
+                  name="close_date"
+                  className="form-control"
+                  placeholder="Enter Close Date"
+                  value={formData.close_date}
+                  onChange={handleInputChange}
+                />
+              </div>
               <button type="submit" className="btn requirment-btn">
                 Submit Requirement
               </button>
@@ -473,6 +495,7 @@ const FeedViews = () => {
           </div>
         </div>
       )}
+
 
       {/* Edit Forum Modal */}
       {isEditModalOpen && (
@@ -527,6 +550,17 @@ const FeedViews = () => {
                   onChange={handleInputChange}
                 />
               </div>
+              <div className="mb-3">
+                <label>Close Date</label>
+                <input
+                  type="date"
+                  name="close_date"
+                  className="form-control"
+                  placeholder="Enter Close Date"
+                  value={formData.close_date}
+                  onChange={handleInputChange}
+                />
+              </div>
               <button type="submit" className="btn requirment-btn">
                 Update Requirement
               </button>
@@ -534,6 +568,7 @@ const FeedViews = () => {
           </div>
         </div>
       )}
+
     </>
   );
 };

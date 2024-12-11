@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import baseurl from "../ApiService/ApiService";
 
 const SearchBarLocation = ({ onLocationSearch }) => {
   const navigate = useNavigate();
@@ -82,28 +83,25 @@ const SearchBarLocation = ({ onLocationSearch }) => {
 
   const fetchDistrictsForState = async (stateName) => {
     try {
-      const statesResponse = await fetch('https://cdn-api.co-vin.in/api/v2/admin/location/states');
+      const statesResponse = await fetch(`${baseurl}/api/states`);
       const statesData = await statesResponse.json();
-      
-      // More flexible state matching
-      const state = statesData.states.find(s => 
+    
+      const state = statesData.states.find(s =>
         stateName.toLowerCase().includes(s.state_name.toLowerCase()) ||
         s.state_name.toLowerCase().includes(stateName.toLowerCase())
       );
-
+    
       if (state) {
-        const districtsResponse = await fetch(`https://cdn-api.co-vin.in/api/v2/admin/location/districts/${state.state_id}`);
+        const districtsResponse = await fetch(`${baseurl}/api/districts/${state.state_id}`);
         const districtsData = await districtsResponse.json();
-        
-        // More robust district selection
+    
         const first5Districts = districtsData.districts 
           ? districtsData.districts.slice(0, 5).map(district => district.district_name)
           : [];
-        
+    
         if (first5Districts.length === 0) {
           setError("No districts found for this state");
         }
-        
         setDistricts(first5Districts);
       } else {
         setError(`State not found: ${stateName}`);
@@ -208,17 +206,17 @@ const SearchBarLocation = ({ onLocationSearch }) => {
   };
 
   // Add the missing handleLocationSearch function
-  const handleLocationSearch = (event) => {
-    // If it's a key event, only process if it's the Enter key
-    if (event.type === 'keyup' && event.key !== 'Enter') {
-      return;
-    }
+  const handleLocationSearch = () => {
+    // // If it's a key event, only process if it's the Enter key
+    // if (event.type === 'keyup' && event.key !== 'Enter') {
+    //   return;
+    // }
 
-    // Trim and validate the search location
-    const location = searchLocation.trim();
-    if (location) {
-      onLocationSearch(location);
-    }
+    // // Trim and validate the search location
+    // const location = searchLocation.trim();
+    // if (location) {
+      onLocationSearch(searchLocation);
+    // }
   };
 
   const handleNearMeClick = () => {
@@ -265,7 +263,7 @@ const SearchBarLocation = ({ onLocationSearch }) => {
                   placeholder="Enter Location..."
                   value={searchLocation}
                   onChange={(e) => setSearchLocation(e.target.value)}
-                  onKeyUp={(e) => handleLocationSearch(e)}
+                  onKeyUp={() => handleLocationSearch()}
                   style={{ height: "100%" }}
                 />
               </li>

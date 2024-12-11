@@ -123,11 +123,14 @@ const StoreDetails = () => {
                         {filteredDistributors.map((distributor, index) => (
                             <div key={distributor.did || index} className="col-6 col-sm-6 col-md-4 col-lg-3">
                                 <div className="card product-card h-100">
+                                <div className='card-img d-flex align-items-center justify-content-center' style={{ height: '200px' }}>
                                     <img
                                         src={`${baseurl}/${distributor.image[0]?.image_path || StoreImg}`}
-                                        className="card-img-top img-fluid rounded-3 p-3"
+                                        className="card-img-top rounded-3 p-3 mw-100 mh-100"
                                         alt={distributor.name || "Distributor"}
+                                        style={{ objectFit: 'contain' }}
                                     />
+                                    </div>
                                     <div className="card-body d-flex flex-column">
                                         <h5 className="card-title fw-bolder">{distributor.companyname || 'Smart Accessories'}</h5>
                                         <h6 className="card-text mt-1">{distributor.location || 'Gandhipuram Coimbatore'}</h6>
@@ -150,9 +153,9 @@ const StoreDetails = () => {
                                         </div>
                                         <div className="text-center mt-auto">
                                             <a
-                                                href="#"
+                                                 href={`tel:${distributor.phoneno}`}
                                                 className="btn w-100 fw-semibold contact-supplier-btn"
-                                                onClick={() => navigate("/user/FeedViews")}
+                                                // onClick={() => navigate("/user/FeedViews")}
                                             >
                                                 Contact Supplier
                                             </a>

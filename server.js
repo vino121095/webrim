@@ -89,6 +89,10 @@ app.use('/api', ShipmentRoutes);
 const OrderRoutes = require('./routes/orderRoutes.js');
 app.use('/api', OrderRoutes);
 
+//Location Route
+const LocationRoutes = require('./routes/LocationRoutes.js');
+app.use('/api', LocationRoutes);
+
 
 // Listen on the port from the .env file
 const PORT = process.env.PORT || 5000;

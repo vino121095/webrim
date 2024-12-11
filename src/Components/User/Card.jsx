@@ -50,7 +50,7 @@ const Card = () => {
   //   // }));
   //   setIsModalOpen(true);
   // };
-  const handleAddToCartClick = async(product)=>{
+  const handleAddToCartClick = async (product) => {
     // setSelectedProduct(product);
     //   setFormData(prevData => ({
     //   ...prevData,
@@ -73,12 +73,12 @@ const Card = () => {
         user_id: LoggedUser.uid,
         product_id: product.product_id,
         product_name: product.product_name,
-        quantity:  formData.quantity,
+        quantity: formData.quantity,
         distributor_name: formData.distributor_name,
         // distributor_location: LoggedUser.location,
         phone_number: formData.phone_number,
       });
-    
+
       if (cartResponse.status === 201) {
         Swal.fire({
           icon: 'success',
@@ -147,7 +147,7 @@ const Card = () => {
   //       distributor_location: formData.distributor_location,
   //       phone_number: formData.phone_number,
   //     });
-    
+
   //     if (cartResponse.status === 201) {
   //       Swal.fire({
   //         icon: 'success',
@@ -203,8 +203,11 @@ const Card = () => {
     setFilteredProducts(filtered);
   };
   const handleLocationSearch = (location) => {
-   
+
   };
+  const handleDistributorProductView = (product) => {
+    navigate(`/User/DistributorProductView/${product.pid}`);
+  }
 
   return (
     <>
@@ -216,20 +219,25 @@ const Card = () => {
             filteredProducts.map((product) => (
               <div key={product.pid} className="col-6 col-sm-6 col-md-4 col-lg-3">
                 <div className="card product-card h-100">
-                  <img
-                    src={`${baseurl}/${product.images[0]?.image_path || 'default.jpg'}`}
-                    className="card-img-top img-fluid rounded-3 p-3"
-                    alt={product.product_name}
-                  />
+                  <div className='card-img d-flex align-items-center justify-content-center' style={{ height: '200px' }}>
+                    <img
+                      src={`${baseurl}/${product.images[0]?.image_path || 'default.jpg'}`}
+                      className="card-img-top rounded-3 p-3 mw-100 mh-100"
+                      alt={product.product_name}
+                      style={{ objectFit: 'contain' }}
+                      onClick={() => handleDistributorProductView (product)}
+                    />
+                  </div>
+
                   <div className="card-body d-flex flex-column">
-                  <h5 className="card-title">{product.product_name}</h5>
-                  <span></span>
-                  <h5 className="card-text mt-3"><i class="bi bi-currency-rupee"></i> {product.mrp_rate}</h5>
-                  <div className='d-block d-lg-flex align-items-center justify-content-between mb-3'><small className="">{product.brand_name}</small>
-                    {/* <p className={product.stocks === 0 ? 'text-danger' : ''}>
+                    <h5 className="card-title">{product.product_name}</h5>
+                    <span></span>
+                    <h5 className="card-text mt-3"><i class="bi bi-currency-rupee"></i> {product.mrp_rate}</h5>
+                    <div className='d-block d-lg-flex align-items-center justify-content-between mb-3'><small className="">{product.brand_name}</small>
+                      {/* <p className={product.stocks === 0 ? 'text-danger' : ''}>
                       Stocks : {product.stocks === 0 ? 'Out of stock' : product.stocks}
                     </p> */}
-                  </div>
+                    </div>
                     <div className="text-center mt-auto">
                       <a
                         href="#"
@@ -324,4 +332,4 @@ const Card = () => {
   );
 };
 
-      export default Card;
+export default Card;

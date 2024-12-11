@@ -15,21 +15,32 @@ const OrderSummary = () => {
   const [showShipmentDetails, setShowShipmentDetails] = useState(false);
   const [searchTerm, setSearchTerm] = useState(''); // New state for search
   const [selectedOrder, setSelectedOrder] = useState({});
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [orderDetails, setOrderDetails] = useState(null);
   const itemsPerPage = 6;
   const navigate = useNavigate();
 
+  const fetchOrders = async () => {
+    try {
+      const response = await axios.get(`${baseurl}/api/orders`);
+      setOrders(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    }
+  };
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const response = await axios.get(`${baseurl}/api/orders`);
-        setOrders(response.data.data || []);
-      } catch (error) {
-        console.error('Error fetching orders:', error);
-      }
-    };
-    fetchOrders();
+       fetchOrders();
   }, []);
 
+  const fetchOrderDetails = async (orderId) => {
+    try {
+      const response = await axios.get(`${baseurl}/api/order/${orderId}`);
+      setOrderDetails(response.data.data);
+      setShowDetailsModal(true);
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+    }
+  };
   // Combine filtering and searching logic
   const filteredAndSearchedOrders = orders.filter(order => {
     // Filter by status
@@ -81,6 +92,11 @@ const OrderSummary = () => {
     setShow(true);
   };
 
+  const handleDetailsModalClose = () => {
+    setShowDetailsModal(false);
+    setOrderDetails(null);
+  };
+
   const statusStyles = {
     'Received': {
       color: '#267309',
@@ -127,6 +143,7 @@ const OrderSummary = () => {
     try {
       const response = await axios.put(`${baseurl}/api/cancelOrder/${selectedOrder.oid}`);
       setOrders(response.data.data || []);
+      fetchOrders();
       setShow(false);
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -136,6 +153,7 @@ const OrderSummary = () => {
     try {
       const response = await axios.put(`${baseurl}/api/completeOrder/${selectedOrder.oid}`);
       setOrders(response.data.data || []);
+      fetchOrders();
       setShow(false);
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -209,20 +227,20 @@ const OrderSummary = () => {
                   <td className="py-3 px-4">{order.user.username}</td>
                   <td className="py-3 px-4">{order.order_date}</td>
                   <td className="py-3 px-4">{order.total_amount}</td>
-                  <td className="py-3 px-4">
+                  <td className="py-3 px-4" style={{cursor:'pointer'}}>
                     <span style={statusStyles[order.status] || {}} onClick={()=>handleChangeStatus(order)}>
                       {order.status}
                     </span>
                   </td>
                   <td className="py-3 px-4">
-                    {order.status === 'Received' && (
-                      <button
-                        className="btn btn-primary btn-sm"
-                        onClick={() => handleShipmentClick(order.oid)}
-                      >
-                        Create Shipments
-                      </button>
-                    )}
+                    {/* {order.status === 'Received' && ( */}
+                      <button 
+                      className='btn btn-primary btn-sm'
+                      onClick={() => fetchOrderDetails(order.oid)}
+                    >
+                      View Order
+                    </button>
+                    {/* )} */}
                   </td>
                 </tr>
               ))
@@ -280,10 +298,10 @@ const OrderSummary = () => {
       
       <Modal.Body>
         <div className="mb-3">
-          <strong>Current Status:</strong> 
+          <strong>Current Status:</strong><span> </span>
           <span 
             className="ml-2" 
-            // style={selectedOrder.status || {}}
+            style={statusStyles[selectedOrder.status] || {}}
           >
             {selectedOrder.status}
           </span>
@@ -304,11 +322,17 @@ const OrderSummary = () => {
          
         )}
          {selectedOrder.status === "Received" && (
-          <Button  onClick={handleCancel}
-            variant="danger" 
+          <div className='d-flex justify-content-around'><Button 
+          variant="danger" onClick={handleCancel}
+        >
+          Cancel
+        </Button>
+        <Button 
+            variant="primary" onClick={() => handleShipmentClick(selectedOrder.oid)}
           >
-            Cancel
+            Create Shipment
           </Button>
+        </div>
         )}
       </Modal.Body>
       
@@ -318,6 +342,74 @@ const OrderSummary = () => {
         </Button>
       </Modal.Footer>
     </Modal>
+
+    {/* Order Details Modal */}
+    <Modal show={showDetailsModal} onHide={handleDetailsModalClose} centered size="lg">
+  <Modal.Header closeButton>
+    <Modal.Title>Order Details #{orderDetails?.order_id}</Modal.Title>
+  </Modal.Header>
+
+  <Modal.Body>
+    {orderDetails ? (
+      <div>
+        {/* User Information */}
+        <div className="mb-4">
+          <h5>User Information</h5>
+          <div>
+            <p><strong>User ID:</strong> {orderDetails.user?.uid}</p>
+            <p><strong>Name:</strong> {orderDetails.user?.username}</p>
+            <p><strong>Email:</strong> {orderDetails.user?.email}</p>
+          </div>
+        </div>
+
+        {/* Order Items */}
+        <div className="mb-4">
+          <h5>Order Items</h5>
+          <div className="table-responsive">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Quantity</th>
+                  <th>Price</th>
+                  <th>Subtotal</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orderDetails.OrderItems?.map((item) => (
+                  <tr key={item.oitems_id}>
+                    <td>{item.Product.product_name}</td>
+                    <td>{item.quantity}</td>
+                    <td><i className="bi bi-currency-rupee"></i>{item.price}</td>
+                    <td><i className="bi bi-currency-rupee"></i>{(item.quantity * item.price).toFixed(2)}</td>
+                    <td>{orderDetails.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Total Amount */}
+        <div className="text-end">
+          <h5>
+            Total Amount: <i className="bi bi-currency-rupee"></i>{orderDetails.total_amount}
+          </h5>
+        </div>
+      </div>
+    ) : (
+      <div className="text-center">Loading order details...</div>
+    )}
+  </Modal.Body>
+
+  <Modal.Footer>
+    <Button variant="secondary" onClick={handleDetailsModalClose}>
+      Close
+    </Button>
+  </Modal.Footer>
+</Modal>
+
     </div>
   );
 };

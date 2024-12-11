@@ -7,10 +7,12 @@ const Product = require('../model/Productmodel');
 const ProductImage = require('../model/productImagesmodel');
 const User = require('../model/UserModel');
 const { where } = require('sequelize');
+const Transport = require('../model/Transportmodel');
  
 exports.createOrder = async (req, res) => {
     try {
         const userId = req.body.user_id;
+        const transportId = req.body.transport_id;
  
         // Fetch all cart items for the user
         const cartItems = await AddToCart.findAll({
@@ -33,7 +35,8 @@ exports.createOrder = async (req, res) => {
             user_id: userId,
             order_date: req.order_date,
             total_amount: totalAmount,
-            status: 'Received'
+            status: 'Received',
+            transport_id: transportId
         });
  
         // Add items to the order
@@ -287,12 +290,24 @@ exports.getOrderById = async (req, res) => {
     try {
         const oid = req.params.id;
         const order = await Order.findByPk(oid, {
-            include: [{
+            include: [
+                {
+                    model: User, 
+                    as: 'user',
+                    attributes: ['uid', 'username', 'email']
+                },
+                {
                 model: OrderItem,
                 include: [{
                     model: Product
                 }]
-            }]
+            },
+            {
+                model: Transport,
+                as: 'transport',
+                attributes: ['travels_name'] 
+            }
+        ]
         });
  
         if (!order) {
