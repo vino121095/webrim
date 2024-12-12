@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Pagination } from "react-bootstrap";
 import "./AdminPanel.css";
-import {
-  Upload,
-  Eye,
-  PencilLine,
-  Trash2,
-  X,
-} from "lucide-react";
+import { Upload, Eye, PencilLine, Trash2, X } from "lucide-react";
 import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 import axios from "axios";
 import baseurl from "../ApiService/ApiService";
@@ -27,7 +21,45 @@ const Distributors = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState("");
+  const [validationErrors, setValidationErrors] = useState({});
   const itemsPerPage = 6;
+
+  // Validation functions
+  const validateGSTNumber = (gst) => {
+    const gstPattern =
+      /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+    if (!gst) return "GST Number is required";
+    if (!gstPattern.test(gst)) return "Invalid GST Number format";
+    return "";
+  };
+
+  const validatePassword = (password) => {
+    if (!password) return "Password is required";
+    if (password.length < 8) return "Password must be at least 8 characters";
+    if (!/(?=.*[a-z])/.test(password))
+      return "Password must include lowercase letter";
+    if (!/(?=.*[A-Z])/.test(password))
+      return "Password must include uppercase letter";
+    if (!/(?=.*\d)/.test(password)) return "Password must include number";
+    if (!/(?=.*[!@#$%^&*])/.test(password))
+      return "Password must include special character";
+    return "";
+  };
+
+  const validateEmail = (email) => {
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) return "Email is required";
+    if (!emailPattern.test(email)) return "Invalid email format";
+    return "";
+  };
+
+  const validatePhone = (phone) => {
+    const phonePattern = /^[6-9]\d{9}$/;
+    if (!phone) return "Phone number is required";
+    if (!phonePattern.test(phone)) return "Invalid phone number format";
+    return "";
+  };
+
   useEffect(() => {
     if (searchQuery.trim()) {
       handleSearch();
@@ -46,7 +78,7 @@ const Distributors = () => {
     }
   };
 
-   const handleSearch = async () => {
+  const handleSearch = async () => {
     if (!searchQuery.trim()) {
       fetchDistributors();
       return;
@@ -60,7 +92,7 @@ const Distributors = () => {
         )}`
       );
       setDistributors(response.data || []);
-      setCurrentPage(1); // Reset to first page when searching
+      setCurrentPage(1);
     } catch (error) {
       if (error.response?.status === 404) {
         setDistributors([]);
@@ -72,9 +104,66 @@ const Distributors = () => {
     }
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setCurrentDistributor((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    // Clear validation error when user starts typing
+    setValidationErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+
+    // Validate fields
+    switch (name) {
+      case "gstnumber":
+        setValidationErrors((prev) => ({
+          ...prev,
+          gstnumber: validateGSTNumber(value),
+        }));
+        break;
+      case "password":
+        setValidationErrors((prev) => ({
+          ...prev,
+          password: validatePassword(value),
+        }));
+        break;
+      case "email":
+        setValidationErrors((prev) => ({
+          ...prev,
+          email: validateEmail(value),
+        }));
+        break;
+      case "phoneno":
+        setValidationErrors((prev) => ({
+          ...prev,
+          phoneno: validatePhone(value),
+        }));
+        break;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    // Validate all required fields
+    const errors = {
+      gstnumber: validateGSTNumber(currentDistributor?.gstnumber),
+      password: currentDistributor?.did ? "" : validatePassword(currentDistributor?.password),
+      email: validateEmail(currentDistributor?.email),
+      phoneno: validatePhone(currentDistributor?.phoneno),
+    };
+
+    // Check if there are any validation errors
+    const hasErrors = Object.values(errors).some((error) => error !== "");
+    if (hasErrors) {
+      setValidationErrors(errors);
+      return;
+    }
 
     // Image validation
     if (imageFiles.length === 0 && existingImages.length === 0) {
@@ -99,27 +188,21 @@ const Distributors = () => {
         contact_person_name: currentDistributor?.contact_person_name || "",
         phoneno: currentDistributor?.phoneno || "",
         email: currentDistributor?.email || "",
-        password: currentDistributor?.password || ""
+        password: currentDistributor?.password || "",
       };
 
-      // Add distributor data as a JSON string
       Object.entries(distributorData).forEach(([key, value]) => {
         formData.append(key, value);
       });
 
-      // Handle images
       if (currentDistributor?.did) {
-        // Update case
         formData.append("did", currentDistributor.did);
-
-        // Add existing images as JSON string
         if (existingImages.length > 0) {
           formData.append("existingImages", JSON.stringify(existingImages));
         }
       }
 
-      // Add new images
-      imageFiles.forEach((file, index) => {
+      imageFiles.forEach((file) => {
         formData.append("image", file);
       });
 
@@ -134,41 +217,32 @@ const Distributors = () => {
       });
 
       if (response.status === 201 || response.status === 200) {
-        // Determine the appropriate icon
-        const iconType =()=>{
-          if(response.data.message === "Distributor added successfully" || response.data.message === "Distributor updated successfully"){
-            return "success";
-          }
-          else{
-            return "error";
-          }
-        } 
-      
-        // SweetAlert for success
+        const iconType =
+          response.data.message === "Distributor added successfully" ||
+          response.data.message === "Distributor updated successfully"
+            ? "success"
+            : "error";
+
         Swal.fire({
-          title: iconType() === 'success' ? "Good job!" : 'Oops',
-          text: response.data.message || "Distributor added successfully!",
-          icon: iconType(), 
+          title: iconType === "success" ? "Good job!" : "Oops",
+          text: response.data.message || "Operation successful!",
+          icon: iconType,
           confirmButtonColor: "#F24E1E",
         });
-      
-        fetchDistributors(); // Refresh the distributors list
-        resetForm(); // Reset the form fields
-        toggleModal(); // Close the modal
-      }
-      
-      else{
+
+        fetchDistributors();
+        resetForm();
+        toggleModal();
+      } else {
         setError(response.data.message);
       }
-     
     } catch (error) {
       console.error("Error submitting form:", error);
-      
-      // Optionally, you can use SweetAlert for error as well
       Swal.fire({
-        title: "Error!", 
-        text: error.response?.data?.message || "Failed to save distributor", 
-        icon: "error"
+        title: "Error!",
+        text: error.response?.data?.message || "Failed to save distributor",
+        icon: "error",
+        confirmButtonColor: "#F24E1E",
       });
     }
   };
@@ -178,6 +252,7 @@ const Distributors = () => {
     setImageFiles([]);
     setExistingImages([]);
     setError("");
+    setValidationErrors({});
   };
 
   const handleViewDetails = (distributor) => {
@@ -194,6 +269,7 @@ const Distributors = () => {
     );
     setIsModalOpen(true);
     setError("");
+    setValidationErrors({});
   };
 
   const handleDeleteDistributor = async (distributor) => {
@@ -204,28 +280,25 @@ const Distributors = () => {
       showCancelButton: true,
       confirmButtonColor: "#F24E1E",
       cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!"
+      confirmButtonText: "Yes, delete it!",
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
           await axios.delete(
             `${baseurl}/api/deleteDistributorById/${distributor.did}`
           );
-          
-          // Show success SweetAlert after deletion
+
           Swal.fire({
             title: "Deleted!",
             text: "Distributor deleted successfully.",
             icon: "success",
             confirmButtonColor: "#F24E1E",
           });
-  
-          // Fetch updated distributors list
+
           fetchDistributors();
         } catch (error) {
           console.error("Error deleting distributor:", error);
-          
-          // Show error SweetAlert if deletion fails
+
           Swal.fire({
             title: "Error!",
             text: "Failed to delete distributor",
@@ -237,43 +310,35 @@ const Distributors = () => {
     });
   };
 
-  const handleDeleteImage = async (imageIndex) => {
-    setExistingImages(
-      existingImages.filter((_, index) => index !== imageIndex)
+  const handleDeleteImage = (imageIndex) => {
+    setExistingImages((prev) =>
+      prev.filter((_, index) => index !== imageIndex)
     );
   };
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     const existingFileNames = imageFiles.map((file) => file.name);
-  
-    // Filter out duplicates
-    const newFiles = files.filter((file) => !existingFileNames.includes(file.name));
-  
+
+    const newFiles = files.filter(
+      (file) => !existingFileNames.includes(file.name)
+    );
+
     if (newFiles.length === 0) {
       Swal.fire({
-        icon: 'info',
-        title: 'Oops...',
-        text: 'File already added',
-        confirmButtonText: 'OK'
+        icon: "info",
+        title: "Oops...",
+        text: "File already added",
+        confirmButtonText: "OK",
       });
     } else {
       setImageFiles((prevFiles) => [...prevFiles, ...newFiles]);
     }
-    // Reset file input value to allow re-upload of the same file
-    e.target.value = '';
+    e.target.value = "";
   };
 
   const removeNewImage = (index) => {
     setImageFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setCurrentDistributor((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
   };
 
   const toggleModal = () => {
@@ -302,21 +367,18 @@ const Distributors = () => {
     <div className="container-fluid py-4">
       {/* Search and Add Section */}
       <div className="searches row align-items-center gx-3 mt-3 mb-3">
-        {/* Search Input */}
         <div className="col-8 col-md-8">
           <div className="input-group">
             <input
               type="text"
               className="form-control"
-              placeholder="Search Product"
-              id="productSearchBox"
+              placeholder="Search Distributor"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
         </div>
 
-        {/* Add Product Button */}
         <div className="col-4 col-md-4">
           <button
             id="addProductBtn"
@@ -349,7 +411,7 @@ const Distributors = () => {
         </li>
       </ul>
 
-      {/* Responsive Table */}
+      {/* Table Section */}
       <div className="container-fluid p-0 mt-5">
         <div className="row">
           <div className="col-12">
@@ -368,10 +430,16 @@ const Distributors = () => {
                   <tbody>
                     {currentDistributors?.map((distributor, index) => (
                       <tr key={index}>
-                        <td className="py-3 px-4">{indexOfFirstDistributor + index + 1}</td>
+                        <td className="py-3 px-4">
+                          {indexOfFirstDistributor + index + 1}
+                        </td>
                         <td className="py-3 px-4">{distributor.companyname}</td>
-                        <td className="py-3 px-4">{distributor.contact_person_name}</td>
-                        <td className="py-3 px-4">{distributor.phoneno || "-"}</td>
+                        <td className="py-3 px-4">
+                          {distributor.contact_person_name}
+                        </td>
+                        <td className="py-3 px-4">
+                          {distributor.phoneno || "-"}
+                        </td>
                         <td className="py-3 px-4">
                           <div className="d-flex gap-2">
                             <button
@@ -408,76 +476,80 @@ const Distributors = () => {
 
       {/* Pagination */}
       <div className="distributorpagination container d-flex mt-2 justify-content-between">
-  <div className="results-count text-center mb-3">
-    Showing{" "}
-    {currentDistributors.length === 0 ? "0" : indexOfFirstDistributor + 1}{" "}
-    to {Math.min(indexOfLastDistributor, distributors.length)} of{" "}
-    {distributors.length} entries
-  </div>
-  <Pagination 
-    className="justify-content-center align-items-center" 
-    style={{ gap: "5px" }}
-  >
-    <Pagination.Prev
-      onClick={() => handlePageChange(currentPage - 1)}
-      disabled={currentPage === 1}
-    >
-      <MdChevronLeft />
-    </Pagination.Prev>
-
-    {/* First page */}
-    <Pagination.Item
-      active={currentPage === 1}
-      onClick={() => handlePageChange(1)}
-    >
-      1
-    </Pagination.Item>
-
-    {/* Show dots if there are many pages before current page */}
-    {currentPage > 3 && <Pagination.Ellipsis disabled>...</Pagination.Ellipsis>}
-
-    {/* Pages around current page */}
-    {[...Array(totalPages)].map((_, index) => {
-      const pageNumber = index + 1;
-      if (
-        pageNumber !== 1 &&
-        pageNumber !== totalPages &&
-        Math.abs(currentPage - pageNumber) <= 1
-      ) {
-        return (
-          <Pagination.Item
-            key={pageNumber}
-            active={currentPage === pageNumber}
-            onClick={() => handlePageChange(pageNumber)}
+        <div className="results-count text-center mb-3">
+          Showing{" "}
+          {currentDistributors.length === 0 ? "0" : indexOfFirstDistributor + 1}{" "}
+          to {Math.min(indexOfLastDistributor, distributors.length)} of{" "}
+          {distributors.length} entries
+        </div>
+        <Pagination
+          className="justify-content-center align-items-center"
+          style={{ gap: "5px" }}
+        >
+          <Pagination.Prev
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
           >
-            {pageNumber}
+            <MdChevronLeft />
+          </Pagination.Prev>
+
+          {/* First page */}
+          <Pagination.Item
+            active={currentPage === 1}
+            onClick={() => handlePageChange(1)}
+          >
+            1
           </Pagination.Item>
-        );
-      }
-      return null;
-    })}
 
-    {/* Show dots if there are many pages after current page */}
-    {currentPage < totalPages - 2 && <Pagination.Ellipsis disabled>...</Pagination.Ellipsis>}
+          {/* Show dots if there are many pages before current page */}
+          {currentPage > 3 && (
+            <Pagination.Ellipsis disabled>...</Pagination.Ellipsis>
+          )}
 
-    {/* Last page */}
-    {totalPages > 1 && (
-      <Pagination.Item
-        active={currentPage === totalPages}
-        onClick={() => handlePageChange(totalPages)}
-      >
-        {totalPages}
-      </Pagination.Item>
-    )}
+          {/* Pages around current page */}
+          {[...Array(totalPages)].map((_, index) => {
+            const pageNumber = index + 1;
+            if (
+              pageNumber !== 1 &&
+              pageNumber !== totalPages &&
+              Math.abs(currentPage - pageNumber) <= 1
+            ) {
+              return (
+                <Pagination.Item
+                  key={pageNumber}
+                  active={currentPage === pageNumber}
+                  onClick={() => handlePageChange(pageNumber)}
+                >
+                  {pageNumber}
+                </Pagination.Item>
+              );
+            }
+            return null;
+          })}
 
-    <Pagination.Next
-      onClick={() => handlePageChange(currentPage + 1)}
-      disabled={currentPage === totalPages}
-    >
-      <MdChevronRight />
-    </Pagination.Next>
-  </Pagination>
-</div>
+          {/* Show dots if there are many pages after current page */}
+          {currentPage < totalPages - 2 && (
+            <Pagination.Ellipsis disabled>...</Pagination.Ellipsis>
+          )}
+
+          {/* Last page */}
+          {totalPages > 1 && (
+            <Pagination.Item
+              active={currentPage === totalPages}
+              onClick={() => handlePageChange(totalPages)}
+            >
+              {totalPages}
+            </Pagination.Item>
+          )}
+
+          <Pagination.Next
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            <MdChevronRight />
+          </Pagination.Next>
+        </Pagination>
+      </div>
 
       {/* Modal */}
       {isModalOpen && (
@@ -526,12 +598,19 @@ const Distributors = () => {
                       <label className="form-label">GST Number</label>
                       <input
                         type="text"
-                        className="form-control"
+                        className={`form-control ${
+                          validationErrors.gstnumber ? "is-invalid" : ""
+                        }`}
                         name="gstnumber"
                         placeholder="Enter GST number"
                         onChange={handleInputChange}
                         value={currentDistributor?.gstnumber || ""}
                       />
+                      {validationErrors.gstnumber && (
+                        <div className="invalid-feedback">
+                          {validationErrors.gstnumber}
+                        </div>
+                      )}
                     </div>
                     <div className="col-12">
                       <label className="form-label">Credit Limit</label>
@@ -559,34 +638,55 @@ const Distributors = () => {
                       <label className="form-label">Phone Number</label>
                       <input
                         type="tel"
-                        className="form-control"
+                        className={`form-control ${
+                          validationErrors.phoneno ? "is-invalid" : ""
+                        }`}
                         name="phoneno"
                         placeholder="Enter phone number"
                         onChange={handleInputChange}
                         value={currentDistributor?.phoneno || ""}
                       />
+                      {validationErrors.phoneno && (
+                        <div className="invalid-feedback">
+                          {validationErrors.phoneno}
+                        </div>
+                      )}
                     </div>
                     <div className="col-12">
                       <label className="form-label">Email</label>
                       <input
                         type="email"
-                        className="form-control"
+                        className={`form-control ${
+                          validationErrors.email ? "is-invalid" : ""
+                        }`}
                         name="email"
                         placeholder="Enter email"
                         onChange={handleInputChange}
                         value={currentDistributor?.email || ""}
                       />
+                      {validationErrors.email && (
+                        <div className="invalid-feedback">
+                          {validationErrors.email}
+                        </div>
+                      )}
                     </div>
                     <div className="col-12">
                       <label className="form-label">Password</label>
                       <input
                         type="text"
-                        className="form-control"
+                        className={`form-control ${
+                          validationErrors.password &&  !currentDistributor?.did ? "is-invalid" : ""
+                        }`}
                         name="password"
                         placeholder="Enter password"
                         onChange={handleInputChange}
                         value={currentDistributor?.password || ""}
                       />
+                      {!currentDistributor?.did && validationErrors.password && (
+                        <div className="invalid-feedback">
+                          {validationErrors.password}
+                        </div>
+                      )}
                     </div>
 
                     {/* Image Upload Section */}
@@ -667,7 +767,12 @@ const Distributors = () => {
                   </div>
 
                   <div className="text-center mt-4">
-                    <button type="submit" className="btn px-4" style={{background: '#F24E1E', color: 'white'}}>
+                    <button
+                      type="submit"
+                      className="btn px-4"
+                      style={{ background: "#F24E1E", color: "white" }}
+                      onClick={handleSubmit}
+                    >
                       {currentDistributor?.did ? "Update" : "Submit"}
                     </button>
                   </div>

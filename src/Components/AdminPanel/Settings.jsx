@@ -1,18 +1,63 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from 'react';
 import Propic from "../User/Assets/profile-pic.png";
+import AppearanceSettings from './AppearanceSettings';
+import SecuritySettings from './SecuritySettings';
+import NotificationSettings from './NotificationSettings';
+import EmailSettings from './EmailSettings';
+
 const Settings = () => {
-  const [settings, setSettings] = useState({
+  const [activeTab, setActiveTab] = useState('appearance');
+  const [userData, setUserData] = useState(null);
+  const [notificationSettings, setNotificationSettings] = useState({
     newsUpdate: false,
     screenNotification: false,
-    message: true,
-    order: false,
+    message: false,
+    order: false
   });
 
-  const handleToggle = (setting) => {
-    setSettings((prev) => ({
+  const handleNotificationToggle = (setting) => {
+    setNotificationSettings(prev => ({
       ...prev,
-      [setting]: !prev[setting],
+      [setting]: !prev[setting]
     }));
+  };
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'appearance':
+        return (
+          <div className="settings-content">
+            <AppearanceSettings />
+          </div>
+        );
+      case 'security':
+        return (
+          <div className="settings-content">
+            <SecuritySettings />
+          </div>
+        );
+      case 'notification':
+        return (
+          <div className="settings-content">
+            <NotificationSettings 
+              settings={notificationSettings}
+              handleToggle={handleNotificationToggle}
+            />
+          </div>
+        );
+      case 'email':
+        return (
+          <div className="settings-content">
+            <EmailSettings />
+          </div>
+        );
+      default:
+        return (
+          <div className="settings-content">
+            <AppearanceSettings />
+          </div>
+        );
+    }
   };
 
   return (
@@ -30,8 +75,8 @@ const Settings = () => {
                   className="rounded-circle"
                 />
                 <div>
-                  <h6 className="mb-0">User Name</h6>
-                  <small>login@gmail.com</small>
+                  <h6 className="mb-0 text-white">{userData?.name || 'User Name'}</h6>
+                  <small className='text-white'>{userData?.email || 'login@gmail.com'}</small>
                 </div>
               </div>
             </div>
@@ -40,38 +85,46 @@ const Settings = () => {
           {/* Settings Sidebar Card */}
           <div className="card border-0 shadow-sm">
             <div className="list-group list-group-flush setting-sidebar">
-              <a href="#" className="list-group-item list-group-item-action p-3">
+              <a 
+                href="#" 
+                className={`list-group-item list-group-item-action p-3`}
+                onClick={() => setActiveTab('appearance')}
+              >
                 <div className="d-flex align-items-center gap-3">
-                  <div className="bg-danger bg-opacity-10 p-2 rounded">
-                    <i className="bi bi-palette text-danger"></i>
+                  <div className=" bg-opacity-10 p-2 rounded settings-icon">
+                    <i className="bi bi-palette"></i>
                   </div>
                   <div>
                     <h6 className="mb-0">Appearances</h6>
-                    <small className="text-muted">
-                      Dark mode, light mode, more
-                    </small>
+                    <small className="text-muted">Dark mode, light mode, more</small>
                   </div>
                 </div>
               </a>
 
-              <a href="#" className="list-group-item list-group-item-action p-3">
+              <a 
+                href="#" 
+                className={`list-group-item list-group-item-action p-3`}
+                onClick={() => setActiveTab('security')}
+              >
                 <div className="d-flex align-items-center gap-3">
-                  <div className="bg-danger bg-opacity-10 p-2 rounded">
-                    <i className="bi bi-shield-lock text-danger"></i>
+                  <div className=" bg-opacity-10 p-2 rounded settings-icon">
+                    <i className="bi bi-shield-lock"></i>
                   </div>
                   <div>
                     <h6 className="mb-0">Security</h6>
-                    <small className="text-muted">
-                      Change Password, etc
-                    </small>
+                    <small className="text-muted">Change Password, etc</small>
                   </div>
                 </div>
               </a>
 
-              <a href="#" className="list-group-item list-group-item-action p-3">
-                <div className="d-flex align-items-center gap-3">
-                  <div className="bg-danger bg-opacity-10 p-2 rounded">
-                    <i className="bi bi-bell text-danger"></i>
+              <a 
+                href="#" 
+                className={`list-group-item list-group-item-action p-3`}
+                onClick={() => setActiveTab('notification')}
+              >
+                <div className="d-flex align-items-center gap-3 h-75">
+                  <div className="bg-opacity-10 p-2 rounded settings-icon">
+                    <i className="bi bi-bell"></i>
                   </div>
                   <div>
                     <h6 className="mb-0">Notification</h6>
@@ -80,16 +133,19 @@ const Settings = () => {
                 </div>
               </a>
 
-              <a href="#" className="list-group-item list-group-item-action p-3">
+              <a 
+                href="#" 
+                className={`list-group-item list-group-item-action p-3`}
+                onClick={() => setActiveTab('email')}
+              >
                 <div className="d-flex align-items-center gap-3">
-                  <div className="bg-danger bg-opacity-10 p-2 rounded">
-                    <i className="bi bi-envelope text-danger"></i>
+                  <div className="bg-opacity-10 p-2 rounded settings-icon">
+                    <i className="bi bi-envelope"></i>
                   </div>
                   <div>
                     <h6 className="mb-0">E-mail</h6>
-                    <small className="text-muted">
-                      Newsletter and Subscribe
-                    </small>
+                    <small className="text-muted">Newsletter and Subscribe</small>
+
                   </div>
                 </div>
               </a>
@@ -99,95 +155,24 @@ const Settings = () => {
 
         {/* Main Content */}
         <div className="col-lg-8 p-4">
-          <div className="card mb-4 p-4">
-            <div className="mb-4">
-              <h4 className="mb-2">Notification Settings</h4>
-              <p className="text-muted">
-                Lorem ipsum dolor sit amet consectetur. Hac amet nisi sem
-                imperdiet nulla.
-              </p>
-            </div>
-            <div className="card-body">
-              <h5 className="mb-3">Email Notifications</h5>
-              <p className="text-muted">Lorem ipsum dolor sit amet consectetur.</p>
-
-              <div className="list-group list-group-flush">
-                <div className="list-group-item d-flex justify-content-between align-items-center px-0">
-                  <div>
-                    <h6 className="mb-1">News & Update</h6>
-                    <small className="text-muted">
-                      Lorem ipsum dolor sit amet consectetur.
-                    </small>
-                  </div>
-                  <div className="form-check form-switch">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      checked={settings.newsUpdate}
-                      onChange={() => handleToggle("newsUpdate")}
-                      style={{ cursor: "pointer" }}
-                    />
-                  </div>
-                </div>
-
-                <div className="list-group-item d-flex justify-content-between align-items-center px-0">
-                  <div>
-                    <h6 className="mb-1">Screen Notification</h6>
-                    <small className="text-muted">
-                      Lorem ipsum dolor sit amet consectetur.
-                    </small>
-                  </div>
-                  <div className="form-check form-switch">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      checked={settings.screenNotification}
-                      onChange={() => handleToggle("screenNotification")}
-                      style={{ cursor: "pointer" }}
-                    />
-                  </div>
-                </div>
-
-                <div className="list-group-item d-flex justify-content-between align-items-center px-0">
-                  <div>
-                    <h6 className="mb-1">Message</h6>
-                    <small className="text-muted">
-                      Lorem ipsum dolor sit amet consectetur.
-                    </small>
-                  </div>
-                  <div className="form-check form-switch">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      checked={settings.message}
-                      onChange={() => handleToggle("message")}
-                      style={{ cursor: "pointer" }}
-                    />
-                  </div>
-                </div>
-
-                <div className="list-group-item d-flex justify-content-between align-items-center px-0">
-                  <div>
-                    <h6 className="mb-1">Order</h6>
-                    <small className="text-muted">
-                      Lorem ipsum dolor sit amet consectetur.
-                    </small>
-                  </div>
-                  <div className="form-check form-switch">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      checked={settings.order}
-                      onChange={() => handleToggle("order")}
-                      style={{ cursor: "pointer" }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          {renderContent()}
         </div>
       </div>
+
+      {/* Add this style to your global CSS or create a separate CSS file */}
+      <style jsx>{`
+        .settings-content {
+          height: 500px;
+          overflow-y: auto;
+          padding: 15px;
+          background: white;
+        }
+
+        .list-group-item.active {
+          background-color: #f8f9fa;
+          color: #007bff;
+        }
+      `}</style>
     </div>
   );
 };

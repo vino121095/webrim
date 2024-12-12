@@ -2,6 +2,7 @@ const { Sequelize } = require('sequelize');
 const db = require('../config/db');
 const { DataTypes } = Sequelize;
 const User = require('./UserModel');
+const Transport = require('./Transportmodel');
 
 const Order = db.define('orders', {
     oid: {
@@ -9,20 +10,18 @@ const Order = db.define('orders', {
         autoIncrement: true,
         primaryKey: true,
     },
-    order_id : {
+    order_id: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true
     },
-    user_id : {
+    user_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
             model: User, 
             key: 'uid'
-        },
-        onDelete: 'CASCADE', // Add this to handle deletion
-        onUpdate: 'CASCADE'  // Add this to handle updates
+        }
     },
     order_date: {
         type: DataTypes.STRING,
@@ -33,9 +32,17 @@ const Order = db.define('orders', {
         allowNull: false,
     },
     status: {
-        type: DataTypes.ENUM('Received', 'Shipping', 'Done', 'Cancelled', 'Complaint'), // Consider using ENUM for predefined statuses
+        type: DataTypes.ENUM('Received', 'Shipping', 'Done', 'Cancelled', 'Complaint'),
         allowNull: false,
         defaultValue: 'Received'
+    },
+    transport_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: Transport,
+            key: 'tid'
+        }
     },
     cancelAt: {
         type: DataTypes.DATE,
@@ -50,10 +57,33 @@ const Order = db.define('orders', {
     timestamps: true, 
 });
 
+// Associations with explicit cascade options
 Order.belongsTo(User, {
     foreignKey: 'user_id',
     as: 'user',
-    onDelete: 'CASCADE', // Add this to handle deletion
-    onUpdate: 'CASCADE'  // Add this to handle updates
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
 });
+
+User.hasMany(Order, {
+    foreignKey: 'user_id',
+    as: 'orders',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+Order.belongsTo(Transport, {
+    foreignKey: 'transport_id',
+    as: 'transport',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+Transport.hasMany(Order, {
+    foreignKey: 'transport_id',
+    as: 'orders',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
 module.exports = Order;

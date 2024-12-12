@@ -15,7 +15,8 @@ const orderValidator = [
     body('total_amount')
         .notEmpty().withMessage('Total amount is required')
         .isDecimal().withMessage('Total amount must be a decimal'),
-    body('status').notEmpty().withMessage('Order status is required')
+    body('status').notEmpty().withMessage('Order status is required'),
+    body('transport_id').notEmpty().withMessage('Transport is required')
 ];
 
 module.exports = { orderValidator };

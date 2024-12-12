@@ -3,7 +3,7 @@ import axios from "axios";
 import baseurl from "../ApiService/ApiService";
 import { Pagination } from "react-bootstrap";
 import { MdChevronLeft, MdChevronRight } from "react-icons/md";
-import { Box, Search, Package, Users, TrendingUp, Clock, Trash2, PencilLine } from "lucide-react";
+import { Eye, Box, Search, Package, Users, TrendingUp, Clock, Trash2, PencilLine } from "lucide-react";
 import ShipmentDetails from "./ShipmentsDetails";
 import Swal from 'sweetalert2'
 import Modal from 'react-bootstrap/Modal';
@@ -16,6 +16,8 @@ const Shipments = () => {
   const [orders, setOrders] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewShipment, setViewShipment] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [orderStats, setOrderStats] = useState({
     onDelivery: 0,
@@ -25,16 +27,6 @@ const Shipments = () => {
 
   useEffect(() => {
     // Fetch shipments data
-    const fetchShipments = async () => {
-      try {
-        const response = await axios.get(`${baseurl}/api/getAllShipments`);
-        if (response.data && response.data.data) {
-          setShipments(response.data.data);
-        }
-      } catch (error) {
-        console.error("Error fetching shipments:", error);
-      }
-    };
 
     // Fetch orders data
     const fetchOrders = async () => {
@@ -75,6 +67,17 @@ const Shipments = () => {
     }
   }, []);
 
+  const fetchShipments = async () => {
+    try {
+      const response = await axios.get(`${baseurl}/api/getAllShipments`);
+      if (response.data && response.data.data) {
+        setShipments(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching shipments:", error);
+    }
+  };
+
   const handleShipmentClose = () => {
     setShowShipmentDetails(false);
     setSelectedOrderOid(null);
@@ -102,9 +105,21 @@ const Shipments = () => {
     }
   };
 
+  const handleViewShipment = (shipment) => {
+    setViewShipment(shipment);
+    setShowViewModal(true);
+  };
+
+  const handleViewModalClose = () => {
+    setShowViewModal(false);
+    setViewShipment(null);
+    fetchShipments();
+  };
+
   const handleEditShipment = (shipment) => {
     setSelectedShipment(shipment);
     setShowEditModal(true);
+
   };
 
   const handleDeleteShipment = async (sid) => {
@@ -134,6 +149,7 @@ const Shipments = () => {
             text: 'Shipment has been deleted.',
             confirmButtonColor: '#3085d6'
           });
+          fetchShipments();
         }
       }
     } catch (error) {
@@ -147,10 +163,12 @@ const Shipments = () => {
     }
   };
 
-  const handleEditModalClose = () =>{
+  const handleEditModalClose = () => {
     setShowEditModal(false);
     setSelectedShipment(null);
+    fetchShipments();
   }
+
 
   const chartData = [
     { month: "Jan", orders: 20 },
@@ -223,8 +241,8 @@ const Shipments = () => {
                     >
                       <div
                         className={`${data.month === "Aug"
-                            ? "bg-primary"
-                            : "bg-primary bg-opacity-10"
+                          ? "bg-primary"
+                          : "bg-primary bg-opacity-10"
                           }`}
                         style={{
                           height: `${(data.orders / 35) * 200}px`,
@@ -315,7 +333,7 @@ const Shipments = () => {
         <div className="col-12">
           <div className="card border-0 shadow-sm">
             <div className="card-body p-4">
-              <div className="d-flex justify-content-between align-items-center mb-4">
+              <div className="d-flex justify-content-between align-items-center mb-4 shipments-flex">
                 <div className="d-flex align-items-center gap-2">
                   <div className="bg-primary bg-opacity-10 p-2 rounded">
                     <Package className="text-primary" size={20} />
@@ -328,7 +346,7 @@ const Shipments = () => {
                     <input
                       type="text"
                       className="form-control form-control-sm"
-                      placeholder="Search Shipments"
+                      placeholder={`Search Shipment`}
                       value={searchTerm}
                       onChange={(e) => {
                         setSearchTerm(e.target.value);
@@ -377,12 +395,18 @@ const Shipments = () => {
                           </td>
                           <td className="py-3 px-4">
                             <div className="d-flex gap-2">
-                              {/* <button
+                              <button
+                                className="btn btn-link p-0"
+                                onClick={() => handleViewShipment(shipment)}
+                              >
+                                <Eye size={20} className="text-primary" />
+                              </button>
+                              <button
                                 className="btn btn-link p-0"
                                 onClick={() => handleEditShipment(shipment)}
                               >
                                 <PencilLine size={20} className="text-info" />
-                              </button> */}
+                              </button>
                               <button
                                 className="btn btn-link p-0"
                                 onClick={() => handleDeleteShipment(shipment.sid)}
@@ -403,6 +427,112 @@ const Shipments = () => {
                   </tbody>
                 </table>
               </div>
+
+              <Modal
+        show={showViewModal}
+        onHide={handleViewModalClose}
+        size="lg"
+        aria-labelledby="contained-modal-title-vcenter"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Shipment Details</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {viewShipment && (
+            <div className="shipment-details">
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <div className="detail-group">
+                    <label className="fw-bold">Shipment ID:</label>
+                    <p className="detail-value">{viewShipment.sid || 'N/A'}</p>
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="detail-group">
+                    <label className="fw-bold">Distributor Name:</label>
+                    <p className="detail-value">{viewShipment.distributor_name || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <div className="detail-group">
+                    <label className="fw-bold">Dispatch Date:</label>
+                    <p className="detail-value">{viewShipment.dispatch_date || 'N/A'}</p>
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="detail-group">
+                    <label className="fw-bold">Dispatch Address:</label>
+                    <p className="detail-value">{viewShipment.dispatch_address || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="row mb-3">
+                <div className="col-md-6">
+                  <div className="detail-group">
+                    <label className="fw-bold">Status:</label>
+                    <p className="detail-value">
+                      <span style={statusStyles[viewShipment.status] || {}}>
+                        {viewShipment.status}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="detail-group">
+                    <label className="fw-bold">Transport:</label>
+                    <p className="detail-value">
+                      <span style={statusStyles[viewShipment.transport] || {}}>
+                        {viewShipment.transport}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="row mb-3">
+                <div className="col-12">
+                  <div className="detail-group">
+                    <label className="fw-bold">Shipment Items:</label>
+                    <div className="table-responsive mt-2">
+                      <table className="table table-bordered">
+                        <thead>
+                          <tr>
+                            <th>Product Name</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Total Price</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {viewShipment.shipment_items.map((item, index) => (
+                            <tr key={index}>
+                              <td>{item.product_name}</td>
+                              <td>{item.quantity}</td>
+                              <td><i class="bi bi-currency-rupee"></i>{item.price}</td>
+                              <td><i class="bi bi-currency-rupee"></i>{item.quantity * item.price}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <button className="btn btn-secondary" onClick={handleViewModalClose}>
+            Close
+          </button>
+        </Modal.Footer>
+      </Modal>
+
 
               <Modal
                 show={showEditModal}
