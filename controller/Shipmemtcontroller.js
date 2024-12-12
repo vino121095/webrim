@@ -185,6 +185,18 @@ exports.updateShipment = async (req, res) => {
         }, {
             where: { sid: sid }
         });
+        let orderstatus;
+        if(status === 'Delivered'){
+            orderstatus = 'Done'
+        }
+        else if(status === 'Cancelled'){
+            orderstatus = 'Cancelled'
+        }
+        else{
+            orderstatus = 'Shipping'
+        }
+        
+        await Order.update({ status: orderstatus}, { where: { order_id: shipment.order_id } })
 
         // Fetch updated shipment
         const updatedShipment = await Shipment.findOne({

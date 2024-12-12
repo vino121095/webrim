@@ -93,6 +93,8 @@ app.use('/api', OrderRoutes);
 const LocationRoutes = require('./routes/LocationRoutes.js');
 app.use('/api', LocationRoutes);
 
+const AdminRoutes = require('./routes/AdminRoutes.js');
+app.use('/api', AdminRoutes);
 
 // Listen on the port from the .env file
 const PORT = process.env.PORT || 5000;

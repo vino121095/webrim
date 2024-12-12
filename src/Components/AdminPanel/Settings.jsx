@@ -14,6 +14,12 @@ const Settings = () => {
     message: false,
     order: false
   });
+  useEffect(()=>{
+    const storedUserData = JSON.parse(localStorage.getItem('userData'));
+    if (storedUserData) {
+      setUserData(storedUserData);
+    }
+  },[])
 
   const handleNotificationToggle = (setting) => {
     setNotificationSettings(prev => ({

@@ -1,39 +1,91 @@
 import React, { useState } from 'react';
+import Swal from 'sweetalert2';
+import axios from 'axios';
+import baseurl from '../ApiService/ApiService'
 
 const SecuritySettings = () => {
-  const [Email, setEmail] = useState('');
+  const [email, setEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Configure axios defaults
+  // axios.defaults.withCredentials = true;
+
+  const validateEmail = async () => {
+    try {
+      const response = await axios.post(`${baseurl}/api/admin/search`, { email });
+      if(response.data.message !== "Admin found"){
+        Swal.fire({
+          icon: 'error',
+          title: 'Invalid Email',
+          text: response.data.message,
+          confirmButtonColor: '#F24E1E',
+        });
+        return false;
+      }
+      return true;
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Email',
+        text: 'No admin account found with this email address.',
+        confirmButtonColor: '#F24E1E',
+      });
+      return false;
+    }
+  };
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
-    if (newPassword !== confirmPassword) {
-      alert('New passwords do not match!');
-      return;
-    }
+    setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/settings/security/password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          newPassword,
-        }),
+      // First validate if passwords match
+      if (newPassword !== confirmPassword) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Password Mismatch',
+          text: 'New passwords do not match!',
+          confirmButtonColor: '#F24E1E',
+        });
+        return;
+      }
+
+      // Validate email exists
+      const isValidEmail = await validateEmail();
+      if (!isValidEmail) {
+        return;
+      }
+
+      // Proceed with password update
+      const response = await axios.post(`${baseurl}/api/admin/reset-password`, {
+        email,
+        newPassword,
+        confirmPassword,
       });
 
-      if (response.ok) {
-        alert('Password updated successfully!');
-        setEmail('');
-        setNewPassword('');
-        setConfirmPassword('');
-      } else {
-        alert('Failed to update password');
-      }
+      Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: response.data.message,
+        confirmButtonColor: '#F24E1E',
+      });
+      
+      // Clear form
+      setEmail('');
+      setNewPassword('');
+      setConfirmPassword('');
+      
     } catch (error) {
-      console.error('Error updating password:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.response?.data?.message || 'An error occurred while updating the password',
+        confirmButtonColor: '#F24E1E',
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -50,7 +102,8 @@ const SecuritySettings = () => {
             <input
               type="email"
               className="form-control"
-              value={Email}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
@@ -74,8 +127,13 @@ const SecuritySettings = () => {
               required
             />
           </div>
-          <button type="submit" className="btn"style={{background: '#F24E1E', color: 'white'}}>
-            Update Password
+          <button 
+            type="submit" 
+            className="btn"
+            style={{background: '#F24E1E', color: 'white'}}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Updating...' : 'Update Password'}
           </button>
         </form>
       </div>

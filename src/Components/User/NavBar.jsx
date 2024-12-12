@@ -44,7 +44,7 @@ const NavBar = () => {
   }, [loggedUser]);
 
   const fetchCartData = async () => {
-    if(loggedUser.role === 'distributor'){
+    if (loggedUser.role === 'distributor') {
       try {
         const response = await axios.get(baseurl + `/api/user/${loggedUser.uid}`);
         const items = response.data.map((item) => ({
@@ -60,9 +60,9 @@ const NavBar = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        `${loggedUser.role === 'distributor' ? 
-        `${baseurl}/api/forumtakens/${loggedUser.uid}` : `${baseurl}/api/forumtakes/${loggedUser.uid}` }`);
-      
+        `${loggedUser.role === 'distributor' ?
+          `${baseurl}/api/forumtakens/${loggedUser.uid}` : `${baseurl}/api/forumtakes/${loggedUser.uid}`}`);
+
       // Transform API data into notification format
       const apiNotifications = response.data.data.map(item => ({
         id: item.takeId,
@@ -140,7 +140,7 @@ const NavBar = () => {
   };
 
   useEffect(() => {
-    const fetchCurrentLocation = async() => {
+    const fetchCurrentLocation = async () => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           async (position) => {
@@ -152,39 +152,39 @@ const NavBar = () => {
             })
             console.log(latitude)
             console.log(longitude)
-  
+
             try {
               const apiKey = 'a3317655231447b6b370288bb881de3f';
               const response = await axios.get(
                 `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=${apiKey}`
               );
-  
+
               if (response.data.results.length > 0) {
                 const components = response.data.results[0].components;
                 console.log('Location Components:', components);
-  
+
                 const city = components.city;
                 const state = components.state;
                 const country = components.country;
                 const county = components.county;
-  
+
                 const district = city || county || "Location not found";
                 const stateName = state || "State not available";
                 const countryName = country || "Country not available";
-  
+
                 setLocation(`${district}, ${stateName}, ${countryName}`);
-  
+
                 // Check if Google Maps is loaded
                 if (window.google && window.google.maps) {
                   const mapOptions = {
                     center: { lat: latitude, lng: longitude },
                     zoom: 14,
                   };
-  
+
                   const mapElement = document.getElementById("map");
                   if (mapElement) {
                     const newMap = new window.google.maps.Map(mapElement, mapOptions);
-                    
+
                     new window.google.maps.Marker({
                       position: { lat: latitude, lng: longitude },
                       map: newMap,
@@ -216,12 +216,12 @@ const NavBar = () => {
         setLocation("Geolocation not supported by your browser");
       }
     };
-  
+
     fetchCurrentLocation();
   }, []); // Empty dependency array
-const handleMoveToMain = ()=>{
-  navigate('/')
-}
+  const handleMoveToMain = () => {
+    navigate('/')
+  }
   return (
     <nav>
       {screenWidth > 768 ? (
@@ -242,12 +242,16 @@ const handleMoveToMain = ()=>{
 
           <div className="d-flex align-items-center gap-3 position-absolute end-0 me-4">
             {loggedUser && loggedUser.role === "distributor" && (
-              <div className="addtocart-count"> 
-                <span className="bg-danger text-white px-2 border rounded-circle addtocart-count-icon">{cartcount.length}</span>
+              <div className="addtocart-count">
+                {cartcount.length > 0 && (
+                  <span className="bg-danger text-white px-2 border rounded-circle addtocart-count-icon">
+                    {cartcount.length}
+                  </span>
+                )}
                 <a href="/User/Cart" className="text-decoration-none">
-              <span><ShoppingCart className="me-2" color="#000"/></span>
-            </a>
-            </div>
+                  <span><ShoppingCart className="me-2" color="#000" /></span>
+                </a>
+              </div>
             )}
             <img
               src={notify}
@@ -314,7 +318,7 @@ const handleMoveToMain = ()=>{
           {/* Mobile Navigation Bar */}
           <div className="Mob-nav bg-white d-flex justify-content-between align-items-center px-3 py-3 container-fluid">
             {/* Hamburger Menu Button */}
-            <div className="" style={{width:'30px', height:'30px'}}> <button
+            <div className="" style={{ width: '80px', height: '30px' }}> <button
               className="navbar-toggler border-0"
               type="button"
               data-bs-toggle="offcanvas"
@@ -326,24 +330,24 @@ const handleMoveToMain = ()=>{
                 src={hamburger}
                 alt="Menu"
                 className="img-fluid"
-                
+
               />
             </button></div>
-           
+
 
             {/* Mobile Logo */}
-            <div className="d-flex align-items-center justify-content-center" style={{width:'70px', height:'50px'}} onClick={handleMoveToMain}>
-            <img src={RIM} alt="RIM Logo" className="" style={{width:'70px', height:'40px'}}  />
+            <div className="d-flex align-items-center justify-content-center" style={{ width: '70px', height: '50px' }} onClick={handleMoveToMain}>
+              <img src={RIM} alt="RIM Logo" className="" style={{ width: '70px', height: '40px' }} />
             </div>
-            <div className="d-flex align-items-center gap-3 me-3">
-            {loggedUser && loggedUser.role === "distributor" && (
-              <div className="addtocart-count"> 
-                <span className="bg-danger text-white px-2 border rounded-circle addtocart-count-icon">{cartcount.length}</span>
-                <a href="/User/Cart" className="text-decoration-none">
-              <span><ShoppingCart className="me-2" color="#000"/></span>
-            </a>
-            </div>
-            )}
+            <div className="d-flex align-items-center gap-3">
+              {loggedUser && loggedUser.role === "distributor" && (
+                <div className="addtocart-count">
+                  <span className="bg-danger text-white px-2 border rounded-circle addtocart-count-icon">{cartcount.length}</span>
+                  <a href="/User/Cart" className="text-decoration-none">
+                    <span><ShoppingCart className="me-2" color="#000" /></span>
+                  </a>
+                </div>
+              )}
               {" "}
               <img
                 src={notify}
@@ -352,7 +356,7 @@ const handleMoveToMain = ()=>{
                 style={{ width: "24px", height: "24px", cursor: "pointer" }}
               />
               {/* Profile Picture */}
-              <img
+              {/* <img
                 src={ProfilePic}
                 alt="Profile"
                 style={{
@@ -360,7 +364,7 @@ const handleMoveToMain = ()=>{
                   height: "30px",
                   borderRadius: "50%",
                 }}
-              />
+              /> */}
             </div>
           </div>
 
@@ -458,156 +462,156 @@ const handleMoveToMain = ()=>{
           </div>
         </div>
       )}
-       {showNotifications && (
-  <div
-    className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-start justify-content-end"
-    style={{ zIndex: 2000 }}
-  >
-    {/* Semi-transparent background overlay */}
-    <div
-      className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50"
-      onClick={() => setShowNotifications(false)}
-    ></div>
-
-    {/* Notification panel */}
-    <div
-      className="position-relative bg-white mt-4 mx-3 rounded shadow-lg"
-      style={{ maxWidth: '500px', width: '100%' }}
-    >
-      <div className="p-3">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <h5 className="mb-0">Notifications</h5>
-          <button
-            className="btn btn-link border border-danger rounded-circle text-decoration-none p-0 text-danger"
-            onClick={() => {
-              setShowNotifications(false);
-              setShowAllNotifications(false); 
-              setSelectedNotification(null);
-            }}
-          >
-            <X className="fs-5" />
-          </button>
-        </div>
-
-        {/* Notification Details Modal */}
-        {selectedNotification && (
+      {showNotifications && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-start justify-content-end"
+          style={{ zIndex: 2000 }}
+        >
+          {/* Semi-transparent background overlay */}
           <div
-            className="modal fade show"
-            style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
-            tabIndex="-1"
+            className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50"
+            onClick={() => setShowNotifications(false)}
+          ></div>
+
+          {/* Notification panel */}
+          <div
+            className="position-relative bg-white mt-4 mx-3 rounded shadow-lg"
+            style={{ maxWidth: '500px', width: '100%' }}
           >
-            <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">Notification Details</h5>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    onClick={() => setSelectedNotification(null)}
-                    aria-label="Close"
-                  ></button>
-                </div>
-                <div className="modal-body">
-                  <div className="table-responsive">
-                    <table className="table table-striped">
-                      <tbody>
-                        <tr>
-                          <th className="col-4">Owner Name</th>
-                          <td>{selectedNotification.details?.forumOwnerId || selectedNotification.details.distributorName}</td>
-                        </tr>
-                        <tr>
-                          <th>Phone</th>
-                          <td>{selectedNotification.details?.forumOwnerPhone || selectedNotification.details.distributorPhone}</td>
-                        </tr>
-                        <tr>
-                          <th>Email</th>
-                          <td>{selectedNotification.details?.forumOwnerEmail || selectedNotification.details.distributorEmail}</td>
-                        </tr>
-                        <tr>
-                          <th>Address</th>
-                          <td>{selectedNotification.details?.forumOwnerAddress || selectedNotification.details.distributorAddress}</td>
-                        </tr>
-                        <tr>
-                          <th>Taken At</th>
-                          <td>{new Date(selectedNotification.details.takenAt).toLocaleString()}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="overflow-auto" style={{ maxHeight: '70vh' }}>
-          {loading ? (
-            <div className="text-center py-3">Loading notifications...</div>
-          ) : error ? (
-            <div className="text-danger text-center py-3">{error}</div>
-          ) : notifications.length === 0 ? (
-            <div className="text-center py-3">No notifications</div>
-          ) : (
-            <>
-              {notifications.slice(0, 3).map((notification) => (
-                <div
-                  key={notification.id}
-                  className="d-flex align-items-start p-3 mb-2 border-bottom position-relative"
+            <div className="p-3">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h5 className="mb-0">Notifications</h5>
+                <button
+                  className="btn btn-link border border-danger rounded-circle text-decoration-none p-0 text-danger"
+                  onClick={() => {
+                    setShowNotifications(false);
+                    setShowAllNotifications(false);
+                    setSelectedNotification(null);
+                  }}
                 >
-                  <div className="flex-grow-1">
-                    <strong className="d-block mb-1">{notification.title}</strong>
-                    <small className="text-muted">{notification.message}</small>
-                  </div>
-                  <button
-                    className="btn btn-sm btn-outline-info ms-2"
-                    onClick={() => handleShowDetails(notification)}
-                  >
-                    <Info size={16} />
-                  </button>
-                </div>
-              ))}
+                  <X className="fs-5" />
+                </button>
+              </div>
 
-              {notifications.length > 3 && !showAllNotifications && (
-                <div className="text-center py-3">
-                  <button
-                    className="btn"
-                    style={{
-                      backgroundColor: "orangered",
-                      color: "white",
-                      border: "none",
-                    }}
-                    onClick={() => setShowAllNotifications(true)}
-                  >
-                    View More
-                  </button>
+              {/* Notification Details Modal */}
+              {selectedNotification && (
+                <div
+                  className="modal fade show"
+                  style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
+                  tabIndex="-1"
+                >
+                  <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                    <div className="modal-content">
+                      <div className="modal-header">
+                        <h5 className="modal-title">Notification Details</h5>
+                        <button
+                          type="button"
+                          className="btn-close"
+                          onClick={() => setSelectedNotification(null)}
+                          aria-label="Close"
+                        ></button>
+                      </div>
+                      <div className="modal-body">
+                        <div className="table-responsive">
+                          <table className="table table-striped">
+                            <tbody>
+                              <tr>
+                                <th className="col-4">Owner Name</th>
+                                <td>{selectedNotification.details?.forumOwnerId || selectedNotification.details.distributorName}</td>
+                              </tr>
+                              <tr>
+                                <th>Phone</th>
+                                <td>{selectedNotification.details?.forumOwnerPhone || selectedNotification.details.distributorPhone}</td>
+                              </tr>
+                              <tr>
+                                <th>Email</th>
+                                <td>{selectedNotification.details?.forumOwnerEmail || selectedNotification.details.distributorEmail}</td>
+                              </tr>
+                              <tr>
+                                <th>Address</th>
+                                <td>{selectedNotification.details?.forumOwnerAddress || selectedNotification.details.distributorAddress}</td>
+                              </tr>
+                              <tr>
+                                <th>Taken At</th>
+                                <td>{new Date(selectedNotification.details.takenAt).toLocaleString()}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 
-              {showAllNotifications &&
-                notifications.slice(3).map((notification) => (
-                  <div
-                    key={notification.id}
-                    className="d-flex align-items-start p-3 mb-2 border-bottom position-relative"
-                  >
-                    <div className="flex-grow-1">
-                      <strong className="d-block mb-1">{notification.title}</strong>
-                      <small className="text-muted">{notification.message}</small>
-                    </div>
-                    <button
-                      className="btn btn-sm btn-outline-info ms-2"
-                      onClick={() => handleShowDetails(notification)}
-                    >
-                      <Info size={16} />
-                    </button>
-                  </div>
-                ))}
-            </>
-          )}
+              <div className="overflow-auto" style={{ maxHeight: '70vh' }}>
+                {loading ? (
+                  <div className="text-center py-3">Loading notifications...</div>
+                ) : error ? (
+                  <div className="text-danger text-center py-3">{error}</div>
+                ) : notifications.length === 0 ? (
+                  <div className="text-center py-3">No notifications</div>
+                ) : (
+                  <>
+                    {notifications.slice(0, 3).map((notification) => (
+                      <div
+                        key={notification.id}
+                        className="d-flex align-items-start p-3 mb-2 border-bottom position-relative"
+                      >
+                        <div className="flex-grow-1">
+                          <strong className="d-block mb-1">{notification.title}</strong>
+                          <small className="text-muted">{notification.message}</small>
+                        </div>
+                        <button
+                          className="btn btn-sm btn-outline-info ms-2"
+                          onClick={() => handleShowDetails(notification)}
+                        >
+                          <Info size={16} />
+                        </button>
+                      </div>
+                    ))}
+
+                    {notifications.length > 3 && !showAllNotifications && (
+                      <div className="text-center py-3">
+                        <button
+                          className="btn"
+                          style={{
+                            backgroundColor: "orangered",
+                            color: "white",
+                            border: "none",
+                          }}
+                          onClick={() => setShowAllNotifications(true)}
+                        >
+                          View More
+                        </button>
+                      </div>
+                    )}
+
+                    {showAllNotifications &&
+                      notifications.slice(3).map((notification) => (
+                        <div
+                          key={notification.id}
+                          className="d-flex align-items-start p-3 mb-2 border-bottom position-relative"
+                        >
+                          <div className="flex-grow-1">
+                            <strong className="d-block mb-1">{notification.title}</strong>
+                            <small className="text-muted">{notification.message}</small>
+                          </div>
+                          <button
+                            className="btn btn-sm btn-outline-info ms-2"
+                            onClick={() => handleShowDetails(notification)}
+                          >
+                            <Info size={16} />
+                          </button>
+                        </div>
+                      ))}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-)}
+      )}
     </nav>
   );
 };
