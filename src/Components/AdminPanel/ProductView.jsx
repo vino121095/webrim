@@ -32,11 +32,14 @@ const ProductView = () => {
         {products.map((product) => (
           <div key={product.pid} className="col-12 col-sm-6 col-md-4 col-lg-3">
             <div className="card shadow-sm product-view-card h-100">
+            <div className='card-img d-flex align-items-center justify-content-center' style={{ height: '200px' }}>
               <img
                 src={baseurl + `/${product.images[0]?.image_path}` || compressor}
                 alt={product.product_name}
-                className="card-img-top img-fluid rounded"
+                style={{ objectFit: 'contain' }}
+                className="card-img-top rounded-3 p-3 mw-100 mh-100"
               />
+              </div>
               <div className="card-body d-flex flex-column">
                 <h5 className="card-title">{product.product_name}</h5>
                 <hr className="my-2" />

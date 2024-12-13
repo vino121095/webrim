@@ -26,6 +26,7 @@ const EnterpriseAi = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [orders, setOrders] = useState([]);
+  const [users, setUsers] = useState([]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -38,22 +39,24 @@ const EnterpriseAi = () => {
         // Ensure data is available and valid
         const usersData = userRes.data?.data || [];
         const ordersData = orderRes.data?.data || [];
-
+        setUsers(usersData);
         // Calculate order summary
         const summary = {
           received: ordersData.filter(order => order.status === 'Received').length,
           shipping: ordersData.filter(order => order.status === 'Shipping').length,
           complaint: ordersData.filter(order => order.status === 'Complaint').length,
-          canceled: ordersData.filter(order => order.status === 'Canceled').length,
+          canceled: ordersData.filter(order => order.status === 'Cancelled').length,
           done: ordersData.filter(order => order.status === 'Done').length
         };
         setOrderSummary(summary);
 
         // Ensure total sales calculation handles potential null/undefined values
-        const totalSales = ordersData.reduce((total, order) => {
-          const amount = parseFloat(order.total_amount || 0);
-          return total + (isNaN(amount) ? 0 : amount);
-        }, 0);
+        const totalSales = ordersData
+          .filter(order => order.status === 'Done')
+          .reduce((total, order) => {
+            const amount = parseFloat(order.total_amount || 0);
+            return total + (isNaN(amount) ? 0 : amount);
+          }, 0);
 
         // Update stats with safe fallback values
         setStats({
@@ -67,7 +70,7 @@ const EnterpriseAi = () => {
         setOrders(ordersData);
       } catch (error) {
         console.error('Error fetching stats:', error);
-        
+
         // Set fallback values in case of error
         setStats({
           totalUsers: 0,
@@ -75,7 +78,7 @@ const EnterpriseAi = () => {
           pendingOrders: 0,
           totalSales: 0
         });
-        
+
         setOrderSummary({
           received: 0,
           shipping: 0,
@@ -133,7 +136,7 @@ const EnterpriseAi = () => {
     borderRadius: "5px",
 
   };
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState("");
@@ -243,18 +246,76 @@ const EnterpriseAi = () => {
           confirmButtonColor: '#d33'
         });
       }
-      } catch (error) {
-        console.error("Submission Error:", error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Submission Error',
-          text: 'Failed to submit. Please check your network or contact support.',
-          confirmButtonText: 'OK',
-          confirmButtonColor: '#d33'
-        });
-      }
+    } catch (error) {
+      console.error("Submission Error:", error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Submission Error',
+        text: 'Failed to submit. Please check your network or contact support.',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#d33'
+      });
     }
+  }
+  const calculatePercentageChange = (current, previous) => {
+    if (previous === 0) return '0% from yesterday';
+    const percentageChange = ((current - previous) / previous) * 100;
+    const direction = percentageChange >= 0 ? 'Up' : 'Down';
+    return `${Math.abs(percentageChange).toFixed(1)}% ${direction} from yesterday`;
+  };
+  const calculatePercentageChangeInWeek = (current, previous) => {
+    if (previous === 0) return '0% from past week';
+    const percentageChange = ((current - previous) / previous) * 100;
+    const direction = percentageChange >= 0 ? 'Up' : 'Down';
+    return `${Math.abs(percentageChange).toFixed(1)}% ${direction} from past week`;
+  };
 
+  const calculatePreviousUsers = (users) => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const previousUsers = users.filter(user =>
+      new Date(user.createdAt) < yesterday
+    ).length;
+
+    return previousUsers;
+  }
+  const calculatePreviousPendingOrders = (orders) => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const previousPendingOrders = orders.filter(order =>
+      order.status === 'Received' &&
+      new Date(order.createdAt) < yesterday
+    ).length;
+
+    return previousPendingOrders;
+  }
+  const calculatePreviousSales = (orders) => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const previousSales = orders
+      .filter(order => 
+        order.status === 'Done' && 
+        new Date(order.completeAt) < yesterday
+      )
+      .reduce((total, order) => total + parseFloat(order.totalAmount || 0), 0);
+    
+    return previousSales;
+  }
+// console.log(calculatePreviousSales(orders))
+  const calculatePastWeekOrders = (orders) => {
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    
+    const pastWeekOrders = orders.filter(order => 
+      new Date(order.createdAt) >= oneWeekAgo && 
+      new Date(order.createdAt) < new Date()
+    ).length;
+    
+    return pastWeekOrders;
+  }
 
   return (
     <div className="container-fluid p-4">
@@ -264,7 +325,7 @@ const EnterpriseAi = () => {
           {
             title: 'Total User',
             value: stats.totalUsers,
-            percentage: '8.5% Up from yesterday',
+            percentage: calculatePercentageChange(stats.totalUsers, calculatePreviousUsers(users)),
             icon: 'bi-people',
             iconClass: 'text-primary',
             bgClass: 'bg-primary bg-opacity-10',
@@ -272,7 +333,7 @@ const EnterpriseAi = () => {
           {
             title: 'Total Order',
             value: stats.totalOrders,
-            percentage: '1.3% Up from past week',
+            percentage: calculatePercentageChangeInWeek(stats.totalOrders, calculatePastWeekOrders(orders)),
             icon: 'bi-box',
             iconClass: 'text-warning',
             bgClass: 'bg-warning bg-opacity-10',
@@ -285,7 +346,7 @@ const EnterpriseAi = () => {
                 {stats.totalSales.toFixed(2)}
               </div>
             ),
-            percentage: '4.3% Down from yesterday',
+            percentage: calculatePercentageChange(stats.totalSales, calculatePreviousSales(orders)),
             icon: 'bi-graph-up',
             iconClass: 'text-success',
             bgClass: 'bg-success bg-opacity-10',
@@ -293,7 +354,7 @@ const EnterpriseAi = () => {
           {
             title: 'Total Pending',
             value: stats.pendingOrders,
-            percentage: '1.8% Up from yesterday',
+            percentage: calculatePercentageChange(stats.pendingOrders, calculatePreviousPendingOrders(orders)),
             icon: 'bi-clock',
             iconClass: 'text-danger',
             bgClass: 'bg-danger bg-opacity-10',
@@ -364,16 +425,16 @@ const EnterpriseAi = () => {
                 <div className="card-body">
                   <div className="row">
                     <div className="col-md-3">
-                    <img
-                      src={
-                        matchingProduct?.images?.[0]?.image_path
-                          ? `${baseurl}/${matchingProduct.images[0].image_path}`
-                          : Compressor
-                      }
-                      alt={matchingProduct?.product_name || "Product"}
-                      className="img-fluid rounded"
-                      style={{ width: "100%", marginTop: "40px", objectFit: "cover" }}
-                    />
+                      <img
+                        src={
+                          matchingProduct?.images?.[0]?.image_path
+                            ? `${baseurl}/${matchingProduct.images[0].image_path}`
+                            : Compressor
+                        }
+                        alt={matchingProduct?.product_name || "Product"}
+                        className="img-fluid rounded"
+                        style={{ width: "100%", marginTop: "40px", objectFit: "cover" }}
+                      />
                     </div>
                     <div className="col-md-9">
                       <div className="mb-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -403,34 +464,34 @@ const EnterpriseAi = () => {
 
       {/* Order Summary and Charts Row */}
       <div className="row">
-      <div className="col-md-4">
+        <div className="col-md-4">
           <div className="card h-100">
             <div className="card-body">
-              <h5 className="card-title mb-4">Order Summary</h5>
+              <h5 className="card-title mb-5">Order Summary</h5>
               <div className="list-group">
-                <div className="list-group-item bg-light">
+                <div className="list-group-item bg-light p-3">
                   Received ({orderSummary.received})
                 </div>
                 <div
-                  className="list-group-item"
+                  className="list-group-item p-3"
                   style={{ backgroundColor: "#FFF8E7" }}
                 >
                   Shipping ({orderSummary.shipping})
                 </div>
                 <div
-                  className="list-group-item"
-                  style={{ backgroundColor: "#FFE7E7" }}
+                  className="list-group-item p-3"
+                  style={{ backgroundColor: "#FFC8C8" }}
                 >
                   Complaint ({orderSummary.complaint})
                 </div>
                 <div
-                  className="list-group-item"
+                  className="list-group-item p-3"
                   style={{ backgroundColor: "#FFE7E7" }}
                 >
                   Canceled ({orderSummary.canceled})
                 </div>
                 <div
-                  className="list-group-item"
+                  className="list-group-item p-3"
                   style={{ backgroundColor: "#E7FFE7" }}
                 >
                   Done ({orderSummary.done})
@@ -440,60 +501,60 @@ const EnterpriseAi = () => {
           </div>
         </div>
 
-  <div className="col-md-4">
-    <div className="card h-100">
-      <div className="card-body">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <h5 className="card-title mb-0">Average sales</h5>
-          <select className="form-select w-auto">
-            <option>Month</option>
-          </select>
-        </div>
-        <h3><i class="bi bi-currency-rupee"></i> 975,993</h3>
-        <Pie data={data} options={options}/>
-        <div className="center-label" style={centerLabelStyle}>
-          <p>
-            95%<br />
-            on Process
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div className="col-md-4">
-    <div className="card h-100">
-      <div className="card-body">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <h5 className="card-title mb-0">Average visitor</h5>
-          <select className="form-select w-auto">
-            <option>Weekly</option>
-          </select>
-        </div>
-        <h3>560,395</h3>
-        <div
-          className="d-flex justify-content-between align-items-end"
-          style={{ height: '150px' }}
-        >
-          {['Mon', 'Tue', 'Wed', 'Thu'].map((day, idx) => (
-            <div key={idx} className="d-flex flex-column align-items-center">
-              <div
-                className="bg-primary"
-                style={{
-                  width: '20px',
-                  height: `${Math.random() * 100 + 20}px`,
-                }}
-              ></div>
-              <small className="mt-2">{day}</small>
+        <div className="col-md-4">
+          <div className="card h-100">
+            <div className="card-body">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h5 className="card-title mb-0">Average sales</h5>
+                <select className="form-select w-auto">
+                  <option>Month</option>
+                </select>
+              </div>
+              <h3><i class="bi bi-currency-rupee"></i> 975,993</h3>
+              <Pie data={data} options={options} />
+              <div className="center-label" style={centerLabelStyle}>
+                <p>
+                  95%<br />
+                  on Process
+                </p>
+              </div>
             </div>
-          ))}
+          </div>
+        </div>
+
+        <div className="col-md-4">
+          <div className="card h-100">
+            <div className="card-body">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h5 className="card-title mb-0">Average visitor</h5>
+                <select className="form-select w-auto">
+                  <option>Weekly</option>
+                </select>
+              </div>
+              <h3>560,395</h3>
+              <div
+                className="d-flex justify-content-between align-items-end"
+                style={{ height: '150px' }}
+              >
+                {['Mon', 'Tue', 'Wed', 'Thu'].map((day, idx) => (
+                  <div key={idx} className="d-flex flex-column align-items-center">
+                    <div
+                      className="bg-primary"
+                      style={{
+                        width: '20px',
+                        height: `${Math.random() * 100 + 20}px`,
+                      }}
+                    ></div>
+                    <small className="mt-2">{day}</small>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-</div>
 
-{isModalOpen && (
+      {isModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
             <span className="close-button" onClick={toggleModal}>

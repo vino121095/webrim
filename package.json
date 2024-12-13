@@ -2,6 +2,7 @@
   "name": "fe-tech",
   "version": "0.1.0",
   "private": true,
+  "proxy": "https://cdn-api.co-vin.in",
   "dependencies": {
     "@mantine/core": "^7.14.2",
     "@popperjs/core": "^2.11.8",

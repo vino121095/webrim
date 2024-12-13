@@ -259,22 +259,66 @@ const OrderSummary = () => {
         <span>
           Showing {currentOrders.length} of {filteredAndSearchedOrders.length} entries
         </span>
-        <Pagination>
+        <Pagination
+          className="justify-content-center align-items-center"
+          style={{ gap: "5px" }}
+        >
           <Pagination.Prev
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
           >
             <MdChevronLeft />
           </Pagination.Prev>
-          {[...Array(totalPages)].map((_, index) => (
+
+          {/* First page */}
+          <Pagination.Item
+            active={currentPage === 1}
+            onClick={() => handlePageChange(1)}
+          >
+            1
+          </Pagination.Item>
+
+          {/* Show dots if there are many pages before current page */}
+          {currentPage > 3 && (
+            <Pagination.Ellipsis disabled>...</Pagination.Ellipsis>
+          )}
+
+          {/* Pages around current page */}
+          {[...Array(totalPages)].map((_, index) => {
+            const pageNumber = index + 1;
+            if (
+              pageNumber !== 1 &&
+              pageNumber !== totalPages &&
+              Math.abs(currentPage - pageNumber) <= 1
+            ) {
+              return (
+                <Pagination.Item
+                  key={index}
+                  active={currentPage === pageNumber}
+                  onClick={() => handlePageChange(pageNumber)}
+                >
+                  {pageNumber}
+                </Pagination.Item>
+              );
+            }
+            return null;
+          })}
+
+          {/* Show dots if there are many pages after current page */}
+          {currentPage < totalPages - 2 && (
+            <Pagination.Ellipsis disabled>...</Pagination.Ellipsis>
+          )}
+
+          {/* Last page */}
+          {totalPages > 1 && (
             <Pagination.Item
-              key={index}
-              active={currentPage === index + 1}
-              onClick={() => handlePageChange(index + 1)}
+              active={currentPage === totalPages}
+              onClick={() => handlePageChange(totalPages)}
             >
-              {index + 1}
+              {totalPages}
             </Pagination.Item>
-          ))}
+          )}
+
           <Pagination.Next
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}

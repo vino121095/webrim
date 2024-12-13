@@ -290,7 +290,7 @@ const ShipmentsDetails = ({ isEditMode = false, initialShipmentData = null, onCl
               >
                 <option value="Shipment">Shipment</option>
                 <option value="Delivered">Delivered</option>
-                <option value="Canceled">Canceled</option>
+                <option value="Cancelled">Canceled</option>
               </select>
             </div>
           </div>

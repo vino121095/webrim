@@ -69,7 +69,7 @@ exports.addDistributor = async (req, res) => {
         const user = await User.create({
             username: contact_person_name,
             company_name: companyname,
-            credit_limit:  creditlimit,
+            creditlimit:  creditlimit,
             email,
             mobile_number : phoneno,
             password: hashedPassword,
@@ -208,8 +208,10 @@ exports.updateDistributor = async (req, res) => {
 exports.deleteDistributor = async (req, res) => {
     try {
         const distributor = await Distributor.findByPk(req.params.id);
+        const user = await User.findOne({where: {email: distributor.email}});
         if (distributor) {
             await distributor.destroy();
+            await user.destroy();
             res.status(204).json({ message: 'Distributor deleted successfully' });
         } else {
             res.status(404).json({ message: 'Distributor not found' });

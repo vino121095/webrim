@@ -8,6 +8,7 @@ const ProductImage = require('../model/productImagesmodel');
 const User = require('../model/UserModel');
 const { where } = require('sequelize');
 const Transport = require('../model/Transportmodel');
+const Shipment = require('../model/Shipmentmodel');
  
 exports.createOrder = async (req, res) => {
     try {
@@ -146,12 +147,21 @@ exports.completeOrder = async (req, res) => {
     await Order.update(
       { 
         status: 'Done',
-        completedAt: new Date() 
+        completeAt: new Date() 
       }, 
       { 
         where: { oid:id } 
       }
     );
+
+    await Shipment.update(
+        {
+          status: 'Delivered'
+        },
+        {
+          where: { order_id: order.order_id } // Adjust the foreign key field name if it's different
+        }
+      );
 
     // Optional: Add any additional completion logic
     // For example, triggering notifications, generating invoices, etc.

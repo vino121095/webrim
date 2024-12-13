@@ -19,46 +19,39 @@ const Shipments = () => {
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewShipment, setViewShipment] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(null); // State for selected month
   const [orderStats, setOrderStats] = useState({
     onDelivery: 0,
     totalPending: 0,
+    totalDelivery: 0
   });
   const itemsPerPage = 6;
+  const [chartData, setChartData] = useState([]);
+  const chartDataTemplate = [
+    { month: "Jan", orders: 0 },
+    { month: "Feb", orders: 0 },
+    { month: "Mar", orders: 0 },
+    { month: "Apr", orders: 0 },
+    { month: "May", orders: 0 },
+    { month: "Jun", orders: 0 },
+    { month: "Jul", orders: 0 },
+    { month: "Aug", orders: 0 },
+    { month: "Sep", orders: 0 },
+    { month: "Oct", orders: 0 },
+    { month: "Nov", orders: 0 },
+    { month: "Dec", orders: 0 },
+  ];
 
   useEffect(() => {
-    // Fetch shipments data
-
-    // Fetch orders data
-    const fetchOrders = async () => {
-      try {
-        const response = await axios.get(`${baseurl}/api/orders`);
-        if (response.data && response.data.data) {
-          const ordersData = response.data.data;
-          setOrders(ordersData);
-
-          // Calculate totals
-          const stats = ordersData.reduce(
-            (acc, order) => {
-              if (order.status === "Shipping") {
-                acc.onDelivery += 1;
-              } else if (order.status === "Received") {
-                acc.totalPending += 1;
-              }
-              return acc;
-            },
-            { onDelivery: 0, totalPending: 0 }
-          );
-
-          setOrderStats(stats);
-        }
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-      }
+    // Fetch orders and shipments data on component mount
+    const fetchInitialData = async () => {
+      await fetchShipments(); // Ensure shipments are fetched first
+      await fetchOrders(); // Then fetch orders
     };
-
-    fetchShipments();
-    fetchOrders();
-
+  
+    fetchInitialData();
+  
+    // Handle pending shipment
     const pendingShipmentOid = localStorage.getItem("pendingShipmentOid");
     if (pendingShipmentOid) {
       setSelectedOrderOid(pendingShipmentOid);
@@ -66,17 +59,58 @@ const Shipments = () => {
       localStorage.removeItem("pendingShipmentOid");
     }
   }, []);
-
+  
   const fetchShipments = async () => {
     try {
       const response = await axios.get(`${baseurl}/api/getAllShipments`);
       if (response.data && response.data.data) {
-        setShipments(response.data.data);
+        const shipmentsData = response.data.data; // Directly access response data
+        setShipments(shipmentsData);
+  
+        // Update chart data with shipment creation months
+        const updatedChartData = [...chartDataTemplate];
+        shipmentsData.forEach((shipment) => {
+          if (shipment.createdAt) {
+            const monthIndex = new Date(shipment.createdAt).getMonth(); // Get month index (0 for Jan, 11 for Dec)
+            updatedChartData[monthIndex].orders += 1; // Increment the orders count for the corresponding month
+          }
+        });
+        setChartData(updatedChartData); // Set updated chart data
       }
     } catch (error) {
       console.error("Error fetching shipments:", error);
     }
   };
+  
+  const fetchOrders = async () => {
+    try {
+      const response = await axios.get(`${baseurl}/api/orders`);
+      if (response.data && response.data.data) {
+        const ordersData = response.data.data;
+        setOrders(ordersData);
+  
+        // Calculate stats based on order status
+        const stats = ordersData.reduce(
+          (acc, order) => {
+            if (order.status === "Shipping") {
+              acc.onDelivery += 1;
+            } else if (order.status === "Received") {
+              acc.totalPending += 1;
+            } else if (order.status === "Done") {
+              acc.totalDelivery += 1;
+            }
+            return acc;
+          },
+          { onDelivery: 0, totalPending: 0, totalDelivery: 0 }
+        );
+  
+        setOrderStats(stats);
+      }
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+    }
+  };
+  
 
   const handleShipmentClose = () => {
     setShowShipmentDetails(false);
@@ -122,6 +156,10 @@ const Shipments = () => {
 
   };
 
+
+  const handleBarClick = (month) => {
+    setSelectedMonth(month);
+  }
   const handleDeleteShipment = async (sid) => {
     try {
       // Confirm deletion with SweetAlert
@@ -170,21 +208,6 @@ const Shipments = () => {
   }
 
 
-  const chartData = [
-    { month: "Jan", orders: 20 },
-    { month: "Feb", orders: 25 },
-    { month: "Mar", orders: 30 },
-    { month: "Apr", orders: 22 },
-    { month: "May", orders: 28 },
-    { month: "Jun", orders: 18 },
-    { month: "Jul", orders: 24 },
-    { month: "Aug", orders: 35 },
-    { month: "Sep", orders: 30 },
-    { month: "Oct", orders: 27 },
-    { month: "Nov", orders: 22 },
-    { month: "Dec", orders: 26 },
-  ];
-
   const statusStyles = {
     Shipment: {
       color: "#267309",
@@ -200,7 +223,7 @@ const Shipments = () => {
       padding: "6px 12px",
       display: "inline-block",
     },
-    Canceled: {
+    Cancelled: {
       color: "#808080",
       background: "#E5E7E5",
       borderRadius: "10px",
@@ -233,27 +256,33 @@ const Shipments = () => {
                 style={{ height: "300px" }}
               >
                 <div className="d-flex align-items-end justify-content-between h-100 overflow-x-auto pb-4">
-                  {chartData.map((data, index) => (
-                    <div
-                      key={index}
-                      className="text-center mx-1"
-                      style={{ minWidth: "30px" }}
-                    >
+                  {chartData.map((data, index) => {
+                    const maxOrders = Math.max(...chartData.map((d) => d.orders)); 
+                    const barHeight = (data.orders / maxOrders) * 200;
+                    const isSelected = data.month === selectedMonth;
+
+                    return (
                       <div
-                        className={`${data.month === "Aug"
-                          ? "bg-primary"
-                          : "bg-primary bg-opacity-10"
-                          }`}
-                        style={{
-                          height: `${(data.orders / 35) * 200}px`,
-                          borderRadius: "4px",
-                        }}
-                      ></div>
-                      <small className="d-block mt-2 text-muted">
-                        {data.month}
-                      </small>
-                    </div>
-                  ))}
+                        key={index}
+                        className="text-center mx-1"
+                        style={{ minWidth: "30px", cursor: "pointer" }}
+                        onClick={() => handleBarClick(data.month)} 
+                      >
+                        {/* Bar */}
+                        <div
+                          className={isSelected ? "bg-primary" : "bg-primary bg-opacity-10"}
+                          style={{
+                            height: `${barHeight}px`,
+                            borderRadius: "4px",
+                          }}
+                          aria-label={`${data.month}: ${data.orders} orders`}
+                        ></div>
+
+                        {/* Month Label */}
+                        <small className="d-block mt-2 text-muted">{data.month}</small>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -272,7 +301,7 @@ const Shipments = () => {
                       <Users size={20} className="text-primary opacity-75" />
                       <span className="text-secondary">Total Delivery</span>
                     </div>
-                    <h3 className="mb-0 fw-bold">10</h3>
+                    <h3 className="mb-0 fw-bold">{orderStats.totalDelivery || 0}</h3>
                   </div>
                   <div className="d-flex align-items-center gap-1 mt-2">
                     <TrendingUp size={16} className="text-success" />
@@ -429,109 +458,109 @@ const Shipments = () => {
               </div>
 
               <Modal
-        show={showViewModal}
-        onHide={handleViewModalClose}
-        size="lg"
-        aria-labelledby="contained-modal-title-vcenter"
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Shipment Details</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {viewShipment && (
-            <div className="shipment-details">
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <div className="detail-group">
-                    <label className="fw-bold">Shipment ID:</label>
-                    <p className="detail-value">{viewShipment.sid || 'N/A'}</p>
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="detail-group">
-                    <label className="fw-bold">Distributor Name:</label>
-                    <p className="detail-value">{viewShipment.distributor_name || 'N/A'}</p>
-                  </div>
-                </div>
-              </div>
+                show={showViewModal}
+                onHide={handleViewModalClose}
+                size="lg"
+                aria-labelledby="contained-modal-title-vcenter"
+                centered
+              >
+                <Modal.Header closeButton>
+                  <Modal.Title>Shipment Details</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                  {viewShipment && (
+                    <div className="shipment-details">
+                      <div className="row mb-3">
+                        <div className="col-md-6">
+                          <div className="detail-group">
+                            <label className="fw-bold">Shipment ID:</label>
+                            <p className="detail-value">{viewShipment.sid || 'N/A'}</p>
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="detail-group">
+                            <label className="fw-bold">Distributor Name:</label>
+                            <p className="detail-value">{viewShipment.distributor_name || 'N/A'}</p>
+                          </div>
+                        </div>
+                      </div>
 
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <div className="detail-group">
-                    <label className="fw-bold">Dispatch Date:</label>
-                    <p className="detail-value">{viewShipment.dispatch_date || 'N/A'}</p>
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="detail-group">
-                    <label className="fw-bold">Dispatch Address:</label>
-                    <p className="detail-value">{viewShipment.dispatch_address || 'N/A'}</p>
-                  </div>
-                </div>
-              </div>
+                      <div className="row mb-3">
+                        <div className="col-md-6">
+                          <div className="detail-group">
+                            <label className="fw-bold">Dispatch Date:</label>
+                            <p className="detail-value">{viewShipment.dispatch_date || 'N/A'}</p>
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="detail-group">
+                            <label className="fw-bold">Dispatch Address:</label>
+                            <p className="detail-value">{viewShipment.dispatch_address || 'N/A'}</p>
+                          </div>
+                        </div>
+                      </div>
 
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <div className="detail-group">
-                    <label className="fw-bold">Status:</label>
-                    <p className="detail-value">
-                      <span style={statusStyles[viewShipment.status] || {}}>
-                        {viewShipment.status}
-                      </span>
-                    </p>
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="detail-group">
-                    <label className="fw-bold">Transport:</label>
-                    <p className="detail-value">
-                      <span style={statusStyles[viewShipment.transport] || {}}>
-                        {viewShipment.transport}
-                      </span>
-                    </p>
-                  </div>
-                </div>
-              </div>
+                      <div className="row mb-3">
+                        <div className="col-md-6">
+                          <div className="detail-group">
+                            <label className="fw-bold">Status:</label>
+                            <p className="detail-value">
+                              <span style={statusStyles[viewShipment.status] || {}}>
+                                {viewShipment.status}
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="detail-group">
+                            <label className="fw-bold">Transport:</label>
+                            <p className="detail-value">
+                              <span style={statusStyles[viewShipment.transport] || {}}>
+                                {viewShipment.transport}
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
 
-              <div className="row mb-3">
-                <div className="col-12">
-                  <div className="detail-group">
-                    <label className="fw-bold">Shipment Items:</label>
-                    <div className="table-responsive mt-2">
-                      <table className="table table-bordered">
-                        <thead>
-                          <tr>
-                            <th>Product Name</th>
-                            <th>Quantity</th>
-                            <th>Unit Price</th>
-                            <th>Total Price</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {viewShipment.shipment_items.map((item, index) => (
-                            <tr key={index}>
-                              <td>{item.product_name}</td>
-                              <td>{item.quantity}</td>
-                              <td><i class="bi bi-currency-rupee"></i>{item.price}</td>
-                              <td><i class="bi bi-currency-rupee"></i>{item.quantity * item.price}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                      <div className="row mb-3">
+                        <div className="col-12">
+                          <div className="detail-group">
+                            <label className="fw-bold">Shipment Items:</label>
+                            <div className="table-responsive mt-2">
+                              <table className="table table-bordered">
+                                <thead>
+                                  <tr>
+                                    <th>Product Name</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price</th>
+                                    <th>Total Price</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {viewShipment.shipment_items.map((item, index) => (
+                                    <tr key={index}>
+                                      <td>{item.product_name}</td>
+                                      <td>{item.quantity}</td>
+                                      <td><i class="bi bi-currency-rupee"></i>{item.price}</td>
+                                      <td><i class="bi bi-currency-rupee"></i>{item.quantity * item.price}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <button className="btn btn-secondary" onClick={handleViewModalClose}>
-            Close
-          </button>
-        </Modal.Footer>
-      </Modal>
+                  )}
+                </Modal.Body>
+                <Modal.Footer>
+                  <button className="btn btn-secondary" onClick={handleViewModalClose}>
+                    Close
+                  </button>
+                </Modal.Footer>
+              </Modal>
 
 
               <Modal
