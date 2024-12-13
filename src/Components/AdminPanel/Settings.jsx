@@ -4,28 +4,74 @@ import AppearanceSettings from './AppearanceSettings';
 import SecuritySettings from './SecuritySettings';
 import NotificationSettings from './NotificationSettings';
 import EmailSettings from './EmailSettings';
-
+import baseurl from '../ApiService/ApiService';
+import userLogo from "../User/Assets/user-logo.png";
+import axios from 'axios';
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('appearance');
   const [userData, setUserData] = useState(null);
-  const [notificationSettings, setNotificationSettings] = useState({
-    newsUpdate: false,
-    screenNotification: false,
-    message: false,
-    order: false
+  const [profileImage, setProfileImage] = useState(userLogo);
+  const [notificationSettings, setNotificationSettings] = useState(() => {
+    const savedSettings = localStorage.getItem('notificationSettings');
+    return savedSettings 
+      ? JSON.parse(savedSettings) 
+      : {
+        newsUpdate: false,
+        screenNotification: false,
+        message: false,
+        order: false
+      };
   });
-  useEffect(()=>{
-    const storedUserData = JSON.parse(localStorage.getItem('userData'));
-    if (storedUserData) {
-      setUserData(storedUserData);
+
+  // Update localStorage whenever settings change
+  useEffect(() => {
+    // Check if any setting is true
+    const hasActiveNotifications = Object.values(notificationSettings).some(value => value === true);
+    
+    if (hasActiveNotifications) {
+      localStorage.setItem('notificationSettings', JSON.stringify(notificationSettings));
+    } else {
+      // Optionally remove from localStorage if all are false
+      localStorage.removeItem('notificationSettings');
     }
-  },[])
+  }, [notificationSettings]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const storedUserData = JSON.parse(localStorage.getItem('userData'));
+      if (storedUserData) {
+        setUserData(storedUserData);
+      }
+
+      await fetchAdminProfile(storedUserData);
+    };
+
+    fetchData();
+  }, []);
+
+  const fetchAdminProfile = async (storedUserData) => {
+    if (!storedUserData || !storedUserData.aid) {
+      console.error("User data not found");
+      return;
+    }
+    
+    try {
+      const response = await axios.get(`${baseurl}/api/admin/${storedUserData.aid}`);
+      const adminData = response.data.admin;
+      if (adminData && adminData.profileimagepath) {
+        setProfileImage(`${baseurl}/${adminData.profileimagepath}`);
+      }
+    } catch (error) {
+      console.error("Error fetching admin profile:", error);
+    }
+  };
 
   const handleNotificationToggle = (setting) => {
     setNotificationSettings(prev => ({
       ...prev,
       [setting]: !prev[setting]
     }));
+    
   };
 
   const renderContent = () => {
@@ -33,7 +79,7 @@ const Settings = () => {
       case 'appearance':
         return (
           <div className="settings-content">
-            <AppearanceSettings />
+            <SecuritySettings />
           </div>
         );
       case 'security':
@@ -54,18 +100,18 @@ const Settings = () => {
       case 'email':
         return (
           <div className="settings-content">
-            <EmailSettings />
+            <SecuritySettings />
           </div>
         );
       default:
         return (
           <div className="settings-content">
-            <AppearanceSettings />
+             <SecuritySettings />
           </div>
         );
     }
   };
-
+console.log(profileImage);
   return (
     <div className="container-fluid bg-light min-h-screen">
       <div className="row">
@@ -75,11 +121,14 @@ const Settings = () => {
           <div className="card border-0 shadow-sm mb-3 setting-user">
             <div className="card-body text-center rounded-3">
               <div className="d-flex align-items-center gap-3 mb-4">
-                <img
-                  src={Propic}
+                <div className='rounded-circle overflow-hidden d-flex justify-content-center' style={{width:'40px', height:'40px'}}>
+                  <img
+                  src={profileImage}
                   alt="User Avatar"
-                  className="rounded-circle"
-                />
+                  className='img-fluid'
+                  
+                /></div>
+                
                 <div>
                   <h6 className="mb-0 text-white">{userData?.name || 'User Name'}</h6>
                   <small className='text-white'>{userData?.email || 'login@gmail.com'}</small>

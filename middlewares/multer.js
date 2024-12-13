@@ -36,4 +36,10 @@ const uploadDistributorImage = multer({
     fileFilter,
 }).array('image', 3); // Accept only 1 image
 
-module.exports = { uploadProductImages, uploadDistributorImage };
+const uploadAdminProfile = multer({
+    storage,
+    limits: { fileSize: 2 * 1024 * 1024 }, // 2MB file size limit (smaller for profile images)
+    fileFilter,
+}).single('profileImage'); 
+
+module.exports = { uploadProductImages, uploadDistributorImage, uploadAdminProfile };

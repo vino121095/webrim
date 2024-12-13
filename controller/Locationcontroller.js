@@ -1,23 +1,23 @@
+const axios = require('axios');
 
 exports.fetchStates = async (req, res) => {
   try {
-    const fetch = (await import('node-fetch')).default;
-    const response = await fetch('https://cdn-api.co-vin.in/api/v2/admin/location/states');
-    const data = await response.json();
-    res.json(data);
+    const response = await axios.get('https://cdn-api.co-vin.in/api/v2/admin/location/states');
+    res.json(response.data);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch states' });
+    console.error("Error fetching data from CoWIN API:", error);
+    res.status(500).json({ error: 'Failed to fetch data from CoWIN API' });
   }
 };
 
 exports.fetchDistricts = async (req, res) => {
+  const stateId = req.params.id;
+
   try {
-    const fetch = (await import('node-fetch')).default;
-    const stateId = req.params.id;
-    const response = await fetch(`https://cdn-api.co-vin.in/api/v2/admin/location/districts/${stateId}`);
-    const data = await response.json();
-    res.json(data);
+    const response = await axios.get(`https://cdn-api.co-vin.in/api/v2/admin/location/districts/${stateId}`);
+    res.json(response.data);
   } catch (error) {
+    console.error("Error fetching districts:", error);
     res.status(500).json({ error: 'Failed to fetch districts' });
   }
 };
