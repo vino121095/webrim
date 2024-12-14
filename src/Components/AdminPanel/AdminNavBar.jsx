@@ -5,7 +5,6 @@ import { Link, useLocation } from "react-router-dom";
 import axios from 'axios';
 import userLogo from "../User/Assets/user-logo.png";
 import notify from "../User/Assets/notify.png";
-import Propic from "../User/Assets/profile-pic.png";
 import hamburger from "../User/Assets/hamburger.png";
 import { X, Box, Truck, LogOut } from 'lucide-react';
 import { BsBoxSeam } from "react-icons/bs";
@@ -29,6 +28,24 @@ const AdminNavBar = () => {
   const [seenNotifications, setSeenNotifications] = useState(
     JSON.parse(localStorage.getItem('seenNotifications')) || []
   );
+  const [profileImage, setProfileImage] = useState(userLogo);
+
+  useEffect(() => {
+    // Fetch the admin profile data
+    const fetchAdminProfile = async () => {
+      try {
+        const response = await axios.get(`${baseurl}/api/admin/${LoggedUser.aid}`);
+        const adminData = response.data.admin;
+        if (adminData && adminData.profileimagepath) {
+          setProfileImage(`${baseurl}/${adminData.profileimagepath}`);
+        }
+      } catch (error) {
+        console.error("Error fetching admin profile:", error);
+      }
+    };
+
+    fetchAdminProfile();
+  }, []);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -80,11 +97,46 @@ const AdminNavBar = () => {
   }, [seenNotifications]);
 
   useEffect(() => {
-    fetchOrders();
-    const interval = setInterval(fetchOrders, 30000);
-    return () => clearInterval(interval);
+    let interval;
+    
+    const checkNotificationSettings = () => {
+      try {
+        const notificationSettings = JSON.parse(localStorage.getItem('notificationSettings') || '{}');
+        
+        if (notificationSettings.order === true) {
+          // Initial fetch
+          fetchOrders();
+          
+          // Set up periodic fetching
+          interval = setInterval(fetchOrders, 30000);
+        } else {
+          // If order notifications are turned off, clear any existing interval
+          if (interval) {
+            clearInterval(interval);
+            interval = null;
+          }
+          setOrders([]);
+        }
+      } catch (error) {
+        console.error('Error setting up notifications:', error);
+      }
+    };
+  
+    // Initial check
+    checkNotificationSettings();
+  
+    // Listen for storage changes
+    window.addEventListener('storage', checkNotificationSettings);
+    
+    // Cleanup function
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+      window.removeEventListener('storage', checkNotificationSettings);
+    };
   }, [fetchOrders]);
-
+  
   // Save seen notifications to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('seenNotifications', JSON.stringify(seenNotifications));
@@ -344,12 +396,13 @@ const AdminNavBar = () => {
           <NotificationButton />
           <Nav.Link as={Link} to="/Auth/Login" data-bs-toggle="modal" data-bs-target="#logoutModal">
             <img
-              src={userLogo}
+              src={profileImage}
               alt="logout"
               style={{
                 width: "48px",
                 height: "48px",
                 borderRadius: "5px",
+                objectFit:'contain'
               }}
             />
           </Nav.Link>
@@ -381,9 +434,9 @@ const AdminNavBar = () => {
 
           <div className="d-flex align-items-center gap-3">
             <NotificationButton />
-            <div className="rounded-circle overflow-hidden" style={{ width: "40px", height: "40px" }}>
+            <div className="rounded-circle overflow-hidden d-flex justify-content-center" style={{ width: "40px", height: "40px" }}>
               <img
-                src={Propic}
+                src={profileImage}
                 alt="Profile"
                 className="img-fluid"
               />
@@ -401,8 +454,9 @@ const AdminNavBar = () => {
         <div className="offcanvas-header">
           <div className="p-3 d-flex align-items-center justify-content-between w-100">
             <div className="d-flex align-items-center justify-content-between">
-              <img src={Propic} alt="logo" className="img-fluid" />
-              <span><h6 className="mb-0 ms-3">{LoggedUser?.email}</h6></span>
+              <div className='rounded-circle overflow-hidden d-flex justify-content-center' style={{ width: "40px", height: "40px" }}>
+                <img src={profileImage} alt="logo" className="img-fluid"/></div>
+                <span><h6 className="mb-0 ms-3">{LoggedUser?.email}</h6></span>
             </div>
             <div>
               <button

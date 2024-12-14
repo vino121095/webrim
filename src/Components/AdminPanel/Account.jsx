@@ -1,6 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import userLogo from "../User/Assets/user-logo.png";
 import './AdminPanel.css';
+import axios from 'axios';
+import baseurl from '../ApiService/ApiService';
+import Swal from 'sweetalert2';
 
 const EditProfile = () => {
   const [formData, setFormData] = useState({
@@ -12,7 +15,52 @@ const EditProfile = () => {
   });
   
   const [profileImage, setProfileImage] = useState(userLogo);
+  const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch existing profile data on component mount
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      setIsLoading(true);
+      try {
+        const userData = JSON.parse(localStorage.getItem('userData'));
+        if (!userData || !userData.aid) {
+          throw new Error('Admin ID not found in localStorage');
+        }
+
+        const response = await axios.get(`${baseurl}/api/admin/${userData.aid}`);
+        const data = response.data.admin;
+
+        // Update form data
+        setFormData({
+          name: data.name || '',
+          phoneNumber: data.phoneNumber || '',
+          email: data.email || '',
+          aboutStore: data.aboutStore || '',
+          storeAddress: data.storeAddress || ''
+        });
+
+        // Update profile image if exists
+        if (data.profileimagepath) {
+          setProfileImage(data.profileimagepath);
+        }
+
+        setIsLoading(false);
+      } catch (err) {
+        setIsLoading(false);
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: 'Failed to fetch profile data',
+          confirmButtonColor: '#3085d6'
+        });
+        console.error('Error fetching profile:', err);
+      }
+    };
+
+    fetchProfileData();
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -25,6 +73,10 @@ const EditProfile = () => {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Store the file for binary upload
+      setSelectedFile(file);
+
+      // Create a preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfileImage(reader.result);
@@ -38,20 +90,84 @@ const EditProfile = () => {
   };
 
   const handleRemoveImage = () => {
-    setProfileImage(userLogo);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+    Swal.fire({
+      title: 'Remove Profile Picture?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, remove it!'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setProfileImage(userLogo);
+        setSelectedFile(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      }
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const userData = JSON.parse(localStorage.getItem('userData'));
+      if (!userData || !userData.aid) {
+        throw new Error('Admin ID not found in localStorage');
+      }
+
+      // Create FormData for binary upload
+      const formDataToSend = new FormData();
+      
+      // Append text fields
+      Object.keys(formData).forEach(key => {
+        formDataToSend.append(key, formData[key]);
+      });
+
+      // Append image file if selected
+      if (selectedFile) {
+        formDataToSend.append('profileImage', selectedFile);
+      }
+
+      // Send update to backend with binary data
+      const response = await axios.put(`${baseurl}/api/admin/${userData.aid}`, formDataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      // Show success message
+      Swal.fire({
+        icon: 'success',
+        title: 'Profile Updated',
+        text: 'Your profile has been updated successfully!',
+        confirmButtonColor: '#3085d6'
+      });
+      
+      setIsLoading(false);
+    } catch (err) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Update Failed',
+        text: err.response?.data?.message || 'Failed to update profile. Please try again.',
+        confirmButtonColor: '#3085d6'
+      });
+      console.error('Error updating profile:', err);
+      setIsLoading(false);
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Here you would typically send the data to your backend
-    console.log('Form submitted:', {
-      ...formData,
-      profileImage
-    });
-  };
+  if (isLoading) {
+    return (
+      <div className="text-center">
+        <div className="spinner-border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="edit-profile-container container">
@@ -61,7 +177,9 @@ const EditProfile = () => {
 
       <div className="image-section d-flex align-items-center gap-3 mb-4">
         <img 
-          src={profileImage}
+          src={ profileImage.startsWith('http://') || profileImage.startsWith('https://') || profileImage.startsWith('data:') 
+            ? profileImage 
+            : `${baseurl}/${profileImage}`}
           alt="Profile" 
           className="profile-image"
         />
@@ -92,6 +210,7 @@ const EditProfile = () => {
         </div>
       </div>
 
+      {/* Rest of the form remains the same */}
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
           <label className="form-label">Name</label>
@@ -147,9 +266,12 @@ const EditProfile = () => {
             className="form-control custom-input"
           />
         </div>
-
-        <button type="submit" className="btn btn-success mt-3">
-          Update Profile
+        <button 
+          type="submit" 
+          className="btn btn-success mt-3"
+          disabled={isLoading}
+        >
+          {isLoading ? 'Updating...' : 'Update Profile'}
         </button>
       </form>
     </div>

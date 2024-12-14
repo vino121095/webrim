@@ -8,6 +8,10 @@ const Admin = sequelize.define('Admin', {
     autoIncrement: true,
     primaryKey: true,
   },
+  name: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   email: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -15,6 +19,11 @@ const Admin = sequelize.define('Admin', {
     validate: {
       isEmail: true,
     },
+  },
+  phonenumber: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    unique: true,
   },
   password: {
     type: DataTypes.STRING,
@@ -25,6 +34,18 @@ const Admin = sequelize.define('Admin', {
     allowNull: false,
     defaultValue: 'admin',
   },
+  storedetails: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  storeaddress: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  profileimagepath: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  }
 }, {
   tableName: 'admin',
   timestamps: true,

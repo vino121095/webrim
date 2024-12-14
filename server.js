@@ -11,8 +11,9 @@ const app = express();
 app.use(express.urlencoded({extended : true}));
 app.use(express.json());
 app.use(cors({ 
-  origin: '*' 
-  // origin: 'https://develop.rimhub.in'
+  origin: ['https://web.rimhub.in', 'http://localhost:3000', 'https://cdn-api.co-vin.in', 'https://api.opencagedata.com'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true, // Allow credentials if needed
 }));
 
 // Define the path for the uploads directory
