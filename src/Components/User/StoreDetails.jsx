@@ -50,6 +50,20 @@ const StoreDetails = () => {
         fetchDistributors();
     }, []);
 
+    const handleNearDistricts = (targetLocations) => {
+        console.log(targetLocations);
+    
+        const filteredDistributorsLocation = distributors.filter(distributor => 
+            targetLocations.some(location => 
+                location.toLowerCase() === distributor.location?.toLowerCase()
+            )
+        );
+    
+        // Update the state with the filtered distributors
+        setFilteredDistributors(filteredDistributorsLocation);
+    };
+    
+
     const handleLocationSearch = (location) => {
         // Trim the location to handle empty spaces
         const trimmedLocation = location.trim();
@@ -84,8 +98,8 @@ const StoreDetails = () => {
         return (
             <>
                 <NavBar />
-                <UserSearch onSearch={handleSearch} />
-                <SearchBarLocation onLocationSearch={handleLocationSearch} />
+                <UserSearch onSearch={handleSearch}  />
+                <SearchBarLocation onLocationSearch={handleLocationSearch} onSearchNear={handleNearDistricts}/>
                 <div className="container mt-5 text-center">
                     <div className="spinner-border" role="status">
                         <span className="visually-hidden">Loading...</span>
@@ -100,7 +114,7 @@ const StoreDetails = () => {
             <>
                 <NavBar />
                 <UserSearch onSearch={handleSearch} />
-                <SearchBarLocation onLocationSearch={handleLocationSearch} />
+                <SearchBarLocation onLocationSearch={handleLocationSearch} onSearchNear={handleNearDistricts}/>
                 <div className="container mt-5 text-center text-danger">
                     {error}
                 </div>
@@ -112,7 +126,7 @@ const StoreDetails = () => {
         <>
             <NavBar />
             <UserSearch onSearch={handleSearch} />
-            <SearchBarLocation onLocationSearch={handleLocationSearch} />
+            <SearchBarLocation onLocationSearch={handleLocationSearch} onSearchNear={handleNearDistricts}/>
             <div className="container mt-5 mb-3">
                 {filteredDistributors.length === 0 ? (
                     <div className="text-center text-muted">

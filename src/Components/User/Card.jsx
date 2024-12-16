@@ -205,6 +205,9 @@ const Card = () => {
   const handleLocationSearch = (location) => {
 
   };
+  const handleNearDistricts = (districts) => {
+
+  };
   const handleDistributorProductView = (product) => {
     navigate(`/User/DistributorProductView/${product.pid}`);
   }
@@ -212,7 +215,7 @@ const Card = () => {
   return (
     <>
       <UserSearch onSearch={handleSearch} />
-      <SearchBarLoction onLocationSearch={handleLocationSearch} />
+      <SearchBarLoction onLocationSearch={handleLocationSearch} onSearchNear={handleNearDistricts}/>
       <div className="container mt-5 mb-3">
         <div className="row g-4">
           {filteredProducts.length > 0 ? (
