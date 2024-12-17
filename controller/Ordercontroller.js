@@ -9,27 +9,51 @@ const User = require('../model/UserModel');
 const { where } = require('sequelize');
 const Transport = require('../model/Transportmodel');
 const Shipment = require('../model/Shipmentmodel');
+const Distributor = require('../model/Distributorsmodel');
  
 exports.createOrder = async (req, res) => {
     try {
         const userId = req.body.user_id;
         const transportId = req.body.transport_id;
- 
+
         // Fetch all cart items for the user
         const cartItems = await AddToCart.findAll({
             where: { user_id: userId },
             include: [{ model: Product, as: 'product' }],
         });
- 
+
         if (cartItems.length === 0) {
-            return res.status(404).json({ error: 'No items in the cart' });
+            return res.json({ error: 'No items in the cart' });
         }
- 
+
         // Calculate total amount
         const totalAmount = cartItems.reduce((sum, item) => {
             return sum + item.quantity * item.product.mrp_rate;
         }, 0);
- 
+
+        // Fetch user details
+        const user = await User.findOne({
+            where: { uid: userId }
+        });
+
+        if (!user) {
+            return res.json({ error: 'User not found' });
+        }
+
+        // Fetch distributor details
+        const distributor = await Distributor.findOne({
+            where: { email: user.email }
+        });
+
+        if (!distributor) {
+            return res.json({ error: 'Distributor not found' });
+        }
+
+        // Check if the distributor has sufficient credit limit
+        if (distributor.creditlimit < totalAmount) {
+            return res.json({ error: 'Insufficient credit limit' });
+        }
+
         // Create the order
         const newOrder = await Order.create({
             order_id: req.order_id,
@@ -39,7 +63,7 @@ exports.createOrder = async (req, res) => {
             status: 'Received',
             transport_id: transportId
         });
- 
+
         // Add items to the order
         const orderItemsData = cartItems.map(item => ({
             order_id: newOrder.order_id,
@@ -48,74 +72,104 @@ exports.createOrder = async (req, res) => {
             price: item.product.mrp_rate
         }));
         await OrderItem.bulkCreate(orderItemsData);
- 
+
+        // Remove items from the cart
         await AddToCart.destroy({
             where: { user_id: userId }
         });
+
+        // Update distributor's credit limit
+        const updatedCreditLimit = distributor.creditlimit - totalAmount;
+        await Distributor.update(
+            { creditlimit: updatedCreditLimit },
+            { where: { email: user.email } }
+        );
+        await User.update({
+            creditlimit:updatedCreditLimit},
+            {where:{uid:userId}
+        })
+
         res.status(201).json({
             message: 'Order placed successfully',
             order: newOrder,
-            orderItems: orderItemsData
+            orderItems: orderItemsData,
+            updatedCreditLimit
         });
     } catch (error) {
         console.error('Error placing order:', error);
         res.status(500).json({ error: 'Failed to place order', details: error.message });
     }
 };
+
  
 
 // Cancel Order API
 exports.cancelOrder = async (req, res) => {
-  try {
-    const id = req.params.id;
+    try {
+        const id = req.params.id;
 
-    // Find the order first to check its current status
-    const order = await Order.findOne({
-        where :{
-            oid:id
-        }});
+        // Find the order to check its status and total amount
+        const order = await Order.findOne({
+            where: { oid: id }
+        });
 
-    // Check if order exists
-    if (!order) {
-      return res.status(404).json({ 
-        message: 'Order not found' 
-      });
+        // Check if the order exists
+        if (!order) {
+            return res.json({ message: 'Order not found' });
+        }
+
+        // Check if the order can be canceled
+        if (order.status === 'Done' || order.status === 'Cancelled') {
+            return res.json({ message: 'Order cannot be canceled at this stage' });
+        }
+
+        // Fetch the user and distributor associated with the order
+        const user = await User.findOne({ where: { uid: order.user_id } });
+        const distributor = await Distributor.findOne({ where: { email: user.email } });
+
+        if (!user || !distributor) {
+            return res.json({ message: 'User or Distributor not found' });
+        }
+
+        // Update the credit limits (refund the total amount)
+        const refundedAmount = Number(order.total_amount); // Ensure refundedAmount is a number
+        const updatedUserCredit = Number(user.creditlimit) + refundedAmount;
+        const updatedDistributorCredit = Number(distributor.creditlimit) + refundedAmount;
+
+        await User.update(
+            { creditlimit: updatedUserCredit },
+            { where: { uid: order.user_id } }
+        );
+
+        await Distributor.update(
+            { creditlimit: updatedDistributorCredit },
+            { where: { email: user.email } }
+        );
+
+        // Update the order status to 'Cancelled'
+        await Order.update(
+            {
+                status: 'Cancelled',
+                cancelAt: new Date()
+            },
+            { where: { oid: id } }
+        );
+
+        res.status(200).json({
+            message: 'Order successfully canceled',
+            refundedAmount,
+            updatedUserCredit,
+            updatedDistributorCredit
+        });
+    } catch (error) {
+        console.error('Error canceling order:', error);
+        return res.status(500).json({
+            message: 'Failed to cancel order',
+            error: error.message
+        });
     }
-
-    // Check if order can be canceled (add your business logic)
-    if (order.status === 'Done' || order.status === 'Canceled') {
-      return res.json({ 
-        message: 'Order cannot be canceled at this stage' 
-      });
-    }
-
-    // Update order status to canceled
-    await Order.update(
-      { 
-        status: 'Cancelled',
-        cancelAt : new Date()
-      }, 
-      { 
-        where: { oid:id } 
-      }
-    );
-
-    // Optional: Add any additional cancellation logic
-    // For example, restoring inventory, processing refund, etc.
-
-    return res.status(200).json({ 
-      message: 'Order successfully canceled',
-      id 
-    });
-
-  } catch (error) {
-    console.error('Error canceling order:', error);
-    return res.status(500).json({ 
-      message: 'Failed to cancel order', 
-      error: error.message 
-    });
-  }
 };
+
 
 // Complete/Done Order API
 exports.completeOrder = async (req, res) => {

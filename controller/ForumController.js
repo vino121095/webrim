@@ -37,11 +37,12 @@ cron.schedule('0 0 * * *', async () => {
 // View all forums
 const viewForums = async (req, res) => {
   try {
-    const forums = await Forum.findAll({
-      where: {
-        status: 'Not Taken'
-      }
-    });
+    const forums = await Forum.findAll();
+    // {
+    //   where: {
+    //     status: 'Not Taken'
+    //   }
+    // }
 
     return res.status(200).json({ message: 'Forums retrieved successfully', data: forums });
   } catch (error) {
@@ -389,6 +390,65 @@ const showNotifyForTechnician = async (req, res) => {
     });
   }
 };
+const getForumTakesByIdemId = async (req, res) => {
+  try {
+    const itemId = req.params.id;
+
+    // Find all forum takes for the given item ID
+    const forumTakes = await ForumTake.findAll({
+      where: { forum_id: itemId },
+      include: [
+        {
+          model: Forum,
+          as: 'forum',
+          include: [
+            {
+              model: User,
+              as: 'user',
+              attributes: ['uid', 'username', 'email', 'mobile_number', 'address']
+            }
+          ]
+        },
+        {
+          model: User,
+          as: 'distributor',
+          attributes: ['uid', 'username', 'email', 'mobile_number', 'address']
+        }
+      ]
+    });
+
+    // Transform the results to a more readable format
+    const formattedForumTakes = forumTakes.map(forumTake => {
+      const forum = forumTake.forum;
+      const distributor = forumTake.distributor;
+
+      return {
+        takeId: forumTake.ftid,
+        forumId: forum.fid,
+        forumOwnerId: forum.user.uid,
+        forumOwnerName: forum.user.username,
+        forumOwnerPhone: forum.user.mobile_number,
+        forumOwnerEmail: forum.user.email,
+        distributorName: distributor.username,
+        distributorEmail: distributor.email,
+        distributorPhone: distributor.mobile_number,
+        distributorAddress: distributor.address,
+        takenAt: forumTake.taken_at
+      };
+    });
+
+    return res.status(200).json({
+      message: 'Forum takes retrieved successfully',
+      data: formattedForumTakes
+    });
+  } catch (error) {
+    console.error('Error retrieving forum takes:', error);
+    return res.status(500).json({
+      message: 'Failed to retrieve forum takes',
+      error: error.message
+    });
+  }
+};
 module.exports = {
   addForum,
   viewForums,
@@ -396,5 +456,6 @@ module.exports = {
   deleteForum,
   takeForum,
   showNotifyForDistributor,
-  showNotifyForTechnician
+  showNotifyForTechnician,
+  getForumTakesByIdemId
 };

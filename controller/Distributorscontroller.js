@@ -252,3 +252,57 @@ exports.searchDistributors = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+
+exports.addArchiveForDistributor = async (req, res) => {
+    try {
+        const distributor_id = req.params.id;
+
+        // Check if distributor exists
+        const distributor = await Distributor.findOne({
+            where: {
+                did: distributor_id
+            }
+        });
+        if (!distributor) {
+            return res.json({ message: 'Distributor not found' });
+        }
+
+        // Update the distributor to mark as archived
+        await distributor.update({ isarchived: true });
+
+        res.status(200).json({
+            message: 'Distributor archived successfully',
+            distributor,
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+
+exports.removeArchiveForDistributor = async (req, res) => {
+    try {
+        const distributor_id = req.params.id;
+
+        // Check if the distributor exists
+        const distributor = await Distributor.findOne({
+            where: {
+                did: distributor_id
+            }
+        });
+        if (!distributor) {
+            return res.json({ error: 'Distributor not found' });
+        }
+
+        // Update the distributor to mark as not archived
+        await distributor.update({ isarchived: false });
+
+        res.status(200).json({
+            message: 'Distributor unarchived successfully',
+            distributor,
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};

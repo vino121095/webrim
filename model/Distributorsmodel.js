@@ -44,7 +44,11 @@ const Distributor = sequelize.define('Distributor', {
         validate: {
             isEmail: true,
         }
-    }
+    },
+    isarchived: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    }   
 }, {
     tableName: 'distributors',
     timestamps: true 

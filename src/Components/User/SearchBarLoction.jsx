@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import baseurl from "../ApiService/ApiService";
 
-const SearchBarLocation = ({ onLocationSearch }) => {
+const SearchBarLocation = ({ onLocationSearch, onSearchNear }) => {
   const navigate = useNavigate();
   const [searchLocation, setSearchLocation] = useState("");
   const [currentLocation, setCurrentLocation] = useState("");
@@ -83,8 +83,8 @@ const SearchBarLocation = ({ onLocationSearch }) => {
 
   const fetchDistrictsForState = async (stateName) => {
     try {
-      const statesResponse = await fetch(`${baseurl}/api/states`);
-      const statesData = await statesResponse.json();
+      const statesResponse = await axios.get(`${baseurl}/api/states`);
+      const statesData = await statesResponse.data;
     
       const state = statesData.states.find(s =>
         stateName.toLowerCase().includes(s.state_name.toLowerCase()) ||
@@ -92,8 +92,8 @@ const SearchBarLocation = ({ onLocationSearch }) => {
       );
     
       if (state) {
-        const districtsResponse = await fetch(`${baseurl}/api/districts/${state.state_id}`);
-        const districtsData = await districtsResponse.json();
+        const districtsResponse = await axios.get(`${baseurl}/api/districts/${state.state_id}`);
+        const districtsData = await districtsResponse.data;
     
         const first5Districts = districtsData.districts 
           ? districtsData.districts.slice(0, 5).map(district => district.district_name)
@@ -134,8 +134,8 @@ const SearchBarLocation = ({ onLocationSearch }) => {
       const { lat: currentLat, lng: currentLon } = currentLocationCoords;
 
       // Fetch states and districts
-      const statesResponse = await fetch('https://cdn-api.co-vin.in/api/v2/admin/location/states');
-      const statesData = await statesResponse.json();
+      const statesResponse = await axios.get(`${baseurl}/api/states`);
+      const statesData = await statesResponse.data;
   
       // Find state more flexibly
       const state = statesData.states.find(s => 
@@ -144,8 +144,8 @@ const SearchBarLocation = ({ onLocationSearch }) => {
       );
   
       if (state) {
-        const districtsResponse = await fetch(`https://cdn-api.co-vin.in/api/v2/admin/location/districts/${state.state_id}`);
-        const districtsData = await districtsResponse.json();
+        const districtsResponse = await axios.get(`${baseurl}/api/districts/${state.state_id}`);
+        const districtsData = await districtsResponse.data;
 
         // Fetch coordinates for each district
         const districtCoordinatesPromises = districtsData.districts.map(async (district) => {
@@ -191,7 +191,7 @@ const SearchBarLocation = ({ onLocationSearch }) => {
           .sort((a, b) => a.distance - b.distance)
           .slice(0, 5)
           .map(district => district.district_name);
-
+          onSearchNear(surroundingDistricts)
         setDistricts(surroundingDistricts);
         setError(""); // Clear any previous errors
       } else {
@@ -233,8 +233,8 @@ const SearchBarLocation = ({ onLocationSearch }) => {
             className="btn text-white px-4 d-flex align-items-center justify-content-center w-100 forum-button"
             style={{
               backgroundColor: "#0000ff",
-              height: "60px",
-              fontSize: "24px",
+              height: "40px",
+              fontSize: "20px",
               borderRadius: "10px",
             }}
             onClick={() => navigate("/user/FeedViews")}

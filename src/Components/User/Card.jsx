@@ -202,9 +202,12 @@ const Card = () => {
 
     setFilteredProducts(filtered);
   };
-  const handleLocationSearch = (location) => {
+  // const handleLocationSearch = (location) => {
 
-  };
+  // };
+  // const handleNearDistricts = (districts) => {
+
+  // };
   const handleDistributorProductView = (product) => {
     navigate(`/User/DistributorProductView/${product.pid}`);
   }
@@ -212,7 +215,21 @@ const Card = () => {
   return (
     <>
       <UserSearch onSearch={handleSearch} />
-      <SearchBarLoction onLocationSearch={handleLocationSearch} />
+      <div className="mt-3 forum-div d-flex align-items-center justify-content-center">
+          <button
+            className="btn text-white px-4 d-flex align-items-center justify-content-center forum-button"
+            style={{
+              backgroundColor: "#0000ff",
+              height: "40px",
+              fontSize: "20px",
+              borderRadius: "10px",
+            }}
+            onClick={() => navigate("/user/FeedViews")}
+          >
+            <i className="bi bi-box-seam me-2"></i> Forum
+          </button>
+        </div>
+      {/* <SearchBarLoction onLocationSearch={handleLocationSearch} onSearchNear={handleNearDistricts}/> */}
       <div className="container mt-5 mb-3">
         <div className="row g-4">
           {filteredProducts.length > 0 ? (
