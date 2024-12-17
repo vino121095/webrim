@@ -214,7 +214,34 @@ const Card = () => {
 
   return (
     <>
-      <UserSearch onSearch={handleSearch} />
+    <div className="container py-3 feed_views_main">
+        <div className="row w-100 justify-content-evenly align-items-center mt-4">
+          <div className="col-10 w-75 feed_views_search">
+            <UserSearch onSearch={handleSearch} />
+          </div>
+
+          {LoggedUser.role === 'technicion' ? (
+            <div></div>
+          ) : (
+            <div className="col-12 col-md-2 col-lg-2 text-center text-md-start add-post-btn-div">
+              <button
+                className="btn d-flex align-items-center justify-content-center rounded-3 w-100 add-forum-button"
+                onClick={() => navigate("/user/FeedViews")}
+                style={{
+                  backgroundColor: "#0000ff",
+                  color:'white',
+                  height: "40px",
+                  fontSize: "20px",
+                  borderRadius: "10px",
+                }}
+              >
+                <i className="bi bi-box me-2"></i> Forum
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+      {/* <UserSearch onSearch={handleSearch} />
       <div className="mt-3 forum-div d-flex align-items-center justify-content-center">
           <button
             className="btn text-white px-4 d-flex align-items-center justify-content-center forum-button"
@@ -226,9 +253,9 @@ const Card = () => {
             }}
             onClick={() => navigate("/user/FeedViews")}
           >
-            <i className="bi bi-box-seam me-2"></i> Forum
+            <i className="bi bi-box-seam me-2"></i> Post
           </button>
-        </div>
+        </div> */}
       {/* <SearchBarLoction onLocationSearch={handleLocationSearch} onSearchNear={handleNearDistricts}/> */}
       <div className="container mt-5 mb-3">
         <div className="row g-4">
@@ -247,7 +274,7 @@ const Card = () => {
                   </div>
 
                   <div className="card-body d-flex flex-column">
-                    <h5 className="card-title">{product.product_name}</h5>
+                    <h5 className="card-title" onClick={() => handleDistributorProductView (product)}>{product.product_name}</h5>
                     <span></span>
                     <h5 className="card-text mt-3"><i class="bi bi-currency-rupee"></i> {product.mrp_rate}</h5>
                     <div className='d-block d-lg-flex align-items-center justify-content-between mb-3'><small className="">{product.brand_name}</small>

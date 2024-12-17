@@ -23,10 +23,18 @@ const OrderSummary = () => {
   const fetchOrders = async () => {
     try {
       const response = await axios.get(`${baseurl}/api/orders`);
-      setOrders(response.data.data || []);
+      
+      // Check and sort orders by updatedAt or createdAt in descending order
+      const sortedOrders = (response.data.data || []).sort(
+        (a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt)
+      );
+    
+      // Set the sorted orders
+      setOrders(sortedOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);
     }
+    
   };
   useEffect(() => {
        fetchOrders();

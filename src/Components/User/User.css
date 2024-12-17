@@ -132,6 +132,9 @@
     max-width: 800px !important;
     position: relative;
   }
+  .card-title{
+    cursor: pointer;
+  }
   
   /* Cart */
   .cart-container {
@@ -219,6 +222,9 @@
       margin-top: 20px !important;
     }
     .add-post-button{
+      width: 50% !important;
+    }
+    .add-forum-button{
       width: 50% !important;
     }
   }

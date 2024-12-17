@@ -358,26 +358,31 @@ const Distributors = () => {
       resetForm();
     }
   };
-
-  // Pagination calculations
+ 
   // Pagination calculations
   const indexOfLastDistributor = currentPage * itemsPerPage;
   const indexOfFirstDistributor = indexOfLastDistributor - itemsPerPage;
-  let currentDistributors = []; // Change from const to let
-
-  if (activeTab === 'all') {
+  
+  let currentDistributors = [];
+  let totalItems = 0;
+  
+  if (activeTab === "all") {
     currentDistributors = distributors.slice(indexOfFirstDistributor, indexOfLastDistributor);
-  } else if (activeTab === 'archive') {
+    totalItems = distributors.length; // Total distributors
+  } else if (activeTab === "archive") {
     currentDistributors = archiveDistributors.slice(indexOfFirstDistributor, indexOfLastDistributor);
+    totalItems = archiveDistributors.length; // Total archive distributors
   }
-
-  const totalPages = Math.ceil(currentDistributors.length / itemsPerPage); // Corrected from currentDistributor to currentDistributors
-
+  
+  // Calculate total pages based on the total number of items
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  
   const handlePageChange = (pageNumber) => {
     if (pageNumber < 1) pageNumber = 1;
     if (pageNumber > totalPages) pageNumber = totalPages;
     setCurrentPage(pageNumber);
   };
+  
 
 
   const handleArchive = async (distributor, isArchive) => {

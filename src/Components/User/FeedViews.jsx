@@ -51,11 +51,22 @@ const FeedViews = () => {
   const fetchForums = async () => {
     try {
       const response = await axios.get(`${baseurl}/api/forums`);
-      const userForums = response.data?.data.filter(forum => forum.user_id === user.uid);
-      user.role === 'technician' ? setForums(userForums || []) : setForums(response.data?.data || []);
+      const allForums = response.data?.data || [];
+    
+      // Filter forums by user_id if the user is a technician
+      const userForums = allForums.filter(forum => forum.user_id === user.uid);
+    
+      // Sort forums by updatedAt or createdAt in descending order
+      const sortedForums = (user.role === 'technician' ? userForums : allForums).sort(
+        (a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt)
+      );
+    
+      // Set sorted forums
+      setForums(sortedForums);
     } catch (error) {
       console.error("Error fetching forums:", error);
     }
+    
   };
 
   useEffect(() => {
@@ -318,9 +329,9 @@ const FeedViews = () => {
             <UserSearch onSearch={handleSearch} />
           </div>
 
-          {user.role === 'distributor' ? (
+          {/* {user.role === 'distributor' ? (
             <div></div>
-          ) : (
+          ) : ( */}
             <div className="col-12 col-md-2 col-lg-2 text-center text-md-start add-post-btn-div">
               <button
                 className="btn d-flex align-items-center justify-content-center rounded-3 w-100 add-post-button"
@@ -329,7 +340,7 @@ const FeedViews = () => {
                 <i className="bi bi-box me-2"></i> Add Post
               </button>
             </div>
-          )}
+          {/* )} */}
         </div>
       </div>
 

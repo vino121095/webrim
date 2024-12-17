@@ -7,13 +7,12 @@ const NotificationSettings = ({ settings, handleToggle }) => {
       <div className="mb-4">
         <h4 className="mb-2">Notification Settings</h4>
         <p className="text-muted">
-          Lorem ipsum dolor sit amet consectetur. Hac amet nisi sem
-          imperdiet nulla.
+        Manage your notification preferences to stay updated on important activities and alerts.
         </p>
       </div>
       <div className="card-body">
-        <h5 className="mb-3">Email Notifications</h5>
-        <p className="text-muted">Lorem ipsum dolor sit amet consectetur.</p>
+        {/* <h5 className="mb-3">Email Notifications</h5>
+        <p className="text-muted">Lorem ipsum dolor sit amet consectetur.</p> */}
 
         <div className="list-group list-group-flush">
           {/* <div className="list-group-item d-flex justify-content-between align-items-center px-0">
@@ -74,7 +73,7 @@ const NotificationSettings = ({ settings, handleToggle }) => {
             <div>
               <h6 className="mb-1">Order</h6>
               <small className="text-muted">
-                Lorem ipsum dolor sit amet consectetur.
+              Enable or disable notifications for new orders.
               </small>
             </div>
             <div className="form-check form-switch">
