@@ -208,7 +208,7 @@ const Login = () => {
         </form>
         
         <p className="signup-link">
-          Don't have an account? <a href="/Auth/Signup">Sign up</a>
+        Are you a technician ? <a href="/Auth/Signup">Sign up</a>
         </p>
       </div>
       

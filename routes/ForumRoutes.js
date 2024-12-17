@@ -19,4 +19,6 @@ router.get('/forumtakens/:id', ForumController.showNotifyForDistributor);
 
 router.get('/forumtakes/:id', ForumController.showNotifyForTechnician);
 
+router.get('/forumtakebyid/:id', ForumController.getForumTakesByIdemId);
+
 module.exports = router;

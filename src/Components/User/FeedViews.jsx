@@ -27,6 +27,7 @@ const FeedViews = () => {
 
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
+    resetForm();
   };
 
   const toggleEditModal = () => {
@@ -396,13 +397,17 @@ const FeedViews = () => {
 
                       {user && user.role === 'distributor' && (
                         <div className="w-100 d-flex justify-content-end">
-                          <button
-                            className="btn w-25"
-                            style={{ background: '#F24E1E', color: 'white' }}
-                            onClick={() => handleTakeForum(forum.fid)}
-                          >
-                            Take
-                          </button>
+                          {forum.status === 'Taken' ? (
+                            <p style={{ color: 'blue', fontWeight: 'bold' }}>Taked</p>
+                          ) : (
+                            <button
+                              className="btn w-25"
+                              style={{ background: '#F24E1E', color: 'white' }}
+                              onClick={() => handleTakeForum(forum.fid)}
+                            >
+                              Take
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>

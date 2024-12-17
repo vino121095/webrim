@@ -16,7 +16,7 @@ const NotificationSettings = ({ settings, handleToggle }) => {
         <p className="text-muted">Lorem ipsum dolor sit amet consectetur.</p>
 
         <div className="list-group list-group-flush">
-          <div className="list-group-item d-flex justify-content-between align-items-center px-0">
+          {/* <div className="list-group-item d-flex justify-content-between align-items-center px-0">
             <div>
               <h6 className="mb-1">News & Update</h6>
               <small className="text-muted">
@@ -32,9 +32,9 @@ const NotificationSettings = ({ settings, handleToggle }) => {
                 style={{ cursor: "pointer" }}
               />
             </div>
-          </div>
+          </div> */}
 
-          <div className="list-group-item d-flex justify-content-between align-items-center px-0">
+          {/* <div className="list-group-item d-flex justify-content-between align-items-center px-0">
             <div>
               <h6 className="mb-1">Screen Notification</h6>
               <small className="text-muted">
@@ -50,9 +50,9 @@ const NotificationSettings = ({ settings, handleToggle }) => {
                 style={{ cursor: "pointer" }}
               />
             </div>
-          </div>
+          </div> */}
 
-          <div className="list-group-item d-flex justify-content-between align-items-center px-0">
+          {/* <div className="list-group-item d-flex justify-content-between align-items-center px-0">
             <div>
               <h6 className="mb-1">Message</h6>
               <small className="text-muted">
@@ -68,7 +68,7 @@ const NotificationSettings = ({ settings, handleToggle }) => {
                 style={{ cursor: "pointer" }}
               />
             </div>
-          </div>
+          </div> */}
 
           <div className="list-group-item d-flex justify-content-between align-items-center px-0">
             <div>

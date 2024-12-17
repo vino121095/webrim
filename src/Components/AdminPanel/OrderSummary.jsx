@@ -255,8 +255,8 @@ const OrderSummary = () => {
         </table>
       </div>
 
-      <div className="d-flex justify-content-between align-items-center mt-3">
-        <span>
+      <div className="d-flex justify-content-between align-items-center mt-3 mb-3 order-page">
+        <span className='mb-3'>
           Showing {currentOrders.length} of {filteredAndSearchedOrders.length} entries
         </span>
         <Pagination

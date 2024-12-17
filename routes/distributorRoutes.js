@@ -19,4 +19,8 @@ router.put('/updateDistributorById/:id', uploadDistributorImage, deleteDistribut
 
 router.delete('/deleteDistributorById/:id', deleteDistributorsimages, Distributorscontroller.deleteDistributor ); // detele distributor by id
 
+router.put('/archiveDistributor/:id', Distributorscontroller.addArchiveForDistributor); // Archive a distributor
+
+router.put('/unarchiveDistributor/:id', Distributorscontroller.removeArchiveForDistributor); // Unarchive a distributor
+
 module.exports = router;

@@ -527,6 +527,9 @@ a.navbar-brand{
   .productStatsSection {
     gap: 20px !important;
   }
+  .order-page{
+    flex-direction: column !important;
+  }
 }
 
   

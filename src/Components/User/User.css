@@ -226,7 +226,7 @@
   @media (max-width: 768px)
   {
     .forum-button{
-      width: 50% !important;
+      width: 30% !important;
       margin-bottom: 0 !important;
     }
     .forum-div{
@@ -267,10 +267,7 @@
   .view-mob-num{
     height: 15px !important;
   }
-  .card-img-top{
-    /* width: 300px; */
-    /* height: 200px !important; */
-  }
+
   .view-mobile-no{
     font-size: 9px !important;
   }

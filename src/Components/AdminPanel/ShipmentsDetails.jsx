@@ -69,6 +69,7 @@ const ShipmentsDetails = ({ isEditMode = false, initialShipmentData = null, onCl
       setFormData((prevState) => ({
         ...prevState,
         orderId: order.order_id,
+        distributorName: order.user.username,
         productIds,
         quantities,
         prices,

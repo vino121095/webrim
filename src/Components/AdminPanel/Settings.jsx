@@ -140,7 +140,7 @@ console.log(profileImage);
           {/* Settings Sidebar Card */}
           <div className="card border-0 shadow-sm">
             <div className="list-group list-group-flush setting-sidebar">
-              <a 
+              {/* <a 
                 href="#" 
                 className={`list-group-item list-group-item-action p-3`}
                 onClick={() => setActiveTab('appearance')}
@@ -154,7 +154,7 @@ console.log(profileImage);
                     <small className="text-muted">Dark mode, light mode, more</small>
                   </div>
                 </div>
-              </a>
+              </a> */}
 
               <a 
                 href="#" 
@@ -188,7 +188,7 @@ console.log(profileImage);
                 </div>
               </a>
 
-              <a 
+              {/* <a 
                 href="#" 
                 className={`list-group-item list-group-item-action p-3`}
                 onClick={() => setActiveTab('email')}
@@ -203,7 +203,7 @@ console.log(profileImage);
 
                   </div>
                 </div>
-              </a>
+              </a> */}
             </div>
           </div>
         </div>

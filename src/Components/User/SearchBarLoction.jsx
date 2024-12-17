@@ -233,8 +233,8 @@ const SearchBarLocation = ({ onLocationSearch, onSearchNear }) => {
             className="btn text-white px-4 d-flex align-items-center justify-content-center w-100 forum-button"
             style={{
               backgroundColor: "#0000ff",
-              height: "60px",
-              fontSize: "24px",
+              height: "40px",
+              fontSize: "20px",
               borderRadius: "10px",
             }}
             onClick={() => navigate("/user/FeedViews")}

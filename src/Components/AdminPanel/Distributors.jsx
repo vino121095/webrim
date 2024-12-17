@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Pagination } from "react-bootstrap";
 import "./AdminPanel.css";
-import { Upload, Eye, PencilLine, Trash2, X } from "lucide-react";
+import { Upload, Eye, PencilLine, Trash2, X, Archive, ArchiveX } from "lucide-react";
 import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 import axios from "axios";
 import baseurl from "../ApiService/ApiService";
@@ -23,6 +23,9 @@ const Distributors = () => {
   const [error, setError] = useState("");
   const [validationErrors, setValidationErrors] = useState({});
   const itemsPerPage = 6;
+  const [activeTab, setActiveTab] = useState("all");
+  const [archiveDistributors, setArchiveDistributors] = useState([]);
+  // const [newDistributors, setNewDistributors] = useState([]);
 
   // Validation functions
   const validateGSTNumber = (gst) => {
@@ -68,13 +71,21 @@ const Distributors = () => {
     }
   }, [searchQuery]);
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setCurrentPage(1); // Reset to the first page when changing tabs
+  }
+
   const fetchDistributors = async () => {
     try {
       const response = await axios.get(`${baseurl}/api/getAllDistributors`);
       setDistributors(response.data || []);
+      setArchiveDistributors(response.data.filter(distributor => distributor.isarchived));
+      // setNewDistributors(data.filter(distributor => distributor.isNew));
     } catch (error) {
       console.error("Error fetching distributors:", error);
       setDistributors([]);
+      setArchiveDistributors([]);
     }
   };
 
@@ -219,7 +230,7 @@ const Distributors = () => {
       if (response.status === 201 || response.status === 200) {
         const iconType =
           response.data.message === "Distributor added successfully" ||
-          response.data.message === "Distributor updated successfully"
+            response.data.message === "Distributor updated successfully"
             ? "success"
             : "error";
 
@@ -349,19 +360,66 @@ const Distributors = () => {
   };
 
   // Pagination calculations
+  // Pagination calculations
   const indexOfLastDistributor = currentPage * itemsPerPage;
   const indexOfFirstDistributor = indexOfLastDistributor - itemsPerPage;
-  const currentDistributors = distributors.slice(
-    indexOfFirstDistributor,
-    indexOfLastDistributor
-  );
-  const totalPages = Math.ceil(distributors.length / itemsPerPage);
+  let currentDistributors = []; // Change from const to let
+
+  if (activeTab === 'all') {
+    currentDistributors = distributors.slice(indexOfFirstDistributor, indexOfLastDistributor);
+  } else if (activeTab === 'archive') {
+    currentDistributors = archiveDistributors.slice(indexOfFirstDistributor, indexOfLastDistributor);
+  }
+
+  const totalPages = Math.ceil(currentDistributors.length / itemsPerPage); // Corrected from currentDistributor to currentDistributors
 
   const handlePageChange = (pageNumber) => {
     if (pageNumber < 1) pageNumber = 1;
     if (pageNumber > totalPages) pageNumber = totalPages;
     setCurrentPage(pageNumber);
   };
+
+
+  const handleArchive = async (distributor, isArchive) => {
+    // Confirmation message based on action
+    const title = isArchive ? 'Archive this distributor?' : 'Remove from archive?';
+    const confirmButtonText = isArchive ? 'Yes, archive it!' : 'Yes, remove it!';
+    const successMessage = isArchive ? 'Distributor archived successfully!' : 'Distributor removed from archive successfully!';
+  
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: title,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText,
+    });
+  
+    if (result.isConfirmed) {
+      try {
+        // Determine the correct API endpoint based on action
+        const endpoint = isArchive
+          ? `${baseurl}/api/archiveDistributor/${distributor.did}`
+          : `${baseurl}/api/unarchiveDistributor/${distributor.did}`;
+        
+        // Send API request
+        const response = await axios.put(endpoint);
+  
+        if (response.status === 200) {
+          Swal.fire('Success!', successMessage, 'success');
+          // Optionally, refresh or update your state here
+        } else {
+          Swal.fire('Error!', response.data.message || 'Failed to process.', 'error');
+        }
+      } catch (error) {
+        Swal.fire('Error!', error.response?.data?.message || 'Something went wrong.', 'error');
+      }
+    }
+    fetchDistributors();
+  };
+  
+
 
   return (
     <div className="container-fluid py-4">
@@ -395,20 +453,29 @@ const Distributors = () => {
       {/* Navigation Tabs */}
       <ul className="nav nav-tabs mb-4">
         <li className="nav-item">
-          <a className="nav-link active" href="#">
+          <a
+            className={`nav-link ${activeTab === "all" ? "active" : ""}`}
+            onClick={() => handleTabChange("all")}
+          >
             All Distributors
           </a>
         </li>
         <li className="nav-item">
-          <a className="nav-link" href="#">
+          <a
+            className={`nav-link ${activeTab === "archive" ? "active" : ""}`}
+            onClick={() => handleTabChange("archive")}
+          >
             Archive
           </a>
         </li>
-        <li className="nav-item">
-          <a className="nav-link" href="#">
+        {/* <li className="nav-item">
+          <a
+            className={`nav-link ${activeTab === "new" ? "active" : ""}`}
+            onClick={() => handleTabChange("new")}
+          >
             New Distributors
           </a>
-        </li>
+        </li> */}
       </ul>
 
       {/* Table Section */}
@@ -462,6 +529,21 @@ const Distributors = () => {
                             >
                               <Trash2 className="text-danger" size={20} />
                             </button>
+                            {activeTab === 'all' ? (
+                              <button
+                                className="btn btn-link p-0"
+                                onClick={() => handleArchive(distributor, true)} // Archive action
+                              >
+                                <Archive className="text-primary" size={20} />
+                              </button>
+                            ) : activeTab === 'archive' ? (
+                              <button
+                                className="btn btn-link p-0"
+                                onClick={() => handleArchive(distributor, false)} // Unarchive action
+                              >
+                                <ArchiveX className="text-danger" size={20} />
+                              </button>
+                            ) : null}
                           </div>
                         </td>
                       </tr>
@@ -598,9 +680,8 @@ const Distributors = () => {
                       <label className="form-label">GST Number</label>
                       <input
                         type="text"
-                        className={`form-control ${
-                          validationErrors.gstnumber ? "is-invalid" : ""
-                        }`}
+                        className={`form-control ${validationErrors.gstnumber ? "is-invalid" : ""
+                          }`}
                         name="gstnumber"
                         placeholder="Enter GST number"
                         onChange={handleInputChange}
@@ -638,9 +719,8 @@ const Distributors = () => {
                       <label className="form-label">Phone Number</label>
                       <input
                         type="tel"
-                        className={`form-control ${
-                          validationErrors.phoneno ? "is-invalid" : ""
-                        }`}
+                        className={`form-control ${validationErrors.phoneno ? "is-invalid" : ""
+                          }`}
                         name="phoneno"
                         placeholder="Enter phone number"
                         onChange={handleInputChange}
@@ -656,9 +736,8 @@ const Distributors = () => {
                       <label className="form-label">Email</label>
                       <input
                         type="email"
-                        className={`form-control ${
-                          validationErrors.email ? "is-invalid" : ""
-                        }`}
+                        className={`form-control ${validationErrors.email ? "is-invalid" : ""
+                          }`}
                         name="email"
                         placeholder="Enter email"
                         onChange={handleInputChange}
@@ -674,9 +753,8 @@ const Distributors = () => {
                       <label className="form-label">Password</label>
                       <input
                         type="text"
-                        className={`form-control ${
-                          validationErrors.password &&  !currentDistributor?.did ? "is-invalid" : ""
-                        }`}
+                        className={`form-control ${validationErrors.password && !currentDistributor?.did ? "is-invalid" : ""
+                          }`}
                         name="password"
                         placeholder="Enter password"
                         onChange={handleInputChange}

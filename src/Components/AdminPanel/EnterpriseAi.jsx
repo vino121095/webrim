@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import Compressor from "../User/Assets/compressor-img.png";
@@ -6,8 +6,11 @@ import axios from "axios";
 import Swal from 'sweetalert2';
 import baseurl from '../ApiService/ApiService';
 import { Pie } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, Title } from 'chart.js';
-ChartJS.register(ArcElement, Tooltip, Legend, Title);
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Card, Form, Row, Col } from 'react-bootstrap';
+
+// Register Chart.js components
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const EnterpriseAi = () => {
   const user = JSON.parse(localStorage.getItem('userData'));
@@ -93,33 +96,162 @@ const EnterpriseAi = () => {
 
     fetchStats();
   }, []);
-  const data = {
-    labels: ['Product 1', 'Product 2', 'Product 3'], // Labels for the sections
-    datasets: [
-      {
-        data: [11, 58, 24], // The data for the chart (percentages)
-        backgroundColor: ['#D8E6FF', '#D8E6FF', '#F24E1E'], // Colors for each segment
-        hoverOffset: 4,
-      },
-    ],
-  };
-
-  // Chart options (styling, tooltip behavior, etc.)
-  const options = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'right', // Place the legend at the bottom
-      },
-      tooltip: {
-        callbacks: {
-          label: function (context) {
-            return `${context.label}: ${context.raw}%`; // Show percentage in tooltip
+  
+  const SalesPieChart = ({ orders }) => {
+    // State to track the current time period view
+    const [timePeriod, setTimePeriod] = useState('month');
+  
+    // Function to group sales by product for different time periods
+    const getSalesData = useMemo(() => {
+      // Filter completed orders (you might want to adjust this based on your business logic)
+      const completedOrders = orders.filter(order => order.status === 'Done');
+  
+      // Group sales by product
+      const productSales = completedOrders.reduce((acc, order) => {
+        // Aggregate sales by product
+        order.OrderItems.forEach(item => {
+          const productId = item.product_id;
+          const productName = item.Product.product_id;
+  
+          if (!acc[productId]) {
+            acc[productId] = {
+              total: 0,
+              name: productName
+            };
+          }
+          acc[productId].total += item.price * item.quantity;
+        });
+  
+        return acc;
+      }, {});
+  
+      // Convert to array and sort to get top 3 products
+      const sortedProducts = Object.entries(productSales)
+        .sort((a, b) => b[1].total - a[1].total)
+        .slice(0, 3);
+  
+      // Prepare chart data for top 3 products
+      const chartData = {
+        labels: sortedProducts.map(([, product]) => product.name),
+        datasets: [{
+          data: sortedProducts.map(([, product]) => product.total),
+          backgroundColor: ['#D8E6FF', '#6A9DFF', '#F24E1E'],
+          hoverOffset: 4,
+        }]
+      };
+  
+      // Calculate total sales of top 3 products
+      const totalSales = sortedProducts.reduce((total, [, product]) => total + product.total, 0);
+      
+      // Calculate processed percentage (you might need to adjust this logic)
+      const processedPercentage = completedOrders.length > 0 
+        ? Math.round((totalSales / 
+          completedOrders.reduce((total, order) => 
+            total + order.OrderItems.reduce((sum, item) => sum + item.price * item.quantity, 0), 0)
+        ) * 100)
+        : 0;
+  
+      return { 
+        chartData, 
+        totalSales, 
+        processedPercentage 
+      };
+    }, [orders, timePeriod]);
+  
+    // Chart options
+    const options = {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'right',
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const value = context.raw;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = ((value / total) * 100).toFixed(2);
+              return `${context.label}: ₹${value.toLocaleString()} (${percentage}%)`;
+            },
           },
         },
       },
-    },
+    };
+  
+    return (
+      <Card className="h-100">
+        <Card.Body>
+          <Row className="align-items-center mb-3">
+            <Col>
+              <Card.Title className="mb-0">Top 3 Product Sales</Card.Title>
+            </Col>
+            <Col xs="auto">
+              <Form.Select 
+                value={timePeriod} 
+                onChange={(e) => setTimePeriod(e.target.value)}
+                className="w-auto"
+              >
+                <option value="week">Week</option>
+                <option value="month">Month</option>
+                <option value="year">Year</option>
+              </Form.Select>
+            </Col>
+          </Row>
+          
+          <div className="d-flex align-items-center justify-content-center mb-3">
+            <h3 className="mb-0 me-2">
+              <i className="bi bi-currency-rupee"></i> 
+              {getSalesData.totalSales.toLocaleString()}
+            </h3>
+          </div>
+          
+          <div className="">
+            <Pie 
+              data={getSalesData.chartData} 
+              options={options} 
+            />
+            
+          </div>
+          <div className='d-flex justify-content-center'>
+              <p className="mb-0 p-2"
+              style={{ backgroundColor:'blue',
+                color:'white', width:'max-content'}}
+              >
+                {getSalesData.processedPercentage}% 
+                Processed
+              </p>
+            </div>
+        </Card.Body>
+      </Card>
+    );
   };
+  // const data = {
+  //   labels: ['Product 1', 'Product 2', 'Product 3'], // Labels for the sections
+  //   datasets: [
+  //     {
+  //       data: [11, 58, 24], // The data for the chart (percentages)
+  //       backgroundColor: ['#D8E6FF', '#D8E6FF', '#F24E1E'], // Colors for each segment
+  //       hoverOffset: 4,
+  //     },
+  //   ],
+  // };
+
+  // Chart options (styling, tooltip behavior, etc.)
+  // const options = {
+  //   responsive: true,
+  //   plugins: {
+  //     legend: {
+  //       position: 'right', // Place the legend at the bottom
+  //     },
+  //     tooltip: {
+  //       callbacks: {
+  //         label: function (context) {
+  //           return `${context.label}: ${context.raw}%`; // Show percentage in tooltip
+  //         },
+  //       },
+  //     },
+  //   },
+  // };
 
   // Style for the container and center label
   const centerLabelStyle = {
@@ -398,20 +530,6 @@ const EnterpriseAi = () => {
       <div className="row mb-4">
         <div className="col-12 d-flex justify-content-between align-items-center mb-3">
           <h4 className="mb-0" style={{ fontWeight: "bold" }}>Forum</h4>
-          <button
-            className="btn btn-danger"
-            style={{
-              width: "auto",
-              height: "auto",
-              fontSize: "25px",
-              fontWeight: "500",
-              backgroundColor: "#ff5722",
-              border: "1px solid #ff5722",
-            }}
-            onClick={toggleModal}
-          >
-            Post
-          </button>
         </div>
 
         {/* Looping through forum items */}
@@ -451,7 +569,11 @@ const EnterpriseAi = () => {
                         <strong>Close Date : </strong> {forum.close_date ? new Date(forum.close_date).toLocaleDateString() : "No Date"}
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <button className="btn btn-primary">Take</button>
+                      <button className="btn" style={{
+                                backgroundColor: forum.status === 'Taken' ? 'blue' : 'orangered',
+                                color: "white",
+                                border: "none",
+                              }}>{forum.status}</button>
                       </div>
                     </div>
                   </div>
@@ -464,7 +586,7 @@ const EnterpriseAi = () => {
 
       {/* Order Summary and Charts Row */}
       <div className="row">
-        <div className="col-md-4">
+        <div className="col-md-4 mb-3">
           <div className="card h-100">
             <div className="card-body">
               <h5 className="card-title mb-5">Order Summary</h5>
@@ -500,8 +622,9 @@ const EnterpriseAi = () => {
             </div>
           </div>
         </div>
-
-        <div className="col-md-4">
+        <div className="col-md-4 mb-3"><SalesPieChart orders={orders}/></div>
+        
+        {/* <div className="col-md-4">
           <div className="card h-100">
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center mb-3">
@@ -520,9 +643,9 @@ const EnterpriseAi = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
 
-        <div className="col-md-4">
+        {/* <div className="col-md-4">
           <div className="card h-100">
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center mb-3">
@@ -551,7 +674,7 @@ const EnterpriseAi = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {isModalOpen && (

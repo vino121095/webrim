@@ -2,13 +2,17 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import baseurl from "../ApiService/ApiService";
 import Swal from "sweetalert2";
+import { Modal } from "react-bootstrap";
 import Compressor from "../User/Assets/compressor-img.png";
 
 const Forum = () => {
   const [forums, setForums] = useState([]);
   const [products, setProducts] = useState([]);
   const user = JSON.parse(localStorage.getItem("userData"));
-
+  const [selectedTake, setSelectedTake] = useState(null);
+  const [isForumModalOpen, setIsForumModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   // Fetch all forums (including those not taken)
   const fetchAllForums = async () => {
     try {
@@ -47,7 +51,7 @@ const Forum = () => {
       const response = await axios.post(`${baseurl}/api/forumtake/${forumId}`, {
         distributor_id: user.uid,
       });
-      
+
       Swal.fire({
         icon: 'success',
         title: 'Success',
@@ -55,7 +59,7 @@ const Forum = () => {
         confirmButtonText: 'OK',
         confirmButtonColor: '#3085d6'
       });
-      
+
       fetchAllForums(); // Refresh the forums list
     } catch (error) {
       Swal.fire({
@@ -74,6 +78,24 @@ const Forum = () => {
     fetchAllForums();
     fetchProducts();
   }, []);
+
+  const handleOpenModal = async (take) => {
+    try {
+      const response = await axios.get(`${baseurl}/api/forumtakebyid/${take.fid}`);
+      setSelectedTake(response.data.data[0]);
+      setError(null);
+    } catch (err) {
+      setError('Failed to fetch forum takes');
+      console.error('Error fetching forum takes:', err);
+    }
+    setIsForumModalOpen(true);
+  };
+
+  // Close modal
+  const handleCloseModal = () => {
+    setSelectedTake(null);
+    setIsForumModalOpen(false);
+  };
 
   return (
     <div className="container mt-4">
@@ -106,27 +128,35 @@ const Forum = () => {
                         />
                       </div>
                       <div className="col-md-9">
-                      <div className="mb-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <strong>Product Name : </strong>
-                        <span>{matchingProduct?.product_name || "N/A"}</span>
+                        <div className="mb-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <strong>Product Name : </strong>
+                          <span>{matchingProduct?.product_name || "N/A"}</span>
+                        </div>
+                        <div className="mb-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <strong>Needed Quantity : </strong> {forum.quantity || "N/A"}
+                        </div>
+                        <div className="mb-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <strong>Post by : </strong> {forum.name || "Unknown"}
+                        </div>
+                        <div className="mb-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <strong>Close Date : </strong> {forum.close_date ? new Date(forum.close_date).toLocaleDateString() : "No Date"}
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                          <button 
+                            className="btn"
+                            style={{
+                              backgroundColor: forum.status === 'Taken' ? 'blue' : 'orangered',
+                              color: "white",
+                              border: "none",
+                              
+                            }}
+                            onClick={() => handleOpenModal(forum)}
+                            disabled={forum.status === 'Not Taken'} 
+                          >
+                            {forum.status}
+                          </button>
+                        </div>
                       </div>
-                      <div className="mb-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <strong>Needed Quantity : </strong> {forum.quantity || "N/A"}
-                      </div>
-                      <div className="mb-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <strong>Post by : </strong> {forum.name || "Unknown"}
-                      </div>
-                      <div className="mb-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <strong>Close Date : </strong> {forum.close_date ? new Date(forum.close_date).toLocaleDateString() : "No Date"}
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <button className="btn" style={{
-                                backgroundColor: "orangered",
-                                color: "white",
-                                border: "none",
-                              }}>Take</button>
-                      </div>
-                    </div>
                     </div>
                   </div>
                 </div>
@@ -137,6 +167,64 @@ const Forum = () => {
           <p className="text-center">No forums available.</p>
         )}
       </div>
+
+      {/* Modal outside of forum mapping */}
+      {isForumModalOpen && (
+            <div 
+            className={`modal fade ${isForumModalOpen ? 'show' : ''}`}
+            style={{ 
+              display: isForumModalOpen ? 'block' : 'none', 
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              zIndex: 1050
+            }}
+            onClick={handleCloseModal}
+            tabIndex="-1"
+          >
+            <div 
+              className="modal-dialog modal-dialog-centered modal-md" 
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Forum Take Details</h5>
+                  <button 
+                    type="button" 
+                    className="btn-close" 
+                    onClick={handleCloseModal} 
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <div className="row mb-2">
+                    <div className="col-6 fw-bold">Distributor Name:</div>
+                    <div className="col-6">{selectedTake.distributorName}</div>
+                  </div>
+                  <div className="row mb-2">
+                    <div className="col-6 fw-bold">Distributor Email:</div>
+                    <div className="col-6">{selectedTake.distributorEmail}</div>
+                  </div>
+                  <div className="row mb-2">
+                    <div className="col-6 fw-bold">Distributor Phone:</div>
+                    <div className="col-6">{selectedTake.distributorPhone}</div>
+                  </div>
+                  <div className="row mb-2">
+                    <div className="col-6 fw-bold">Distributor Address:</div>
+                    <div className="col-6">{selectedTake.distributorAddress}</div>
+                  </div>
+                  <div className="row">
+                    <div className="col-6 fw-bold">Taken At:</div>
+                    <div className="col-6">{new Date(selectedTake.takenAt).toLocaleString()}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>  
+      )}
     </div>
   );
 };

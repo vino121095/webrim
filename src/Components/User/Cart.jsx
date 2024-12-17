@@ -11,6 +11,7 @@ const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [transports, setTransports] = useState([]);
+  const [profileData, setProfileData] = useState(null);
   const [selectedTransport, setSelectedTransport] = useState('');
   const LoggedUser = JSON.parse(localStorage.getItem("userData"));
   const userId = LoggedUser?.uid;
@@ -120,7 +121,6 @@ const Cart = () => {
       alert(`Error removing item from cart: ${error.message}`);
     }
   };
-
   // Handle checkout
   const handleCheckout = async () => {
     if (!selectedTransport) {
@@ -149,47 +149,75 @@ const Cart = () => {
   }, 0);
 
   try {
-    // Fetch user orders to calculate total order value
-    const response = await axios.get(
-      `${baseurl}/api/userOrdersById/${LoggedUser.uid}`
+    // Fetch user's previous orders
+    const orderResponse = await axios.get(
+        `${baseurl}/api/userOrdersById/${LoggedUser.uid}`
     );
-    
-    const previousOrders = response.data.data;
-    
-    // Calculate total amount from previous orders
+
+    const previousOrders = orderResponse.data.data;
+
+    // Calculate the total amount from previous orders
     const previousOrderTotal = previousOrders.reduce((total, order) => {
-      if (order.status !== 'Cancelled' && order.status !== 'Done') {
-        return total + parseFloat(order.total_amount);
-      }
-      return total;
+        if (order.status !== "Cancelled" && order.status !== "Done") {
+            return total + parseFloat(order.total_amount);
+        }
+        return total;
     }, 0);
 
-    // Check if the new order plus previous orders exceed credit limit
-    const totalOrderValue = totalOrderAmount + previousOrderTotal;
-    
-    // Assuming you have the user's credit limit available
-    if (totalOrderValue > parseFloat(LoggedUser.creditlimit)) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Credit Limit Exceeded',
-        text: `Your total order value (₹${totalOrderValue.toFixed(2)}) exceeds your credit limit of ₹${parseFloat(LoggedUser.creditlimit).toFixed(2)}`,
-        confirmButtonText: 'OK',
-        confirmButtonColor: '#d33'
-      });
-      return;
+    // Fetch user profile data to get the credit limit
+    const userProfileResponse = await axios.get(
+        `${baseurl}/api/userprofile/${LoggedUser.uid}`
+    );
+    const userProfile = userProfileResponse.data.data;
+
+    if (!userProfile || !userProfile.creditlimit) {
+        Swal.fire({
+            icon: "error",
+            title: "Credit Limit Error",
+            text: "Unable to fetch user credit limit. Please try again later.",
+            confirmButtonText: "OK",
+            confirmButtonColor: "#d33",
+        });
+        return;
     }
-      await axios.post(baseurl + "/api/placeOrder", { user_id: userId, transport_id: selectedTransport.tid });
-      navigate("/User/PaymentSuccess");
-  }catch (error) {
-    console.error("Error during checkout:", error);
-    Swal.fire({
-      icon: 'error',
-      title: 'Checkout Failed',
-      text: 'An error occurred during checkout. Please try again later.',
-      confirmButtonText: 'OK',
-      confirmButtonColor: '#d33'
+
+    const userCreditLimit = parseFloat(userProfile.creditlimit);
+    const totalOrderValue = totalOrderAmount + previousOrderTotal;
+
+    // Check if the new order plus previous orders exceed the credit limit
+    if (totalOrderValue > userCreditLimit) {
+        Swal.fire({
+            icon: "error",
+            title: "Credit Limit Exceeded",
+            text: `Your total order value (₹${totalOrderValue.toFixed(
+                2
+            )}) exceeds your credit limit of ₹${userCreditLimit.toFixed(2)}.`,
+            confirmButtonText: "OK",
+            confirmButtonColor: "#d33",
+        });
+        return;
+    }
+
+    // Place the order
+    await axios.post(baseurl + "/api/placeOrder", {
+        user_id: LoggedUser.uid,
+        transport_id: selectedTransport.tid,
     });
-  }
+
+    // Navigate to success page after order placement
+    navigate("/User/PaymentSuccess");
+} catch (error) {
+    console.error("Error during checkout:", error);
+
+    Swal.fire({
+        icon: "error",
+        title: "Checkout Failed",
+        text: "An error occurred during checkout. Please try again later.",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#d33",
+    });
+}
+
 }
   return (
     <>
