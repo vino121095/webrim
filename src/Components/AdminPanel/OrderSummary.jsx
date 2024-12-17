@@ -23,10 +23,18 @@ const OrderSummary = () => {
   const fetchOrders = async () => {
     try {
       const response = await axios.get(`${baseurl}/api/orders`);
-      setOrders(response.data.data || []);
+      
+      // Check and sort orders by updatedAt or createdAt in descending order
+      const sortedOrders = (response.data.data || []).sort(
+        (a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt)
+      );
+    
+      // Set the sorted orders
+      setOrders(sortedOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);
     }
+    
   };
   useEffect(() => {
        fetchOrders();
@@ -112,13 +120,13 @@ const OrderSummary = () => {
       padding: '6px 12px',
       display: 'inline-block'
     },
-    'Complaint': {
-      color: '#FF1E00',
-      background: '#F9EDEB',
-      borderRadius: '10px',
-      padding: '6px 12px',
-      display: 'inline-block'
-    },
+    // 'Complaint': {
+    //   color: '#FF1E00',
+    //   background: '#F9EDEB',
+    //   borderRadius: '10px',
+    //   padding: '6px 12px',
+    //   display: 'inline-block'
+    // },
     'Cancelled': {
       color: '#808080',
       background: '#E5E7E5',
@@ -192,7 +200,7 @@ const OrderSummary = () => {
       {/* Order Tabs */}
       <div className="mb-4">
         <ul className="nav nav-tabs">
-          {['All Orders', 'Received', 'Shipping', 'Complaint', 'Cancelled', 'Done'].map((filter) => (
+          {['All Orders', 'Received', 'Shipping', 'Cancelled', 'Done'].map((filter) => (
             <li className="nav-item" key={filter}>
               <button
                 className={`nav-link ${activeFilter === filter ? 'active' : ''}`}

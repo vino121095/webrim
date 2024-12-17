@@ -64,12 +64,19 @@ const Shipments = () => {
     try {
       const response = await axios.get(`${baseurl}/api/getAllShipments`);
       if (response.data && response.data.data) {
-        const shipmentsData = response.data.data; // Directly access response data
-        setShipments(shipmentsData);
-  
+        // Directly access response data
+        const shipmentsData = response.data.data;
+    
+        // Sort shipments by updatedAt or createdAt in descending order (latest first)
+        const sortedShipments = shipmentsData.sort(
+          (a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt)
+        );
+    
+        setShipments(sortedShipments); // Set the sorted shipments
+    
         // Update chart data with shipment creation months
         const updatedChartData = [...chartDataTemplate];
-        shipmentsData.forEach((shipment) => {
+        sortedShipments.forEach((shipment) => {
           if (shipment.createdAt) {
             const monthIndex = new Date(shipment.createdAt).getMonth(); // Get month index (0 for Jan, 11 for Dec)
             updatedChartData[monthIndex].orders += 1; // Increment the orders count for the corresponding month
@@ -80,6 +87,7 @@ const Shipments = () => {
     } catch (error) {
       console.error("Error fetching shipments:", error);
     }
+    
   };
   
   const fetchOrders = async () => {
@@ -400,9 +408,9 @@ const Shipments = () => {
                   </thead>
                   <tbody>
                     {currentShipments.length > 0 ? (
-                      currentShipments.map((shipment) => (
-                        <tr key={shipment.id}>
-                          <td className="py-3 px-4">{shipment.sid}</td>
+                      currentShipments.map((shipment, index) => (
+                        <tr key={shipment.sid}>
+                          <td className="py-3 px-4">{index+1}</td>
                           <td className="py-3 px-4">
                             {shipment.shipment_items
                               .map((item) => item.product_name)

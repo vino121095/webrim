@@ -636,12 +636,12 @@ const EnterpriseAi = () => {
                 >
                   Shipping ({orderSummary.shipping})
                 </div>
-                <div
+                {/* <div
                   className="list-group-item p-3"
                   style={{ backgroundColor: "#FFC8C8" }}
                 >
                   Complaint ({orderSummary.complaint})
-                </div>
+                </div> */}
                 <div
                   className="list-group-item p-3"
                   style={{ backgroundColor: "#FFE7E7" }}

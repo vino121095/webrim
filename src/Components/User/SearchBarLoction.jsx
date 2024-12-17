@@ -239,7 +239,7 @@ const SearchBarLocation = ({ onLocationSearch, onSearchNear }) => {
             }}
             onClick={() => navigate("/user/FeedViews")}
           >
-            <i className="bi bi-box-seam me-2"></i> Forum
+            <i className="bi bi-box-seam me-2"></i> Post
           </button>
         </div>
 

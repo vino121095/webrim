@@ -17,7 +17,11 @@ const Forum = () => {
   const fetchAllForums = async () => {
     try {
       const response = await axios.get(`${baseurl}/api/forums`);
-      setForums(response.data?.data || []);
+      const allForums = response.data?.data || [];
+      const latestForums = allForums.sort(
+        (a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt)
+      );
+      setForums(latestForums);
     } catch (error) {
       console.error("Error fetching forums:", error);
       setForums([]);
