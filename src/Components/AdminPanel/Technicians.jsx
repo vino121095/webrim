@@ -19,7 +19,7 @@ const Technicians = () => {
   const [editTechnician, setEditTechnician] = useState(null);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const itemsPerPage = 6;
+  const itemsPerPage = 10;
 
   // Fetch technicians function moved outside of useEffect to make it accessible in handleDeleteTechnician
   const fetchTechnicians = async () => {
@@ -221,7 +221,7 @@ const Technicians = () => {
           />
         </div>
         <div className="col-4 col-md-4">
-          <button
+          {/* <button
             id="addProductBtn"
             className="btn p-3 d-flex align-items-center justify-content-center"
             onClick={handleAddTechnician}
@@ -229,7 +229,7 @@ const Technicians = () => {
             <i className="bi bi-plus-circle me-2"></i>
             <span className="d-none d-sm-inline">Add Technicians</span>
             <span className="d-inline d-sm-none">Add</span>
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -544,6 +544,7 @@ const Technicians = () => {
                       className="form-control"
                       value={editTechnician.email || ''}
                       onChange={handleInputChange}
+                      disabled
                     />
                   </div>
                 </div>

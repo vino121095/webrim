@@ -17,7 +17,7 @@ const OrderSummary = () => {
   const [selectedOrder, setSelectedOrder] = useState({});
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [orderDetails, setOrderDetails] = useState(null);
-  const itemsPerPage = 6;
+  const itemsPerPage = 10;
   const navigate = useNavigate();
 
   const fetchOrders = async () => {
@@ -186,21 +186,21 @@ const OrderSummary = () => {
 
         {/* Add Product Button */}
         <div className="col-4 col-md-4">
-          <button
+          {/* <button
             id="addProductBtn"
             className="btn p-3 p-md-3 d-flex align-items-center justify-content-center"
           >
             <i className="bi bi-plus-circle me-2"></i>
             <span className="d-none d-sm-inline">Add Product</span>
             <span className="d-inline d-sm-none">Add</span>
-          </button>
+          </button> */}
         </div>
       </div>
 
       {/* Order Tabs */}
       <div className="mb-4">
         <ul className="nav nav-tabs">
-          {['All Orders', 'Received', 'Shipping', 'Cancelled', 'Done'].map((filter) => (
+          {['All Orders', 'Received', 'Shipping', 'Cancelled', 'Deliverd'].map((filter) => (
             <li className="nav-item" key={filter}>
               <button
                 className={`nav-link ${activeFilter === filter ? 'active' : ''}`}
@@ -368,7 +368,7 @@ const OrderSummary = () => {
         <Button 
             variant="success" onClick={handleComplete}
           >
-            Done
+            Deliverd
           </Button>
         </div>
          

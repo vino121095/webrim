@@ -25,6 +25,10 @@ const Distributor = sequelize.define('Distributor', {
         type: DataTypes.DECIMAL,
         allowNull: false
     },
+    current_credit_limit: {
+        type: DataTypes.DECIMAL,
+        allowNull: false
+    },
     contact_person_name: {
         type: DataTypes.STRING,
         allowNull: false

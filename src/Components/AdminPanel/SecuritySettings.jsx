@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 import Swal from 'sweetalert2';
 import axios from 'axios';
-import baseurl from '../ApiService/ApiService'
+import baseurl from '../ApiService/ApiService';
+import { useNavigate } from 'react-router-dom';
 
 const SecuritySettings = () => {
   const [email, setEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Validation state
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
+  const navigate = useNavigate();
 
   // Email validation function
   const validateEmail = (emailToValidate) => {
@@ -68,7 +70,7 @@ const SecuritySettings = () => {
   const handleConfirmPasswordChange = (e) => {
     const confirmPasswordValue = e.target.value;
     setConfirmPassword(confirmPasswordValue);
-    
+
     if (confirmPasswordValue !== newPassword) {
       setConfirmPasswordError('Passwords do not match');
     } else {
@@ -79,7 +81,7 @@ const SecuritySettings = () => {
   // Main form submission handler
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate all fields before submission
     const isEmailValid = validateEmail(email);
     const isPasswordValid = validatePassword(newPassword);
@@ -110,7 +112,7 @@ const SecuritySettings = () => {
         text: response.data.message,
         confirmButtonColor: '#F24E1E',
       });
-      
+
       // Clear form
       setEmail('');
       setNewPassword('');
@@ -118,7 +120,7 @@ const SecuritySettings = () => {
       setEmailError('');
       setPasswordError('');
       setConfirmPasswordError('');
-      
+
     } catch (error) {
       Swal.fire({
         icon: 'error',
@@ -172,11 +174,16 @@ const SecuritySettings = () => {
             />
             {confirmPasswordError && <div className="invalid-feedback">{confirmPasswordError}</div>}
           </div>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="btn"
-            style={{background: '#F24E1E', color: 'white'}}
+            style={{ background: '#F24E1E', color: 'white' }}
             disabled={isLoading}
+            onClick={() => {
+              if (!isLoading) {
+                navigate('/Auth/login');
+              }
+            }}
           >
             {isLoading ? 'Updating...' : 'Update Password'}
           </button>

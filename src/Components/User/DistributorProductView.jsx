@@ -119,6 +119,35 @@ const DistributorProductView = () => {
   return (
     <>
       <NavBar />
+      <ul
+        className="breadcrumb"
+        style={{
+          padding: "10px 16px",
+          listStyle: "none",
+          backgroundColor: "#f8f9fa",
+          display: "flex",
+          gap: "10px",
+          justifyContent: "center",
+          alignItems: "center",
+          borderRadius: "5px",
+          margin: "0",
+        }}
+      >
+        {/* Active item */}
+        <li style={{ fontSize: "18px", margin: "0" }}>
+          <a href="/" style={{ textDecoration: "none", color: "#007bff", fontWeight: "bold" }}>
+            Home
+          </a>
+        </li>
+        <li style={{ fontSize: "18px", margin: "0" }}>/</li>
+
+        {/* Disabled item */}
+        <li style={{ fontSize: "17px", margin: "0", color: "#6c757d", cursor: "not-allowed" }}>
+          Product View
+        </li>
+      </ul>
+
+
       <div className="container product-details-container my-4">
         <div className="row">
           {/* Image Section */}
@@ -179,61 +208,65 @@ const DistributorProductView = () => {
                 <p>
                   <strong>ID Product:</strong> {product.product_id}
                 </p>
+                {/* Add to Cart Button */}
+                <div className="d-flex flex-column flex-sm-row align-items-start justify-content-lg-center gap-2">
+                  <div className="input-group" style={{ width: 'auto' }}>
+                    <button
+                      className="btn btn-outline-secondary"
+                      type="button"
+                      onClick={decrementQuantity}
+                    >
+                      <i className="bi bi-dash"></i>
+                    </button>
+
+                    <span
+                      className="input-group-text bg-white text-dark"
+                      style={{ minWidth: '50px', justifyContent: 'center' }}
+                    >
+                      {quantity}
+                    </span>
+
+                    <button
+                      className="btn btn-outline-secondary"
+                      type="button"
+                      onClick={incrementQuantity}
+                    >
+                      <i className="bi bi-plus"></i>
+                    </button>
+                  </div>
+
+                  <button
+                    className="btn add-to-card-button d-flex align-items-center justify-content-center"
+                    style={{ minWidth: '150px' }}
+                    onClick={() => handleAddToCartClick(product, quantity)}
+                  >
+                    <i className="bi bi-cart-plus me-2"></i>
+                    Add to Cart
+                  </button>
+                </div><br />
 
                 <div className="aboutProduct mb-3">
-                  <h4>About Product</h4>
-                  <p>{product.product_description}</p>
+                  <h4 style={{ fontWeight: "700" }}>About Product</h4>
+                  <p style={{ textIndent: "3em", textAlign: "justify" }}>{product.product_description}</p>
                 </div>
 
                 <div className="additionalInfo mb-3">
-                  <h4>Additional Information</h4>
+                  <h4 style={{ fontWeight: "700" }}>Additional Information</h4>
                   <p>
-                    <strong>Item Details:</strong> {product.item_details}
+                    <strong>Item Details:</strong>
+                    <p style={{ textIndent: "3em", textAlign: "justify" }}>{product.item_details}</p>
                   </p>
                   <p>
-                    <strong>How to Use:</strong> {product.how_to_use}
+                    <strong>How to Use:</strong>
+                    <p style={{ textIndent: "3em", textAlign: "justify" }}>{product.how_to_use}</p>
                   </p>
                   <p>
-                    <strong>Composition:</strong> {product.composition}
+                    <strong>Composition:</strong>
+                    <p style={{ textIndent: "3em", textAlign: "justify" }}>{product.composition}</p>
                   </p>
                 </div>
               </div>
-              {/* Add to Cart Button */}
-              <div className="d-flex flex-column flex-sm-row align-items-start justify-content-lg-center gap-2">
-                <div className="input-group" style={{ width: 'auto' }}>
-                  <button
-                    className="btn btn-outline-secondary"
-                    type="button"
-                    onClick={decrementQuantity}
-                  >
-                    <i className="bi bi-dash"></i>
-                  </button>
 
-                  <span
-                    className="input-group-text bg-white text-dark"
-                    style={{ minWidth: '50px', justifyContent: 'center' }}
-                  >
-                    {quantity}
-                  </span>
-
-                  <button
-                    className="btn btn-outline-secondary"
-                    type="button"
-                    onClick={incrementQuantity}
-                  >
-                    <i className="bi bi-plus"></i>
-                  </button>
-                </div>
-
-                <button
-                  className="btn add-to-card-button d-flex align-items-center justify-content-center"
-                  style={{ minWidth: '150px' }}
-                  onClick={() => handleAddToCartClick(product, quantity)}
-                >
-                  <i className="bi bi-cart-plus me-2"></i>
-                  Add to Cart
-                </button>
-              </div>
             </div>
           </div>
 

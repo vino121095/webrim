@@ -13,7 +13,8 @@ exports.createShipments = async (req, res) => {
             quantity, 
             dispatch_date, 
             dispatch_address, 
-            transport 
+            transport,
+            courier_id 
         } = req.body;
 
         // Validate input
@@ -82,6 +83,7 @@ exports.createShipments = async (req, res) => {
             dispatch_date,
             dispatch_address,
             transport,
+            courier_id,
             shipment_items: shipmentItems // Store product details
         };
 
@@ -161,6 +163,7 @@ exports.updateShipment = async (req, res) => {
             dispatch_date, 
             dispatch_address, 
             transport,
+            courier_id,
             status
         } = req.body;
 
@@ -181,6 +184,7 @@ exports.updateShipment = async (req, res) => {
             dispatch_date,
             dispatch_address,
             transport,
+            courier_id,
             status
         }, {
             where: { sid: sid }

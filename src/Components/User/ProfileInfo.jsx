@@ -167,7 +167,7 @@ const ProfileInfo = () => {
             />
           </div>
 
-          <div className="mb-3">
+          {/* <div className="mb-3">
             <label htmlFor="company_name" className="form-label" style={labelStyle}>
               Company Name
             </label>
@@ -194,7 +194,7 @@ const ProfileInfo = () => {
               disabled 
               style={customStyle}
             />
-          </div>
+          </div> */}
 
           <div className="mb-3">
             <label htmlFor="address" className="form-label" style={labelStyle}>
@@ -210,7 +210,7 @@ const ProfileInfo = () => {
             ></textarea>
           </div>
 
-          <div className="row mb-3">
+          {/* <div className="row mb-3">
             <div className="col-md-6">
               <label htmlFor="pincode" className="form-label" style={labelStyle}>
                 Pincode
@@ -237,7 +237,7 @@ const ProfileInfo = () => {
                 style={customStyle}
               />
             </div>
-          </div>
+          </div> */}
 
           <div className="row mb-3">
             <div className="col-md-6">
@@ -253,7 +253,7 @@ const ProfileInfo = () => {
                 style={customStyle}
               />
             </div>
-            <div className="col-md-6">
+            {/* <div className="col-md-6">
               <label htmlFor="state" className="form-label" style={labelStyle}>
                 State
               </label>
@@ -265,7 +265,7 @@ const ProfileInfo = () => {
                 onChange={handleInputChange}
                 style={customStyle}
               />
-            </div>
+            </div> */}
           </div>
 
           <button type="submit" className="btn profile-update-btn" style={profileUpdateBtn}>

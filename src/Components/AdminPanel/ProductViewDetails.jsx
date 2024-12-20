@@ -66,11 +66,11 @@ const ProductViewDetails = () => {
           <div className="productStatsSection d-flex flex-wrap mt-4">
             <div className="stockInfo flex-fill bg-white p-3 border rounded shadow-sm">
               <Package className="text-primary mb-2 me-2" size={24} /><span>Stocks</span>
-              <p className="fw-bold">{product.stocks} / Pack</p>
+              <p className="fw-bold">{product.stocks}</p>
             </div>
             <div className="salesInfo flex-fill bg-white p-3 border rounded shadow-sm">
               <ShoppingCart className="text-warning mb-2 me-2" size={24} /> <span>Sales</span>
-              <p className="fw-bold">{product.sales} / Pack</p>
+              <p className="fw-bold">{product.sales}</p>
             </div>
           </div>
         </div>

@@ -22,6 +22,7 @@ const ShipmentsDetails = ({ isEditMode = false, initialShipmentData = null, onCl
     dispatchAddress: '',
     transport: '',
     status: 'Shipment',
+    courierId: '',
   });
 
   useEffect(() => {
@@ -50,6 +51,7 @@ const ShipmentsDetails = ({ isEditMode = false, initialShipmentData = null, onCl
         dispatchAddress: initialShipmentData.dispatch_address || '',
         transport: initialShipmentData.transport || '',
         status: initialShipmentData.status || 'Shipment',
+        courierId: initialShipmentData.courier_id || '',
       });
     } else if (!isEditMode && id) {
       fetchOrderDetails();
@@ -138,6 +140,7 @@ const ShipmentsDetails = ({ isEditMode = false, initialShipmentData = null, onCl
         dispatch_address: formData.dispatchAddress,
         transport: formData.transport,
         status: formData.status,
+        courier_id: formData.courierId
       };
 
       let response;
@@ -326,6 +329,20 @@ const ShipmentsDetails = ({ isEditMode = false, initialShipmentData = null, onCl
                   </option>
                 ))}
               </select>
+            </div>
+          </div>
+
+          <div className="row mb-3">
+            <div className="col-md-6">
+              <label htmlFor="courierId" className="form-label">Courier ID</label>
+              <input
+                type="text"
+                className="form-control"
+                id="courierId"
+                name="courierId"
+                value={formData.courierId}
+                onChange={handleChange}
+              />
             </div>
           </div>
 

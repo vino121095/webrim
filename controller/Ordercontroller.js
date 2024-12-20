@@ -50,7 +50,7 @@ exports.createOrder = async (req, res) => {
         }
 
         // Check if the distributor has sufficient credit limit
-        if (distributor.creditlimit < totalAmount) {
+        if (distributor.current_credit_limit < totalAmount) {
             return res.json({ error: 'Insufficient credit limit' });
         }
 
@@ -78,14 +78,14 @@ exports.createOrder = async (req, res) => {
             where: { user_id: userId }
         });
 
-        // Update distributor's credit limit
-        const updatedCreditLimit = distributor.creditlimit - totalAmount;
+        /// Update distributor's credit limit
+        const updatedCreditLimit = distributor.current_credit_limit - totalAmount;
         await Distributor.update(
-            { creditlimit: updatedCreditLimit },
+            { current_credit_limit: updatedCreditLimit },
             { where: { email: user.email } }
         );
         await User.update({
-            creditlimit:updatedCreditLimit},
+            current_credit_limit:updatedCreditLimit},
             {where:{uid:userId}
         })
 
@@ -133,16 +133,16 @@ exports.cancelOrder = async (req, res) => {
 
         // Update the credit limits (refund the total amount)
         const refundedAmount = Number(order.total_amount); // Ensure refundedAmount is a number
-        const updatedUserCredit = Number(user.creditlimit) + refundedAmount;
-        const updatedDistributorCredit = Number(distributor.creditlimit) + refundedAmount;
+        const updatedUserCredit = Number(user.current_credit_limit) + refundedAmount;
+        const updatedDistributorCredit = Number(distributor.current_credit_limit) + refundedAmount;
 
         await User.update(
-            { creditlimit: updatedUserCredit },
+            { current_credit_limit: updatedUserCredit },
             { where: { uid: order.user_id } }
         );
 
         await Distributor.update(
-            { creditlimit: updatedDistributorCredit },
+            { current_credit_limit: updatedDistributorCredit },
             { where: { email: user.email } }
         );
 

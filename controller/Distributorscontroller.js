@@ -48,6 +48,7 @@ exports.addDistributor = async (req, res) => {
             location,
             gstnumber,
             creditlimit,
+            current_credit_limit: creditlimit,
             contact_person_name,
             phoneno,
             email
@@ -70,6 +71,7 @@ exports.addDistributor = async (req, res) => {
             username: contact_person_name,
             company_name: companyname,
             creditlimit:  creditlimit,
+            current_credit_limit: creditlimit,
             email,
             mobile_number : phoneno,
             password: hashedPassword,
@@ -304,5 +306,60 @@ exports.removeArchiveForDistributor = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+};
+
+// Add this function to your distributor controller file
+
+exports.updateDistributorCreditLimit = async (req, res) => {
+    const { id } = req.params;
+    const { current_credit_limit } = req.body;
+
+    try {
+        // Find the distributor
+        const distributor = await Distributor.findByPk(id);
+        if (!distributor) {
+            return res.status(404).json({ message: 'Distributor not found' });
+        }
+
+        // Find the associated user
+        const user = await User.findOne({ where: { email: distributor.email } });
+        if (!user) {
+            return res.status(404).json({ message: 'Associated user not found' });
+        }
+
+        // Calculate the difference to add to credit limit
+        const creditLimitIncrease = parseFloat(current_credit_limit) - parseFloat(distributor.current_credit_limit);
+
+        // Update distributor
+        await distributor.update({
+            current_credit_limit: current_credit_limit,
+            creditlimit: parseFloat(distributor.creditlimit) + creditLimitIncrease
+        });
+
+        // Update user
+        await user.update({
+            current_credit_limit: current_credit_limit,
+            creditlimit: parseFloat(user.creditlimit) + creditLimitIncrease
+        });
+
+        res.status(200).json({
+            message: 'Credit limit updated successfully',
+            distributor: {
+                current_credit_limit: distributor.current_credit_limit,
+                creditlimit: distributor.creditlimit
+            },
+            user: {
+                current_credit_limit: user.current_credit_limit,
+                creditlimit: user.creditlimit
+            }
+        });
+
+    } catch (error) {
+        console.error('Error updating credit limit:', error);
+        res.status(500).json({
+            message: 'Error updating credit limit',
+            error: error.message
+        });
     }
 };
