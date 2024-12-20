@@ -38,6 +38,11 @@ const User = sequelize.define('User', {
     allowNull: true,
     unique: true,
   },
+  current_credit_limit: {
+    type: DataTypes.DECIMAL,
+    allowNull: true,
+    defaultValue: 0.00,
+  },
   company_name: {
     type: DataTypes.STRING,
     allowNull: true,

@@ -532,6 +532,15 @@ const Shipments = () => {
                       </div>
 
                       <div className="row mb-3">
+                        <div className="col-md-6">
+                        <div className="detail-group">
+                            <label className="fw-bold">Courier ID:</label>
+                            <p className="detail-value">{viewShipment.courier_id || 'N/A'}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="row mb-3">
                         <div className="col-12">
                           <div className="detail-group">
                             <label className="fw-bold">Shipment Items:</label>

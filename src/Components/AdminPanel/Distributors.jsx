@@ -22,7 +22,7 @@ const Distributors = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState("");
   const [validationErrors, setValidationErrors] = useState({});
-  const itemsPerPage = 6;
+  const itemsPerPage = 10;
   const [activeTab, setActiveTab] = useState("all");
   const [archiveDistributors, setArchiveDistributors] = useState([]);
   // const [newDistributors, setNewDistributors] = useState([]);
@@ -738,22 +738,22 @@ const Distributors = () => {
                       )}
                     </div>
                     <div className="col-12">
-                      <label className="form-label">Email</label>
-                      <input
-                        type="email"
-                        className={`form-control ${validationErrors.email ? "is-invalid" : ""
-                          }`}
-                        name="email"
-                        placeholder="Enter email"
-                        onChange={handleInputChange}
-                        value={currentDistributor?.email || ""}
-                      />
-                      {validationErrors.email && (
-                        <div className="invalid-feedback">
-                          {validationErrors.email}
-                        </div>
-                      )}
-                    </div>
+                <label className="form-label">Email</label>
+                <input
+                  type="email"
+                  className={`form-control ${validationErrors.email ? "is-invalid" : ""}`}
+                  name="email"
+                  placeholder="Enter email"
+                  onChange={handleInputChange}
+                  value={currentDistributor?.email || ""}
+                  disabled={currentDistributor?.did ? true : false}  // Disable only if editing existing distributor
+                />
+                {validationErrors.email && (
+                  <div className="invalid-feedback">
+                    {validationErrors.email}
+                  </div>
+                )}
+              </div>
                     <div className="col-12">
                       <label className="form-label">Password</label>
                       <input

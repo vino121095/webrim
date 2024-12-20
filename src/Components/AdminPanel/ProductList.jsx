@@ -16,7 +16,7 @@ const ProductList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState(""); // New state for search query
   const [filteredProducts, setFilteredProducts] = useState([]); // New state for filtered products
-  const itemsPerPage = 6;
+  const itemsPerPage = 10;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState(null);

@@ -381,7 +381,7 @@ const AdminNavBar = () => {
           {tab}
         </Navbar.Brand>
         <Nav className="d-flex flex-row align-items-center" id="AdminNav">
-          <input
+          {/* <input
             placeholder="Search Anything..."
             type="search"
             name="search"
@@ -392,7 +392,7 @@ const AdminNavBar = () => {
               borderRadius: "5px",
               border: "1px solid #ccc",
             }}
-          />
+          /> */}
           <NotificationButton />
           <Nav.Link as={Link} to="/Auth/Login" data-bs-toggle="modal" data-bs-target="#logoutModal">
             <img

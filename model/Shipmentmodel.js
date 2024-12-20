@@ -51,6 +51,10 @@ const Shipment = sequelize.define('Shipment', {
         type: DataTypes.STRING,
         allowNull: false
     },
+    courier_id: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
     shipment_items: {
         type: DataTypes.TEXT,
         allowNull: false,

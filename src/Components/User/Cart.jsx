@@ -170,7 +170,7 @@ const Cart = () => {
     );
     const userProfile = userProfileResponse.data.data;
 
-    if (!userProfile || !userProfile.creditlimit) {
+    if (!userProfile || !userProfile.current_credit_limit) {
         Swal.fire({
             icon: "error",
             title: "Credit Limit Error",
@@ -181,17 +181,16 @@ const Cart = () => {
         return;
     }
 
-    const userCreditLimit = parseFloat(userProfile.creditlimit);
-    const totalOrderValue = totalOrderAmount + previousOrderTotal;
+    const userCreditLimit = parseFloat(userProfile.current_credit_limit);
 
     // Check if the new order plus previous orders exceed the credit limit
-    if (totalOrderValue > userCreditLimit) {
+    if (totalOrderAmount > userCreditLimit) {
         Swal.fire({
             icon: "error",
             title: "Credit Limit Exceeded",
-            text: `Your total order value (₹${totalOrderValue.toFixed(
+            text: `Your previous order value (₹${previousOrderTotal.toFixed(
                 2
-            )}) exceeds your credit limit of ₹${userCreditLimit.toFixed(2)}.`,
+            )}),Current Order value(₹${totalOrderAmount}) exceeds your credit limit of ₹${userCreditLimit.toFixed(2)}.`,
             confirmButtonText: "OK",
             confirmButtonColor: "#d33",
         });

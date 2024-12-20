@@ -483,7 +483,7 @@ const EnterpriseAi = () => {
       <div className="row mb-4">
         {[
           {
-            title: 'Total User',
+            title: 'Technician',
             value: stats.totalUsers,
             percentage: calculatePercentageChange(stats.totalUsers, calculatePreviousUsers(users)),
             icon: 'bi-people',
@@ -491,7 +491,7 @@ const EnterpriseAi = () => {
             bgClass: 'bg-primary bg-opacity-10',
           },
           {
-            title: 'Total Order',
+            title: 'Week Order',
             value: stats.totalOrders,
             percentage: calculatePercentageChangeInWeek(stats.totalOrders, calculatePastWeekOrders(orders)),
             icon: 'bi-box',
@@ -499,7 +499,7 @@ const EnterpriseAi = () => {
             bgClass: 'bg-warning bg-opacity-10',
           },
           {
-            title: 'Total Sales',
+            title: 'Yesterday Sales',
             value: (
               <div className="flex items-center">
                 <i className="bi bi-currency-rupee mr-1"></i>
@@ -512,7 +512,7 @@ const EnterpriseAi = () => {
             bgClass: 'bg-success bg-opacity-10',
           },
           {
-            title: 'Total Pending',
+            title: 'Distributor',
             value: stats.pendingOrders,
             percentage: calculatePercentageChange(stats.pendingOrders, calculatePreviousPendingOrders(orders)),
             icon: 'bi-clock',

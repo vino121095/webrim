@@ -340,7 +340,7 @@ const handleDeleteTransport = async (transport) => {
                       <th className="py-3 px-4">Location</th>
                       <th className="py-3 px-4">Travel Name</th>
                       <th className="py-3 px-4">Phone Number</th>
-                      <th className="py-3 px-4">Driver Name</th>
+                      <th className="py-3 px-4">GST Number</th>
                       <th className="py-3 px-4">Action</th>
                     </tr>
                   </thead>
@@ -521,7 +521,7 @@ const handleDeleteTransport = async (transport) => {
               <div className="row mb-3">
                 <div className="col-md-6">
                   <div className="detail-group">
-                    <label className="fw-bold">Driver Name:</label>
+                    <label className="fw-bold">GST Number:</label>
                     <p className="detail-value">{viewTransport.dirver_name || 'N/A'}</p>
                   </div>
                 </div>
@@ -590,7 +590,7 @@ const handleDeleteTransport = async (transport) => {
               </div>
               <div className="form-row">
                 <div className="form-group full-width">
-                  <label>Driver Name</label>
+                  <label>GST Number</label>
                   <input
                     type="text"
                     name="dirver_name"

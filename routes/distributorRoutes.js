@@ -23,4 +23,6 @@ router.put('/archiveDistributor/:id', Distributorscontroller.addArchiveForDistri
 
 router.put('/unarchiveDistributor/:id', Distributorscontroller.removeArchiveForDistributor); // Unarchive a distributor
 
+router.put('/updateDistributorCreditLimit/:id', Distributorscontroller.updateDistributorCreditLimit);
+
 module.exports = router;

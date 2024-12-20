@@ -3,7 +3,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { useNavigate } from 'react-router-dom';
 import UserSearch from "./UserSearch";
-import SearchBarLoction from "./SearchBarLoction";
 import axios from 'axios';
 import baseurl from '../ApiService/ApiService';
 import Swal from 'sweetalert2';
@@ -13,13 +12,14 @@ const Card = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const navigate = useNavigate();
-  const LoggedUser = JSON.parse(localStorage.getItem('userData'));
-  const [formData, setFormData] = useState({
-    quantity: 1,
-    distributor_name: LoggedUser?.username || "",
-    phone_number: LoggedUser?.mobile_number || ""
-  });
-
+  const LoggedUser = JSON.parse(localStorage.getItem('userData')) || {};
+  
+  useEffect(() => {
+    if (!LoggedUser) {
+      navigate("/Auth/Login");
+    }
+  }, [LoggedUser, navigate]);
+  
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -34,6 +34,11 @@ const Card = () => {
     };
     fetchProducts();
   }, []);
+  const [formData, setFormData] = useState({
+    quantity: 1,
+    distributor_name: LoggedUser?.username || "",
+    phone_number: LoggedUser?.mobile_number || ""
+  });
 
   // Handle input change for form
   const handleInputChange = (event) => {
