@@ -1,8 +1,8 @@
+// ForumModel.js
 const { Sequelize } = require('sequelize');
 const { DataTypes } = Sequelize;
 const sequelize = require('../config/db');
 const User = require('./UserModel');
-const Product = require('./Productmodel');
 
 const Forum = sequelize.define('Forum', {
     fid: {
@@ -20,24 +20,6 @@ const Forum = sequelize.define('Forum', {
         },
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE'
-    },
-    product_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-            model: Product,
-            key: 'pid'
-        },
-        onDelete: 'CASCADE',
-        onUpdate: 'CASCADE'
-    },
-    product_name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    quantity: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
     },
     name: {
         type: DataTypes.STRING,
@@ -65,11 +47,28 @@ const Forum = sequelize.define('Forum', {
     timestamps: true,
 });
 
-// Associations
-User.hasMany(Forum, { foreignKey: 'user_id', as: 'forums', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-Forum.belongsTo(User, { foreignKey: 'user_id', as: 'user', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+// Only define the User association here
+Forum.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(Forum, { foreignKey: 'user_id', as: 'forums' });
 
-Product.hasMany(Forum, { foreignKey: 'product_id', as: 'forums', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-Forum.belongsTo(Product, { foreignKey: 'product_id', as: 'product', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-
+// Export the model before defining the many-to-many associations
 module.exports = Forum;
+
+// After exporting, define the many-to-many associations
+const Product = require('./Productmodel');
+const ForumProduct = require('./ForumProductModel');
+
+// Define many-to-many relationship between Forum and Product
+Forum.belongsToMany(Product, {
+    through: ForumProduct,
+    foreignKey: 'forum_id',
+    otherKey: 'product_id',
+    as: 'products'
+});
+
+Product.belongsToMany(Forum, {
+    through: ForumProduct,
+    foreignKey: 'product_id',
+    otherKey: 'forum_id',
+    as: 'forums'
+});

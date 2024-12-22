@@ -11,15 +11,15 @@ const ForumTake = sequelize.define('ForumTake', {
         autoIncrement: true,
         allowNull: false,
     },
-    forum_id: {
+    fid: { 
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
             model: Forum,
             key: 'fid'
         },
-        onDelete: 'CASCADE', // Add this to handle deletion
-        onUpdate: 'CASCADE'  // Add this to handle updates
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE'
     },
     distributor_id: {
         type: DataTypes.INTEGER,
@@ -28,8 +28,8 @@ const ForumTake = sequelize.define('ForumTake', {
             model: User,
             key: 'uid'
         },
-        onDelete: 'CASCADE', // Add this to handle deletion
-        onUpdate: 'CASCADE'  // Add this to handle updates
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE'
     },
     taken_at: {
         type: DataTypes.DATE,
@@ -41,33 +41,33 @@ const ForumTake = sequelize.define('ForumTake', {
     timestamps: true,
 });
 
-// Associations
+// Update associations to use the correct foreign key
+Forum.hasMany(ForumTake, {
+    foreignKey: 'fid',
+    as: 'takes',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+ForumTake.belongsTo(Forum, {
+    foreignKey: 'fid',
+    as: 'forum',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
 User.hasMany(ForumTake, {
     foreignKey: 'distributor_id',
     as: 'forumTakes',
-    onDelete: 'CASCADE', // Add this to handle deletion
-    onUpdate: 'CASCADE'  // Add this to handle updates
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
 });
 
 ForumTake.belongsTo(User, {
     foreignKey: 'distributor_id',
     as: 'distributor',
-    onDelete: 'CASCADE', // Add this to handle deletion
-    onUpdate: 'CASCADE'  // Add this to handle updates
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
 });
-
-Forum.hasMany(ForumTake, {
-    foreignKey: 'fid',
-    as: 'takes',
-    onDelete: 'CASCADE', // Add this to handle deletion
-    onUpdate: 'CASCADE'  // Add this to handle updates
-});
-
-ForumTake.belongsTo(Forum, {
-    foreignKey: 'forum_id', 
-    as: 'forum', 
-    onDelete: 'CASCADE', // Add this to handle deletion
-    onUpdate: 'CASCADE'  // Add this to handle updates
-  });
 
 module.exports = ForumTake;

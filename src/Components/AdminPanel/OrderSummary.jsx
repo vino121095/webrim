@@ -200,13 +200,13 @@ const OrderSummary = () => {
       {/* Order Tabs */}
       <div className="mb-4">
         <ul className="nav nav-tabs">
-          {['All Orders', 'Received', 'Shipping', 'Cancelled', 'Deliverd'].map((filter) => (
+          {['All Orders', 'Received', 'Shipping', 'Cancelled', 'Done'].map((filter) => (
             <li className="nav-item" key={filter}>
               <button
                 className={`nav-link ${activeFilter === filter ? 'active' : ''}`}
                 onClick={() => handleFilterChange(filter)}
               >
-                {filter}
+                {filter === 'Done' ? 'Deliverd' : filter}
               </button>
             </li>
           ))}
@@ -237,7 +237,7 @@ const OrderSummary = () => {
                   <td className="py-3 px-4">{order.total_amount}</td>
                   <td className="py-3 px-4" style={{cursor:'pointer'}}>
                     <span style={statusStyles[order.status] || {}} onClick={()=>handleChangeStatus(order)}>
-                      {order.status}
+                      {order.status === 'Done' ? 'Deliverd' : order.status}
                     </span>
                   </td>
                   <td className="py-3 px-4">
@@ -355,7 +355,7 @@ const OrderSummary = () => {
             className="ml-2" 
             style={statusStyles[selectedOrder.status] || {}}
           >
-            {selectedOrder.status}
+            {selectedOrder.status === 'Done' ? 'Deliverd' : selectedOrder.status}
           </span>
         </div>
 
@@ -435,7 +435,7 @@ const OrderSummary = () => {
                     <td>{item.quantity}</td>
                     <td><i className="bi bi-currency-rupee"></i>{item.price}</td>
                     <td><i className="bi bi-currency-rupee"></i>{(item.quantity * item.price).toFixed(2)}</td>
-                    <td>{orderDetails.status}</td>
+                    <td>{orderDetails.status === 'Done' ? 'Deliverd' : orderDetails.status}</td>
                   </tr>
                 ))}
               </tbody>

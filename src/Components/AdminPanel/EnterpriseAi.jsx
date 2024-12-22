@@ -5,19 +5,19 @@ import Compressor from "../User/Assets/compressor-img.png";
 import axios from "axios";
 import Swal from 'sweetalert2';
 import baseurl from '../ApiService/ApiService';
-import { Pie } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Pie, Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Card, Form, Row, Col } from 'react-bootstrap';
 
 // Register Chart.js components
-ChartJS.register(ArcElement, Tooltip, Legend);
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
 const EnterpriseAi = () => {
   const user = JSON.parse(localStorage.getItem('userData'));
   const [stats, setStats] = useState({
-    totalUsers: 0,
+    totalUsersTechnician: 0,
     totalOrders: 0,
-    pendingOrders: 0,
+    totalUsersDistributor: 0,
     totalSales: 0,
   });
   const [orderSummary, setOrderSummary] = useState({
@@ -43,6 +43,7 @@ const EnterpriseAi = () => {
         const usersData = userRes.data?.data || [];
         const ordersData = orderRes.data?.data || [];
         setUsers(usersData);
+
         // Calculate order summary
         const summary = {
           received: ordersData.filter(order => order.status === 'Received').length,
@@ -53,20 +54,37 @@ const EnterpriseAi = () => {
         };
         setOrderSummary(summary);
 
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
         // Ensure total sales calculation handles potential null/undefined values
-        const totalSales = ordersData
-          .filter(order => order.status === 'Done')
+        const totalSalesForWeek = ordersData
+          .filter(order => {
+            const orderDate = new Date(order.createdAt); // Adjust the field name if different
+            return (
+              order.status === 'Done' &&
+              orderDate >= oneWeekAgo &&
+              orderDate <= new Date()
+            );
+          })
           .reduce((total, order) => {
-            const amount = parseFloat(order.total_amount || 0);
+            const amount = parseFloat(order.total_amount || 0); // Adjust field name if different
             return total + (isNaN(amount) ? 0 : amount);
           }, 0);
 
+        const technicians = usersData.filter(user => user.role === 'technician');
+        const distributors = usersData.filter(user => user.role === 'distributor');
         // Update stats with safe fallback values
+
+        const previousWeekOrders = ordersData.filter(order => {
+          const orderDate = new Date(order.createdAt);
+          return orderDate >= oneWeekAgo && orderDate <= new Date();
+        });
+
         setStats({
-          totalUsers: usersData.length || 0,
-          totalOrders: ordersData.length || 0,
-          pendingOrders: summary.received || 0,
-          totalSales: totalSales
+          totalUsers: technicians.length || 0,
+          totalOrders: previousWeekOrders.length || 0,
+          totalUsersDistributor: distributors.length || 0,
+          totalSales: totalSalesForWeek
         });
 
         // Set orders state
@@ -78,7 +96,7 @@ const EnterpriseAi = () => {
         setStats({
           totalUsers: 0,
           totalOrders: 0,
-          pendingOrders: 0,
+          totalUsersDistributor: 0,
           totalSales: 0
         });
 
@@ -96,6 +114,8 @@ const EnterpriseAi = () => {
 
     fetchStats();
   }, []);
+  const technicians = users.filter(user => user.role === 'technician');
+  const distributors = users.filter(user => user.role === 'distributor');
 
   const SalesPieChart = ({ orders }) => {
     // State to track the current time period view
@@ -177,7 +197,6 @@ const EnterpriseAi = () => {
         },
       },
     };
-
     return (
       <Card className="h-100">
         <Card.Body>
@@ -227,33 +246,149 @@ const EnterpriseAi = () => {
       </Card>
     );
   };
-  // const data = {
-  //   labels: ['Product 1', 'Product 2', 'Product 3'], // Labels for the sections
-  //   datasets: [
-  //     {
-  //       data: [11, 58, 24], // The data for the chart (percentages)
-  //       backgroundColor: ['#D8E6FF', '#D8E6FF', '#F24E1E'], // Colors for each segment
-  //       hoverOffset: 4,
-  //     },
-  //   ],
-  // };
 
-  // Chart options (styling, tooltip behavior, etc.)
-  // const options = {
-  //   responsive: true,
-  //   plugins: {
-  //     legend: {
-  //       position: 'right', // Place the legend at the bottom
-  //     },
-  //     tooltip: {
-  //       callbacks: {
-  //         label: function (context) {
-  //           return `${context.label}: ${context.raw}%`; // Show percentage in tooltip
-  //         },
-  //       },
-  //     },
-  //   },
-  // };
+  const SalesComparisonCard = ({ ordersData }) => {
+    const [timePeriod, setTimePeriod] = useState('week');
+    const [salesData, setSalesData] = useState({
+      totalSales: 0,
+      chartData: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        datasets: [
+          {
+            label: 'This Week',
+            data: Array(7).fill(0),
+            backgroundColor: '#4CAF50',
+            borderColor: '#4CAF50',
+            borderWidth: 1,
+          },
+          {
+            label: 'Last Week',
+            data: Array(7).fill(0),
+            backgroundColor: '#FF9800',
+            borderColor: '#FF9800',
+            borderWidth: 1,
+          },
+        ],
+      },
+      processedPercentage: 0,
+    });
+
+    useEffect(() => {
+      const calculateSalesForDays = (orders, startDate, endDate) => {
+        const sales = Array(7).fill(0); // Array to store sales for each day (Mon-Sun)
+
+        orders.forEach(order => {
+          const orderDate = new Date(order.completeAt);
+          if (orderDate >= startDate && orderDate <= endDate) {
+            const dayOfWeek = orderDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+            sales[dayOfWeek] += parseFloat(order.total_amount || 0);
+          }
+        });
+
+        return sales;
+      };
+
+      const today = new Date();
+      const startOfThisWeek = new Date(today.setDate(today.getDate() - today.getDay())); // Sunday of this week
+      const endOfThisWeek = new Date(startOfThisWeek);
+      endOfThisWeek.setDate(startOfThisWeek.getDate() + 6); // Saturday of this week
+
+      const startOfLastWeek = new Date(startOfThisWeek);
+      startOfLastWeek.setDate(startOfThisWeek.getDate() - 7); // Sunday of last week
+      const endOfLastWeek = new Date(startOfLastWeek);
+      endOfLastWeek.setDate(startOfLastWeek.getDate() + 6); // Saturday of last week
+
+      const thisWeekSales = calculateSalesForDays(ordersData, startOfThisWeek, endOfThisWeek);
+      const lastWeekSales = calculateSalesForDays(ordersData, startOfLastWeek, endOfLastWeek);
+
+      // Calculate total sales for both weeks
+      const totalThisWeek = thisWeekSales.reduce((sum, sale) => sum + sale, 0);
+      const totalLastWeek = lastWeekSales.reduce((sum, sale) => sum + sale, 0);
+
+      setSalesData({
+        totalSales: totalThisWeek + totalLastWeek,
+        chartData: {
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          datasets: [
+            {
+              label: 'This Week',
+              data: thisWeekSales,
+              backgroundColor: '#4CAF50',
+              borderColor: '#4CAF50',
+              borderWidth: 1,
+            },
+            {
+              label: 'Last Week',
+              data: lastWeekSales,
+              backgroundColor: '#FF9800',
+              borderColor: '#FF9800',
+              borderWidth: 1,
+            },
+          ],
+        },
+        processedPercentage: ((totalThisWeek / (totalThisWeek + totalLastWeek)) * 100).toFixed(2),
+      });
+    }, [ordersData]);
+
+    // Bar chart options
+    const options = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top',
+        },
+        title: {
+          display: true,
+          text: 'Sales Comparison (This Week vs Last Week)',
+        },
+      },
+    };
+
+    return (
+      <Card className="h-100">
+        <Card.Body className="d-flex flex-column justify-content-between">
+          <Row className="align-items-center mb-3">
+            <Col xs="12">
+              <Card.Title className="mb-0 text-center text-md-start">
+                Sales Comparison
+              </Card.Title>
+            </Col>
+          </Row>
+
+          <div className="d-flex align-items-center justify-content-center mb-3">
+            <h3 className="mb-0 me-2 text-center">
+              <i className="bi bi-currency-rupee"></i>
+              {salesData.totalSales.toLocaleString()}
+            </h3>
+          </div>
+
+          <div className="h-100">
+            <Bar
+              data={salesData.chartData}
+              options={options}
+              className="w-100 canvas"
+            />
+          </div>
+
+          {/* <div className="d-flex justify-content-center mt-3">
+            <p
+              className="mb-0 p-2 text-center"
+              style={{
+                backgroundColor: 'blue',
+                color: 'white',
+                width: 'fit-content',
+              }}
+            >
+              {salesData.processedPercentage}% Processed
+            </p>
+          </div> */}
+        </Card.Body>
+      </Card>
+
+    );
+  };
+
 
   // Style for the container and center label
   const centerLabelStyle = {
@@ -434,36 +569,39 @@ const EnterpriseAi = () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
-    const previousUsers = users.filter(user =>
+    const previousTechnicians = users.filter(user =>
+      user.role === 'technician' &&
       new Date(user.createdAt) < yesterday
     ).length;
 
-    return previousUsers;
+    return previousTechnicians;
   }
-  const calculatePreviousPendingOrders = (orders) => {
+  const calculatePreviousUsersDistributors = (users) => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
-    const previousPendingOrders = orders.filter(order =>
-      order.status === 'Received' &&
-      new Date(order.createdAt) < yesterday
+    const previousDistributors = users.filter(user =>
+      user.role === 'distributor' &&
+      new Date(user.createdAt) < yesterday
     ).length;
 
-    return previousPendingOrders;
+    return previousDistributors;
   }
-  const calculatePreviousSales = (orders) => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
+  const calculatePreviousWeekSales = (orders) => {
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-    const previousSales = orders
+    const previousWeekSales = orders
       .filter(order =>
         order.status === 'Done' &&
-        new Date(order.completeAt) < yesterday
+        new Date(order.completeAt) >= oneWeekAgo &&
+        new Date(order.completeAt) <= new Date()
       )
       .reduce((total, order) => total + parseFloat(order.totalAmount || 0), 0);
 
-    return previousSales;
-  }
+    return previousWeekSales;
+  };
+
   // console.log(calculatePreviousSales(orders))
   const calculatePastWeekOrders = (orders) => {
     const oneWeekAgo = new Date();
@@ -485,7 +623,7 @@ const EnterpriseAi = () => {
           {
             title: 'Technician',
             value: stats.totalUsers,
-            percentage: calculatePercentageChange(stats.totalUsers, calculatePreviousUsers(users)),
+            percentage: calculatePercentageChange(stats.totalUsers, calculatePreviousUsers(technicians)),
             icon: 'bi-people',
             iconClass: 'text-primary',
             bgClass: 'bg-primary bg-opacity-10',
@@ -499,22 +637,22 @@ const EnterpriseAi = () => {
             bgClass: 'bg-warning bg-opacity-10',
           },
           {
-            title: 'Yesterday Sales',
+            title: 'Week Sales',
             value: (
               <div className="flex items-center">
                 <i className="bi bi-currency-rupee mr-1"></i>
                 {stats.totalSales.toFixed(2)}
               </div>
             ),
-            percentage: calculatePercentageChange(stats.totalSales, calculatePreviousSales(orders)),
+            percentage: calculatePercentageChangeInWeek(stats.totalSales, calculatePreviousWeekSales(orders)),
             icon: 'bi-graph-up',
             iconClass: 'text-success',
             bgClass: 'bg-success bg-opacity-10',
           },
           {
             title: 'Distributor',
-            value: stats.pendingOrders,
-            percentage: calculatePercentageChange(stats.pendingOrders, calculatePreviousPendingOrders(orders)),
+            value: stats.totalUsersDistributor,
+            percentage: calculatePercentageChange(stats.totalUsersDistributor, calculatePreviousUsersDistributors(distributors)),
             icon: 'bi-clock',
             iconClass: 'text-danger',
             bgClass: 'bg-danger bg-opacity-10',
@@ -579,36 +717,66 @@ const EnterpriseAi = () => {
                         }
                         alt={matchingProduct?.product_name || "Product"}
                         className="img-fluid rounded"
-                        style={{ width: "100%", marginTop: "40px", objectFit: "cover" }}
+                        style={{
+                          width: "100%",
+                          marginTop: "40px",
+                          objectFit: "cover",
+                        }}
                       />
                     </div>
                     <div className="col-md-9">
-                      <div className="mb-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <strong>Product Name : </strong>
-                        <span>{matchingProduct?.product_name || "N/A"}</span>
+                      <div style={{ marginBottom: "20px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <div className="mb-2">
+                            <div>Post by: {forum.name || "Unknown"}</div>
+                            <div>
+                              Close Date:{" "}
+                              {forum.close_date
+                                ? new Date(
+                                  forum.close_date
+                                ).toLocaleDateString()
+                                : "No Date"}
+                            </div>
+                          </div>
+                        </div>
+                        <table className="table table-bordered mt-3">
+                          <thead>
+                            <tr>
+                              <th>Product Name</th>
+                              <th>Quantity</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {forum.forumProducts.map((forumProduct, index) => (
+                              <tr key={index}>
+                                <td>{forumProduct.product_name || "N/A"}</td>
+                                <td>{forumProduct.quantity || "N/A"}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
-                      <div className="mb-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <strong>Needed Quantity : </strong> {forum.quantity || "N/A"}
-                      </div>
-                      <div className="mb-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <strong>Post by : </strong> {forum.name || "Unknown"}
-                      </div>
-                      <div className="mb-2" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <strong>Close Date : </strong> {forum.close_date ? new Date(forum.close_date).toLocaleDateString() : "No Date"}
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <div
+                        style={{ display: "flex", justifyContent: "flex-end" }}
+                      >
                         <button
                           className="btn"
                           style={{
-                            backgroundColor: forum.status === 'Taken' ? 'blue' : 'orangered',
+                            backgroundColor: "blue",
                             color: "white",
                             border: "none",
-
                           }}
-                          onClick={() => handleOpenModal(forum)}
-                          disabled={forum.status === 'Not Taken'}
+                          onClick={() =>
+                            forum.status === "Taken" ? handleOpenModal(forum) : ''}
                         >
-                          {forum.status}
+                          {forum.status === "Taken"
+                            ? "View Details"
+                            : "Not Taken Forum"}
                         </button>
                       </div>
                     </div>
@@ -627,6 +795,9 @@ const EnterpriseAi = () => {
             <div className="card-body">
               <h5 className="card-title mb-5">Order Summary</h5>
               <div className="list-group">
+                <div className="list-group-item p-3">
+                  All Orders ({orderSummary.received + orderSummary.shipping + orderSummary.canceled + orderSummary.done})
+                </div>
                 <div className="list-group-item bg-light p-3">
                   Received ({orderSummary.received})
                 </div>
@@ -652,13 +823,14 @@ const EnterpriseAi = () => {
                   className="list-group-item p-3"
                   style={{ backgroundColor: "#E7FFE7" }}
                 >
-                  Done ({orderSummary.done})
+                  Deliverd ({orderSummary.done})
                 </div>
               </div>
             </div>
           </div>
         </div>
         <div className="col-md-4 mb-3"><SalesPieChart orders={orders} /></div>
+        <div className="col-md-4 mb-3"><SalesComparisonCard ordersData={orders} /></div>
 
         {/* <div className="col-md-4">
           <div className="card h-100">
