@@ -14,7 +14,6 @@ const EmailSettings = () => {
     }));
 
   };
-
   return (
     <div className="card mb-4 p-4 border-0">
       <div className="mb-4">
