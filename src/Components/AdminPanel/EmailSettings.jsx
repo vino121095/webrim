@@ -7,47 +7,13 @@ const EmailSettings = () => {
     updates: false,
   });
 
-  // Uncomment and implement if you want to fetch initial settings
-  // useEffect(() => {
-  //   fetchEmailSettings();
-  // }, []);
-
-  // Uncomment and implement if you have a backend endpoint
-  // const fetchEmailSettings = async () => {
-  //   try {
-  //     const response = await fetch('http://localhost:5000/api/settings/email', {
-  //       credentials: 'include',
-  //     });
-  //     const data = await response.json();
-  //     setSettings(data);
-  //   } catch (error) {
-  //     console.error('Error fetching email settings:', error);
-  //   }
-  // };
-
   const handleToggle = (settingKey) => {
     setSettings(prev => ({
       ...prev,
       [settingKey]: !prev[settingKey]
     }));
 
-    // Uncomment and implement if you want to send updates to backend
-    // try {
-    //   const response = await fetch('http://localhost:5000/api/settings/email', {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //     credentials: 'include',
-    //     body: JSON.stringify({
-    //       [settingKey]: !settings[settingKey],
-    //     }),
-    //   });
-    // } catch (error) {
-    //   console.error('Error updating email settings:', error);
-    // }
   };
-
   return (
     <div className="card mb-4 p-4 border-0">
       <div className="mb-4">

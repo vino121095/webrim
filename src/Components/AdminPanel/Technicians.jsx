@@ -347,7 +347,7 @@ const Technicians = () => {
             style={{
               marginTop: "70px",
               backgroundColor: "#ffffff",
-              height: "87vh",
+              height: "70vh",
               overflowY: "auto", // Makes the modal content scrollable
             }}
           >
@@ -420,25 +420,6 @@ const Technicians = () => {
               <div className="row mb-3">
                 <div className="col-md-6">
                   <div className="detail-group">
-                    <label className="fw-bold">Company Name:</label>
-                    <p className="detail-value">
-                      {viewTechnician.company_name || "N/A"}
-                    </p>
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="detail-group">
-                    <label className="fw-bold">Credit Limit:</label>
-                    <p className="detail-value">
-                      {viewTechnician.credit_limit || "N/A"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <div className="detail-group">
                     <label className="fw-bold">Address:</label>
                     <p className="detail-value">
                       {viewTechnician.address || "N/A"}
@@ -447,23 +428,14 @@ const Technicians = () => {
                 </div>
                 <div className="col-md-6">
                   <div className="detail-group">
-                    <label className="fw-bold">Pincode:</label>
+                    <label className="fw-bold">City:</label>
                     <p className="detail-value">
-                      {viewTechnician.pincode || "N/A"}
+                      {viewTechnician.city || "N/A"}
                     </p>
                   </div>
                 </div>
               </div>
-
               <div className="row mb-3">
-                <div className="col-md-6">
-                  <div className="detail-group">
-                    <label className="fw-bold">Landmark:</label>
-                    <p className="detail-value">
-                      {viewTechnician.landmark || "N/A"}
-                    </p>
-                  </div>
-                </div>
                 <div className="col-md-6">
                   <div className="detail-group">
                     <label className="fw-bold">Created At:</label>
@@ -489,7 +461,7 @@ const Technicians = () => {
             style={{
               marginTop: "70px",
               backgroundColor: "#ffffff",
-              height: "87vh",
+              height: "50vh",
               overflowY: "auto",
             }}
           >
@@ -577,48 +549,6 @@ const Technicians = () => {
                 </div>
                 <div className="col-md-6">
                   <div className="detail-group">
-                    <label className="fw-bold">State</label>
-                    <input
-                      type="text"
-                      name="state"
-                      className="form-control"
-                      value={editTechnician.state || ''}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <div className="detail-group">
-                    <label className="fw-bold">Company Name</label>
-                    <input
-                      type="text"
-                      name="company_name"
-                      className="form-control"
-                      value={editTechnician.company_name || ''}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="detail-group">
-                    <label className="fw-bold">Credit Limit</label>
-                    <input
-                      type="number"
-                      name="credit_limit"
-                      className="form-control"
-                      value={editTechnician.credit_limit || ''}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <div className="detail-group">
                     <label className="fw-bold">Address</label>
                     <input
                       type="text"
@@ -629,34 +559,8 @@ const Technicians = () => {
                     />
                   </div>
                 </div>
-                <div className="col-md-6">
-                  <div className="detail-group">
-                    <label className="fw-bold">Pincode</label>
-                    <input
-                      type="text"
-                      name="pincode"
-                      className="form-control"
-                      value={editTechnician.pincode || ''}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
               </div>
 
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <div className="detail-group">
-                    <label className="fw-bold">Landmark</label>
-                    <input
-                      type="text"
-                      name="landmark"
-                      className="form-control"
-                      value={editTechnician.landmark || ''}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
-              </div>
               <div className="text-center">
               <button
                   onClick={handleSaveEditTechnician}

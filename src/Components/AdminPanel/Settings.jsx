@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import Propic from "../User/Assets/profile-pic.png";
-import AppearanceSettings from './AppearanceSettings';
 import SecuritySettings from './SecuritySettings';
 import NotificationSettings from './NotificationSettings';
-import EmailSettings from './EmailSettings';
 import baseurl from '../ApiService/ApiService';
 import userLogo from "../User/Assets/user-logo.png";
 import axios from 'axios';
@@ -23,15 +20,12 @@ const Settings = () => {
       };
   });
 
-  // Update localStorage whenever settings change
   useEffect(() => {
-    // Check if any setting is true
     const hasActiveNotifications = Object.values(notificationSettings).some(value => value === true);
     
     if (hasActiveNotifications) {
       localStorage.setItem('notificationSettings', JSON.stringify(notificationSettings));
     } else {
-      // Optionally remove from localStorage if all are false
       localStorage.removeItem('notificationSettings');
     }
   }, [notificationSettings]);
@@ -65,6 +59,7 @@ const Settings = () => {
       console.error("Error fetching admin profile:", error);
     }
   };
+  
 
   const handleNotificationToggle = (setting) => {
     setNotificationSettings(prev => ({
