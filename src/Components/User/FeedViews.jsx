@@ -189,13 +189,15 @@ const EditForumModal = ({
 const FeedViews = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  // const [isMessageInputOpen, setIsMessageInputOpen] =useState(false);
+  const [forumId, setForumId] = useState(null);
   const [products, setProducts] = useState([]);
-  const [selectedProduct, setSelectedProduct] = useState("");
+  const [message, setMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredForums, setFilteredForums] = useState([]);
   const [selectedProductImage, setSelectedProductImage] = useState("");
   const [editingForum, setEditingForum] = useState(null);
-  const user = JSON.parse(localStorage.getItem("userData"));
+  const user = JSON.parse(localStorage.getItem("userData")) || {};
   const [selectedProducts, setSelectedProducts] = useState([
     { product: "", quantity: "" },
   ]);
@@ -206,22 +208,21 @@ const FeedViews = () => {
   });
   const [forums, setForums] = useState([]);
 
-  const [activeTab, setActiveTab] = useState('all');
-  
+  const [activeTab, setActiveTab] = useState('technician');
   const filterForums = (forums, filterType) => {
     const user = JSON.parse(localStorage.getItem("userData"));
-    
+
     switch (filterType) {
       case 'technician':
-        return forums.filter(forum => 
+        return forums.filter(forum =>
           forum.user_id && forum.user.role === 'technician'
         );
       case 'distributor':
-        return forums.filter(forum => 
+        return forums.filter(forum =>
           forum.user.uid !== user?.uid && forum.user.role === 'distributor'
         );
       case 'my':
-        return forums.filter(forum => 
+        return forums.filter(forum =>
           forum.user.uid === user?.uid
         );
       default:
@@ -458,7 +459,16 @@ const FeedViews = () => {
 
   // Add handler for adding new product row
   const handleAddProduct = () => {
-    setSelectedProducts([...selectedProducts, { product: "", quantity: "" }]);
+    if (selectedProducts.length < 5) {
+      setSelectedProducts([...selectedProducts, { product: "", quantity: "" }]);
+    } else {
+      Swal.fire({
+        icon: "warning",
+        title: "Limit Reached",
+        text: "Only 5 products can be added at a time.",
+        confirmButtonColor: "#F24E1E",
+      });
+    }
   };
 
   // Add handler for removing product row
@@ -553,7 +563,7 @@ const FeedViews = () => {
 
   const availableProducts = products.filter((product) => product.stocks > 0);
 
-  const handleTakeForum = async (forumId) => {
+  const handleTakeForum = async (forumId, message) => {
     if (!user || !user.uid) {
       Swal.fire({
         icon: "warning",
@@ -563,7 +573,7 @@ const FeedViews = () => {
       });
       return;
     }
-  
+
     // Show loading state
     const loadingSwal = Swal.fire({
       title: 'Processing...',
@@ -572,17 +582,18 @@ const FeedViews = () => {
       showConfirmButton: false,
       willOpen: () => {
         Swal.showLoading();
-      }
+      },
     });
-  
+
     try {
       const response = await axios.post(`${baseurl}/api/forumtake/${forumId}`, {
         distributor_id: user.uid,
-        status: 'Taken'
+        status: 'Taken',
+        message, // Include the message
       });
-  
+
       await loadingSwal.close();
-  
+
       if (response.data && response.status === 200) {
         await Swal.fire({
           icon: "success",
@@ -590,15 +601,15 @@ const FeedViews = () => {
           text: "Forum taken successfully!",
           confirmButtonText: "OK",
         });
-  
+        setMessage('');
         // Refresh forums list
         await fetchForums();
       }
     } catch (error) {
       await loadingSwal.close();
-  
+
       let errorMessage = "Error processing your request";
-  
+
       if (error.response?.data?.error) {
         errorMessage = error.response.data.error;
       } else if (error.response?.data?.message) {
@@ -606,7 +617,7 @@ const FeedViews = () => {
       } else if (error.message) {
         errorMessage = error.message;
       }
-  
+
       await Swal.fire({
         icon: "error",
         title: "Error",
@@ -616,6 +627,7 @@ const FeedViews = () => {
       console.error("Forum take error:", error);
     }
   };
+
 
 
   const handleSearch = (searchTerm) => {
@@ -853,8 +865,8 @@ const FeedViews = () => {
         </div>
       </div>
 
-      {user?.role === "distributor" && ( 
-      <div className="mt-4 d-flex justify-content-center w-100">
+      {user?.role === "distributor" && (
+        <div className="mt-4 d-flex justify-content-center w-100">
           <ul className="nav ">
             {/* <li className="nav-item">
               <button 
@@ -865,7 +877,7 @@ const FeedViews = () => {
               </button>
             </li> */}
             <li className="nav-item">
-              <button 
+              <button
                 className={`nav-link  forum-menu ${activeTab === 'technician' ? 'active' : ''}`}
                 onClick={() => setActiveTab('technician')}
               >
@@ -873,7 +885,7 @@ const FeedViews = () => {
               </button>
             </li>
             <li className="nav-item">
-              <button 
+              <button
                 className={`nav-link forum-menu ${activeTab === 'distributor' ? 'active' : ''}`}
                 onClick={() => setActiveTab('distributor')}
               >
@@ -881,7 +893,7 @@ const FeedViews = () => {
               </button>
             </li>
             <li className="nav-item">
-              <button 
+              <button
                 className={`nav-link forum-menu ${activeTab === 'my' ? 'active' : ''}`}
                 onClick={() => setActiveTab('my')}
               >
@@ -890,8 +902,8 @@ const FeedViews = () => {
             </li>
           </ul>
         </div>
-        )}
-    
+      )}
+
       <div className="container mt-4">
         <div className="row justify-content-center">
           {forums.length > 0 ? (
@@ -908,13 +920,13 @@ const FeedViews = () => {
                       />
                     </div>
                     <div className="w-100 w-md-75">
-                      <div className="d-flex justify-content-between mb-3">
-                        <div>
-                          <span className="fw-bold">Post by: </span>
+                      <div className="d-flex justify-content-between mb-3 flex-column flex-sm-row">
+                        <div className="d-flex justify-content-between">
+                          <span className="fw-bold">Post by{" "}:{" "}</span>
                           <span>{forum.name || "Unknown"}</span>
                         </div>
-                        <div>
-                          <span className="fw-bold">Close Date: </span>
+                        <div className="d-flex justify-content-between">
+                          <span className="fw-bold">Close Date{" "}:{" "} </span>
                           <span>
                             {forum.close_date
                               ? new Date(forum.close_date).toLocaleDateString("en-GB", {
@@ -927,7 +939,7 @@ const FeedViews = () => {
                         </div>
                       </div>
 
-                      <div className="table-responsive">
+                      <div className="table-responsive" style={{height:'120px', overflowY:'auto'}}>
                         <table className="table table-bordered mb-0">
                           <thead className="table-light">
                             <tr>
@@ -974,16 +986,15 @@ const FeedViews = () => {
                               </p>
                             ) : (
                               <button
-                                className="btn"
-                                style={{
-                                  background: "#F24E1E",
-                                  color: "white",
-                                  width: "120px",
-                                }}
-                                onClick={() => handleTakeForum(forum.fid)} // Use forum.fid instead of forum.id || forum._id
+                                type="button"
+                                className="btn btn-primary"
+                                data-bs-toggle="modal"
+                                data-bs-target="#takeForumModal"
+                                onClick={() => setForumId(forum.fid)}
                               >
-                                Take
+                                Take Forum
                               </button>
+
                             )}
                           </div>
                         )}
@@ -991,12 +1002,52 @@ const FeedViews = () => {
                     </div>
                   </div>
                 </div>
+
+
               </div>
             ))
           ) : (
             <p>No forums available.</p>
           )}
         </div>
+        <div className="modal fade" id="takeForumModal" tabIndex="-1" aria-labelledby="takeForumModalLabel" aria-hidden="true">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title" id="takeForumModalLabel">Take Forum</h5>
+                <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div className="modal-body">
+                <div className="mb-3">
+                  <label htmlFor="message" className="form-label">
+                    Please enter a message before taking this forum
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="message"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Enter your message"
+                  />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => handleTakeForum(forumId, message)}
+                  data-bs-dismiss="modal"
+                  disabled={!message.trim()}
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
       {renderAddForumModal()}
 

@@ -516,27 +516,49 @@ const NavBar = () => {
                           <table className="table table-striped">
                             <tbody>
                               <tr>
-                                <th className="col-4">Owner Name</th>
-                                <td>{selectedNotification.details?.forumOwnerId || selectedNotification.details.distributorName}</td>
+                                <th className="col-4 align-middle">Owner Name</th>
+                                <td className="align-middle">{selectedNotification.details?.forumOwnerId || selectedNotification.details.distributorName}</td>
                               </tr>
                               <tr>
-                                <th>Phone</th>
-                                <td>{selectedNotification.details?.forumOwnerPhone || selectedNotification.details.distributorPhone}</td>
+                                <th className="align-middle">Phone</th>
+                                <td className="align-middle">{selectedNotification.details?.forumOwnerPhone || selectedNotification.details.distributorPhone}</td>
                               </tr>
                               <tr>
-                                <th>Email</th>
-                                <td>{selectedNotification.details?.forumOwnerEmail || selectedNotification.details.distributorEmail}</td>
+                                <th className="align-middle">Email</th>
+                                <td className="align-middle">{selectedNotification.details?.forumOwnerEmail || selectedNotification.details.distributorEmail}</td>
                               </tr>
                               <tr>
-                                <th>Address</th>
-                                <td>{selectedNotification.details?.forumOwnerAddress || selectedNotification.details.distributorAddress}</td>
+                                <th className="align-middle">Address</th>
+                                <td className="align-middle">{selectedNotification.details?.forumOwnerAddress || selectedNotification.details.distributorAddress}</td>
                               </tr>
                               <tr>
-                                <th>Taken At</th>
-                                <td>{new Date(selectedNotification.details.takenAt).toLocaleString()}</td>
+                                <th className="align-middle">{loggedUser.role === "technician" ? "Message" : "Products"}</th>
+                                <td className="align-middle">
+                                  {loggedUser.role === "technician" ? (
+                                    selectedNotification.details?.distributorMessage
+                                  ) : (
+                                    selectedNotification.details?.products?.length > 0 ? (
+                                      <ul className="list-unstyled">
+                                        {selectedNotification.details.products.map((product, index) => (
+                                          <li key={index}>
+                                            {product.product_name} (Quantity: {product.quantity})
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    ) : (
+                                      "No products available."
+                                    )
+                                  )}
+                                </td>
+                              </tr>
+                              <tr>
+                                <th className="align-middle">Taken At</th>
+                                <td className="align-middle">{new Date(selectedNotification.details.takenAt).toLocaleString()}</td>
                               </tr>
                             </tbody>
                           </table>
+
+
                         </div>
                       </div>
                     </div>

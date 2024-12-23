@@ -726,40 +726,37 @@ const EnterpriseAi = () => {
                     </div>
                     <div className="col-md-9">
                       <div style={{ marginBottom: "20px" }}>
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <div className="mb-2">
-                            <div>Post by: {forum.name || "Unknown"}</div>
-                            <div>
-                              Close Date:{" "}
-                              {forum.close_date
-                                ? new Date(
-                                  forum.close_date
-                                ).toLocaleDateString()
-                                : "No Date"}
-                            </div>
+                        <div className="mb-2">
+                          <div className="d-flex justify-content-between"><span>Post by{" "}: </span><span>{forum.name || "Unknown"}</span></div>
+                          <div className="d-flex justify-content-between">
+                            <span>Close Date{" "}:</span>
+                            <span>{forum.close_date
+                              ? new Date(
+                                forum.close_date
+                              ).toLocaleDateString()
+                              : "No Date"}</span>
+
                           </div>
                         </div>
-                        <table className="table table-bordered mt-3">
-                          <thead>
-                            <tr>
-                              <th>Product Name</th>
-                              <th>Quantity</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {forum.forumProducts.map((forumProduct, index) => (
-                              <tr key={index}>
-                                <td>{forumProduct.product_name || "N/A"}</td>
-                                <td>{forumProduct.quantity || "N/A"}</td>
+                        <div style={{ height: '120px', overflowY: 'auto' }}>
+                          <table className="table table-bordered mt-3">
+                            <thead>
+                              <tr>
+                                <th>Product Name</th>
+                                <th>Quantity</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody>
+                              {forum.forumProducts.map((forumProduct, index) => (
+                                <tr key={index}>
+                                  <td>{forumProduct.product_name || "N/A"}</td>
+                                  <td>{forumProduct.quantity || "N/A"}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
                       </div>
                       <div
                         style={{ display: "flex", justifyContent: "flex-end" }}

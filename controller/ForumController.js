@@ -1,7 +1,7 @@
 const { where, Sequelize, Transaction } = require('sequelize');
 const Forum = require('../model/ForumModel');
 const ForumProduct = require('../model/ForumProductModel');
-const ForumTake = require('../model/ForumTakesModel');
+const ForumTake = require('../model/ForumTakesmodel');
 const User = require('../model/UserModel');
 const Product = require('../model/Productmodel');
 const cron = require('node-cron');
@@ -171,6 +171,7 @@ const takeForum = async (req, res) => {
   try {
     const { fid } = req.params;
     const { distributor_id } = req.body;
+    const { message } = req.body;
 
     // Validate input
     if (!fid || !distributor_id) {
@@ -210,6 +211,7 @@ const takeForum = async (req, res) => {
     const forumTake = await ForumTake.create({
       fid: fid, // Use fid instead of forum_id
       distributor_id: distributor_id,
+      message: message,
       taken_at: new Date()
     }, { transaction });
 
@@ -294,7 +296,7 @@ const showNotifyForDistributor = async (req, res) => {
           as: 'forum',
           include: [{
             model: ForumProduct,
-            as: 'products'
+            as: 'forumProducts'
           }]
         }
       ],
@@ -327,7 +329,7 @@ const showNotifyForDistributor = async (req, res) => {
           forumOwnerPhone: userData?.mobile_number || 'No Mobile number',
           forumOwnerAddress: userData?.address || 'No Address',
           forumOwnerEmail: userData?.email || 'No Email',
-          products: forum.forum.products,
+          products: forum.forum.forumProducts,
           takenAt: forum.taken_at
         };
       })
@@ -360,7 +362,7 @@ const showNotifyForTechnician = async (req, res) => {
       include: [
         {
           model: ForumProduct,
-          as: 'products'
+          as: 'forumProducts'
         }
       ]
     });
@@ -374,7 +376,7 @@ const showNotifyForTechnician = async (req, res) => {
 
     const forums = await ForumTake.findAll({
       where: {
-        forum_id: userForums.map(forum => forum.fid)
+        fid: userForums.map(forum => forum.fid)
       },
       include: [
         {
@@ -388,12 +390,13 @@ const showNotifyForTechnician = async (req, res) => {
 
     const formattedForums = forums.map(forum => ({
       takeId: forum.ftid,
-      forumId: forum.forum_id,
+      forumId: forum.fid,
       distributorName: forum.distributor?.username || 'Unknown',
       distributorEmail: forum.distributor?.email || 'No Email',
       distributorPhone: forum.distributor?.mobile_number || 'No Phone',
       distributorAddress: forum.distributor?.address || 'No Address',
-      products: userForums.find(f => f.fid === forum.forum_id)?.products || [],
+      distributorMessage: forum.message,
+      products: userForums.find(f => f.fid === forum.fid)?.products || [],
       takenAt: forum.taken_at
     }));
 
