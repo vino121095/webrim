@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import Propic from "../User/Assets/profile-pic.png";
-import AppearanceSettings from './AppearanceSettings';
 import SecuritySettings from './SecuritySettings';
 import NotificationSettings from './NotificationSettings';
-import EmailSettings from './EmailSettings';
 import baseurl from '../ApiService/ApiService';
 import userLogo from "../User/Assets/user-logo.png";
 import axios from 'axios';
