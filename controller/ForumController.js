@@ -1,7 +1,7 @@
 const { where, Sequelize, Transaction } = require('sequelize');
 const Forum = require('../model/ForumModel');
 const ForumProduct = require('../model/ForumProductModel');
-const ForumTake = require('../model/ForumTakesModel');
+const ForumTake = require('../model/ForumTakesmodel');
 const User = require('../model/UserModel');
 const Product = require('../model/Productmodel');
 const cron = require('node-cron');
