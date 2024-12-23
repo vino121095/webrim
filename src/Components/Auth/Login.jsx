@@ -210,6 +210,9 @@ const Login = () => {
         <p className="signup-link">
         Are you a technician ? <a href="/Auth/Signup">Sign up</a>
         </p>
+        <p className="signup-link">
+        Signin with <a href="/Auth/LoginEmail">OTP</a>
+        </p>
       </div>
       
       <div className="login-banner">

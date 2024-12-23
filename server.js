@@ -54,32 +54,32 @@ app.get('/', (req, res) => {
     res.send('Welcome');
 });
 
-app.get('/test', async (req, res) => {
+// app.get('/test', async (req, res) => {
 
-  // Create the transporter
-  const transporter = nodemailer.createTransport({
-    service: 'Gmail',
-    auth: {
-      user: 'vinothini1.deecodes@gmail.com',
-      pass: 'setp kpsv zzun xesv', // App-specific password
-    },
-  });
+//   // Create the transporter
+//   const transporter = nodemailer.createTransport({
+//     service: 'Gmail',
+//     auth: {
+//       user: 'vinothini1.deecodes@gmail.com',
+//       pass: 'setp kpsv zzun xesv', // App-specific password
+//     },
+//   });
 
-  // Email options
-  const mailOptions = {
-    from: 'vinothini1.deecodes@gmail.com',
-    to: 'vinothinivm31@gmail.com',
-    subject: 'Your Registration Request Update',
-    html: `
-<p style="font-family: Arial, sans-serif;">Dear ,</p>
-<p style="font-family: Arial, sans-serif;">We regret to inform you that your registration request has been rejected.</p>
-<p style="font-family: Arial, sans-serif;">Reason for rejection: <strong></strong></p>
-<p style="font-family: Arial, sans-serif;">We appreciate your interest in our platform and encourage you to reach out if you have any further questions or concerns.</p>
-<p style="font-family: Arial, sans-serif;">Best regards,<br/>The Team at eNool</p>
-`
-};
-console.log(mailOptions)
-});
+//   // Email options
+//   const mailOptions = {
+//     from: 'vinothini1.deecodes@gmail.com',
+//     to: 'vinothinivm31@gmail.com',
+//     subject: 'Your Registration Request Update',
+//     html: `
+// <p style="font-family: Arial, sans-serif;">Dear ,</p>
+// <p style="font-family: Arial, sans-serif;">We regret to inform you that your registration request has been rejected.</p>
+// <p style="font-family: Arial, sans-serif;">Reason for rejection: <strong></strong></p>
+// <p style="font-family: Arial, sans-serif;">We appreciate your interest in our platform and encourage you to reach out if you have any further questions or concerns.</p>
+// <p style="font-family: Arial, sans-serif;">Best regards,<br/>The Team at eNool</p>
+// `
+// };
+// console.log(mailOptions)
+// });
 
 // Post route
 app.post('/', (req, res) => {
@@ -124,6 +124,10 @@ app.use('/api', LocationRoutes);
 
 const AdminRoutes = require('./routes/AdminRoutes.js');
 app.use('/api', AdminRoutes);
+
+// Email Authentication Routes
+const EmailRoutes = require('./routes/EmailRoutes.js');
+app.use('/api', EmailRoutes);
 
 // Listen on the port from the .env file
 const PORT = process.env.PORT || 5000;

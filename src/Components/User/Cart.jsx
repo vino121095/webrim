@@ -158,7 +158,7 @@ const Cart = () => {
 
     // Calculate the total amount from previous orders
     const previousOrderTotal = previousOrders.reduce((total, order) => {
-        if (order.status !== "Cancelled" && order.status !== "Done") {
+        if (order.status !== "Cancelled") {
             return total + parseFloat(order.total_amount);
         }
         return total;

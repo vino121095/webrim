@@ -31,6 +31,10 @@ const ForumTake = sequelize.define('ForumTake', {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE'
     },
+    message: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+    },
     taken_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,

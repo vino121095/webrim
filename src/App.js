@@ -12,6 +12,8 @@ import DistributorProductView from './Components/User/DistributorProductView';
 import Cart from './Components/User/Cart';
 import StoreDetails from './Components/User/StoreDetails';
 import PaymentSuccess from './Components/User/PaymentSuccess';
+import LoginEmail from './Components/Auth/LoginEmail';
+import OtpVerification from './Components/Auth/OtpVerification';
 
 function App() {
   return (
@@ -30,6 +32,8 @@ function App() {
          <Route path='/User/OrderHistory' element={<OrderHistory/>} />
          <Route path='/AdminDashboard/*' element={<AdminDashboard/>} />
          <Route path='/User/DistributorProductView/:id' element={<DistributorProductView/>} />
+         <Route path='/Auth/LoginEmail' element={<LoginEmail/>} />
+          <Route path='/Auth/OtpVerification' element={<OtpVerification/>} />
        </Routes>
      </BrowserRouter>
     </>
