@@ -24,6 +24,9 @@
     display: block;
     margin: 0 auto; 
   }
+  .forum-menu.active{
+    color: black !important;
+  }
   
   .navbar .bi-geo-alt-fill {
     font-size: 18px; 

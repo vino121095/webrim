@@ -242,6 +242,7 @@ const EditProfile = () => {
             value={formData.email}
             onChange={handleInputChange}
             className="form-control custom-input"
+            required
             disabled
           />
         </div>

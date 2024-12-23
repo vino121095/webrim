@@ -217,6 +217,24 @@ exports.completeOrder = async (req, res) => {
         }
       );
 
+      const orderItems = await OrderItem.findAll({
+        where: {
+          order_id: order.order_id
+        }
+      });
+  
+      for (const item of orderItems) {
+        await Product.decrement('stocks', {
+          by: item.quantity,
+          where: { product_id: item.product_id }
+        });
+
+        await Product.increment('sales', {
+            by: item.quantity, // Add the quantity sold to the sales field
+            where: { product_id: item.product_id }
+          });
+      }
+
     // Optional: Add any additional completion logic
     // For example, triggering notifications, generating invoices, etc.
 

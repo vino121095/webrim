@@ -616,4 +616,7 @@ a.navbar-brand{
   .shipment-table th,td{
     font-size: 10px !important;
   }
+  .canvas{
+    height: 300px !important;
+  }
 }

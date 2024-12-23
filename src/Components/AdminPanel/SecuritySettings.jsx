@@ -5,7 +5,8 @@ import baseurl from '../ApiService/ApiService';
 import { useNavigate } from 'react-router-dom';
 
 const SecuritySettings = () => {
-  const [email, setEmail] = useState('');
+  const LoggedUser = JSON.parse(localStorage.getItem('userData'));
+  const [email, setEmail] = useState(LoggedUser.email);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -120,6 +121,7 @@ const SecuritySettings = () => {
       setEmailError('');
       setPasswordError('');
       setConfirmPasswordError('');
+      navigate('/Auth/login');
 
     } catch (error) {
       Swal.fire({
@@ -148,6 +150,7 @@ const SecuritySettings = () => {
               className={`form-control ${emailError ? 'is-invalid' : ''}`}
               value={email}
               onChange={handleEmailChange}
+              disabled
               required
             />
             {emailError && <div className="invalid-feedback">{emailError}</div>}
@@ -179,11 +182,11 @@ const SecuritySettings = () => {
             className="btn"
             style={{ background: '#F24E1E', color: 'white' }}
             disabled={isLoading}
-            onClick={() => {
-              if (!isLoading) {
-                navigate('/Auth/login');
-              }
-            }}
+            // onClick={() => {
+            //   if (!isLoading) {
+            //     navigate('/Auth/login');
+            //   }
+            // }}
           >
             {isLoading ? 'Updating...' : 'Update Password'}
           </button>
