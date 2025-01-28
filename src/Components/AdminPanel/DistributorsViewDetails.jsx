@@ -186,7 +186,7 @@ const DistributorsViewDetails = () => {
                     <strong>GST Number:</strong> {distributor?.gstnumber || "N/A"}
                   </p>
                   <p>
-                    <strong>Credit Limit:</strong> {distributor?.creditlimit || "N/A"}
+                    <strong>Credit Limit:</strong> {distributor?.current_credit_limit || "N/A"}
                   </p>
                 </div>
                 <div className="col-md-6">
