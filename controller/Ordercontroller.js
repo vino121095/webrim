@@ -10,6 +10,26 @@ const { where } = require('sequelize');
 const Transport = require('../model/Transportmodel');
 const Shipment = require('../model/Shipmentmodel');
 const Distributor = require('../model/Distributorsmodel');
+const Notification = require('../model/NotificationModel');
+
+const createOrderNotification = async (userId, orderId, status, message) => {
+    try {
+        await Notification.create({
+            user_id: userId,
+            order_id: orderId,
+            type: 'order',
+            title: `Order ${status}`,
+            message: message,
+            status: status,  // Store the status in the notification
+            is_read: false,
+            created_at: new Date()
+        });
+    } catch (error) {
+        console.error('Error creating notification:', error);
+        throw error;
+    }
+};
+
  
 exports.createOrder = async (req, res) => {
     try {
@@ -88,6 +108,12 @@ exports.createOrder = async (req, res) => {
             current_credit_limit:updatedCreditLimit},
             {where:{uid:userId}
         })
+        await createOrderNotification(
+            userId,
+            newOrder.order_id,
+            'Received',
+            `Your order #${newOrder.order_id} has been received and is being processed.`
+          );
 
         res.status(201).json({
             message: 'Order placed successfully',
@@ -154,6 +180,12 @@ exports.cancelOrder = async (req, res) => {
             },
             { where: { oid: id } }
         );
+        await createOrderNotification(
+            order.user_id,
+            order.order_id,
+            'Cancelled',
+            `Your order #${order.order_id} has been cancelled.`
+          );
 
         res.status(200).json({
             message: 'Order successfully canceled',
@@ -237,6 +269,13 @@ exports.completeOrder = async (req, res) => {
 
     // Optional: Add any additional completion logic
     // For example, triggering notifications, generating invoices, etc.
+
+    await createOrderNotification(
+        order.user_id,
+        order.order_id,
+        'Completed',
+        `Your order #${order.order_id} has been delivered successfully.`
+      );
 
     return res.status(200).json({ 
       message: 'Order successfully completed',
@@ -406,5 +445,44 @@ exports.getOrderById = async (req, res) => {
     } catch (error) {
         console.error('Error fetching order by OID:', error);
         res.status(500).json({ error: 'Failed to retrieve order', details: error.message });
+    }
+};
+
+exports.getOrderNotifications = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const notifications = await Notification.findAll({
+            where: { 
+                user_id: userId,
+                type: 'order'
+            },
+            order: [['created_at', 'DESC']],
+            include: [{
+                model: Order,
+                as: 'order',
+                attributes: ['order_id', 'status', 'total_amount']
+            }],
+            attributes: [
+                'id', 
+                'order_id', 
+                'type', 
+                'title', 
+                'message', 
+                'status',  // Include status in the response
+                'is_read', 
+                'created_at'
+            ]
+        });
+
+        res.status(200).json({
+            message: 'Notifications retrieved successfully',
+            data: notifications
+        });
+    } catch (error) {
+        console.error('Error fetching notifications:', error);
+        res.status(500).json({
+            error: 'Failed to retrieve notifications',
+            details: error.message
+        });
     }
 };

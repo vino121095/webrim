@@ -29,6 +29,7 @@ const NavBar = () => {
   const [ismap, setMap] = useState({});
   const [cartcount, setCartCount] = useState([]);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
+
   useEffect(() => {
     const handleResize = () => setScreenWidth(window.innerWidth);
     const userData = JSON.parse(localStorage.getItem("userData"));
@@ -56,23 +57,54 @@ const NavBar = () => {
       }
     }
   };
+
+
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(
+      // First fetch forum notifications
+      const forumResponse = await axios.get(
         `${loggedUser.role === 'distributor' ?
-          `${baseurl}/api/forumtakens/${loggedUser.uid}` : `${baseurl}/api/forumtakes/${loggedUser.uid}`}`);
+          `${baseurl}/api/forumtakens/${loggedUser.uid}` : 
+          `${baseurl}/api/forumtakes/${loggedUser.uid}`}`
+      );
+      
+      // Then fetch order notifications
+      const orderResponse = await axios.get(
+        `${baseurl}/api/notifications/${loggedUser.uid}`
+      );
 
-      // Transform API data into notification format
-      const apiNotifications = response.data.data.map(item => ({
-        id: item.takeId,
-        type: 'forum', // You can adjust this based on your needs
+      // Transform forum notifications
+      const forumNotifications = forumResponse.data.data.map(item => ({
+        id: `forum-${item.takeId}`,
+        type: 'forum',
         title: `Forum Taken: ${item.takeId}`,
         message: `Taken by ${item?.forumOwnerId || item.distributorName} at ${new Date(item.takenAt).toLocaleString()}`,
-        details: item // Keep full item details if needed
+        details: item
       }));
 
-      setNotifications(apiNotifications);
+      // Transform order notifications
+      const orderNotifications = orderResponse.data.data.map(item => ({
+        id: `order-${item.id}`,
+        type: 'order',
+        title: item.title,
+        message: item.message,
+        details: {
+          orderId: item.order_id,
+          status: item?.status,
+          createdAt: item.created_at
+        }
+      }));
+
+      // Combine and sort notifications by date
+      const allNotifications = [...forumNotifications, ...orderNotifications]
+        .sort((a, b) => {
+          const dateA = a.type === 'forum' ? new Date(a.details.takenAt) : new Date(a.details.createdAt);
+          const dateB = b.type === 'forum' ? new Date(b.details.takenAt) : new Date(b.details.createdAt);
+          return dateB - dateA;
+        });
+
+      setNotifications(allNotifications);
       setError(null);
     } catch (err) {
       console.error('Failed to fetch notifications:', err);
@@ -83,28 +115,17 @@ const NavBar = () => {
     }
   };
 
-  // Fetch notifications when component mounts or when needed
   useEffect(() => {
     if (showNotifications) {
       fetchNotifications();
     }
   }, [showNotifications]);
 
-  // notifications = [
-  //   { id: 1, type: "order", title: "Order Received", message: "Order #123 has been received." },
-  //   { id: 2, type: "complaint", title: "Complaint", message: "New complaint received." },
-  //   { id: 3, type: "order", title: "Order Update", message: "Order #124 has been shipped." },
-  // ];
-
   const handleClickNotify = () => setShowNotifications(!showNotifications);
-
   const toggleUserDropdown = () => setToggleUserDropdown(!isToggleUserDropdown);
-
   const toggleMobileDropdown = () => setIsMobileDropdownOpen(!isMobileDropdownOpen);
+  const handleShowDetails = (notification) => setSelectedNotification(notification);
 
-  const handleShowDetails = (notification) => {
-    setSelectedNotification(notification);
-  };
   const handleLogout = () => {
     Swal.fire({
       title: 'Are you sure you want to logout?',
@@ -149,9 +170,7 @@ const NavBar = () => {
             setMap({
               latitude,
               longitude
-            })
-            console.log(latitude)
-            console.log(longitude)
+            });
 
             try {
               const apiKey = 'a3317655231447b6b370288bb881de3f';
@@ -161,20 +180,15 @@ const NavBar = () => {
 
               if (response.data.results.length > 0) {
                 const components = response.data.results[0].components;
-                console.log('Location Components:', components);
-
                 const city = components.city;
                 const state = components.state;
                 const country = components.country;
                 const county = components.county;
-
                 const district = city || county || "Location not found";
                 const stateName = state || "State not available";
                 const countryName = country || "Country not available";
-
                 setLocation(`${district}, ${stateName}, ${countryName}`);
 
-                // Check if Google Maps is loaded
                 if (window.google && window.google.maps) {
                   const mapOptions = {
                     center: { lat: latitude, lng: longitude },
@@ -184,7 +198,6 @@ const NavBar = () => {
                   const mapElement = document.getElementById("map");
                   if (mapElement) {
                     const newMap = new window.google.maps.Map(mapElement, mapOptions);
-
                     new window.google.maps.Marker({
                       position: { lat: latitude, lng: longitude },
                       map: newMap,
@@ -196,19 +209,12 @@ const NavBar = () => {
                 setLocation("Location not found");
               }
             } catch (error) {
-              console.error("Detailed geocoding error:", {
-                message: error.message,
-                response: error.response,
-                request: error.request
-              });
+              console.error("Detailed geocoding error:", error);
               setLocation("Unable to fetch location");
             }
           },
           (error) => {
-            console.error("Geolocation error:", {
-              code: error.code,
-              message: error.message
-            });
+            console.error("Geolocation error:", error);
             setLocation("Unable to fetch location");
           }
         );
@@ -218,10 +224,88 @@ const NavBar = () => {
     };
 
     fetchCurrentLocation();
-  }, []); // Empty dependency array
+  }, []);
+
   const handleMoveToMain = () => {
-    navigate('/')
-  }
+    navigate('/');
+  };
+
+  const renderNotificationContent = (notification) => {
+    if (notification.type === 'forum') {
+      return (
+        <div className="table-responsive">
+          <table className="table table-striped">
+            <tbody>
+              <tr>
+                <th className="col-4 align-middle">Owner Name</th>
+                <td className="align-middle">{notification.details?.forumOwnerId || notification.details.distributorName}</td>
+              </tr>
+              <tr>
+                <th className="align-middle">Phone</th>
+                <td className="align-middle">{notification.details?.forumOwnerPhone || notification.details.distributorPhone}</td>
+              </tr>
+              <tr>
+                <th className="align-middle">Email</th>
+                <td className="align-middle">{notification.details?.forumOwnerEmail || notification.details.distributorEmail}</td>
+              </tr>
+              <tr>
+                <th className="align-middle">Address</th>
+                <td className="align-middle">{notification.details?.forumOwnerAddress || notification.details.distributorAddress}</td>
+              </tr>
+              <tr>
+                <th className="align-middle">{loggedUser.role === "technician" ? "Message" : "Products"}</th>
+                <td className="align-middle">
+                  {loggedUser.role === "technician" ? (
+                    notification.details?.distributorMessage
+                  ) : (
+                    notification.details?.products?.length > 0 ? (
+                      <ul className="list-unstyled">
+                        {notification.details.products.map((product, index) => (
+                          <li key={index}>
+                            {product.product_name} (Quantity: {product.quantity})
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      "No products available."
+                    )
+                  )}
+                </td>
+              </tr>
+              <tr>
+                <th className="align-middle">Taken At</th>
+                <td className="align-middle">{new Date(notification.details.takenAt).toLocaleString()}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      );
+    } else if (notification.type === 'order') {
+      return (
+        <div className="table-responsive">
+          <table className="table table-striped">
+            <tbody>
+              <tr>
+                <th className="col-4">Order ID</th>
+                <td>{notification.details.orderId}</td>
+              </tr>
+              <tr>
+                <th>Status</th>
+                <td>
+                    {notification.details.status}
+                </td>
+              </tr>
+              <tr>
+                <th>Created At</th>
+                <td>{new Date(notification.details.createdAt).toLocaleString()}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+  };
+
   return (
     <nav>
       {screenWidth > 768 ? (
@@ -303,320 +387,229 @@ const NavBar = () => {
                     <a href="#"
                       className="dropdown-item text-danger"
                       onClick={handleLogout}
-                    >
-                      <MdOutlineLogout className="me-2" />
-                      Logout
-                    </a>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div>
-          {/* Mobile Navigation Bar */}
-          <div className="Mob-nav bg-white d-flex justify-content-between align-items-center px-3 py-3 container-fluid">
-            {/* Hamburger Menu Button */}
-            <div className="" style={{ width: '80px', height: '30px' }}> <button
-              className="navbar-toggler border-0"
-              type="button"
-              data-bs-toggle="offcanvas"
-              data-bs-target="#userSidebar"
-              aria-controls="userSidebar"
-              style={{ width: "24px", height: "24px" }}
-            >
-              <img
-                src={hamburger}
-                alt="Menu"
-                className="img-fluid"
-
-              />
-            </button></div>
-
-
-            {/* Mobile Logo */}
-            <div className="d-flex align-items-center justify-content-center" style={{ width: '70px', height: '50px' }} onClick={handleMoveToMain}>
-              <img src={RIM} alt="RIM Logo" className="" style={{ width: '70px', height: '40px' }} />
-            </div>
-            <div className="d-flex align-items-center gap-3">
-              {loggedUser && loggedUser.role === "distributor" && (
-                <div className="addtocart-count">
-                  <span className="bg-danger text-white px-2 border rounded-circle addtocart-count-icon">{cartcount.length}</span>
-                  <a href="/User/Cart" className="text-decoration-none">
-                    <span><ShoppingCart className="me-2" color="#000" /></span>
-                  </a>
+                      >
+                        <MdOutlineLogout className="me-2" />
+                        Logout
+                      </a>
+                    </>
+                  )}
                 </div>
               )}
-              {" "}
-              <img
-                src={notify}
-                alt="Notifications"
-                onClick={handleClickNotify}
-                style={{ width: "24px", height: "24px", cursor: "pointer" }}
-              />
-              {/* Profile Picture */}
-              {/* <img
-                src={ProfilePic}
-                alt="Profile"
-                style={{
-                  width: "30px",
-                  height: "30px",
-                  borderRadius: "50%",
-                }}
-              /> */}
             </div>
           </div>
-
-          {/* Offcanvas Sidebar */}
-          <div
-            className="offcanvas offcanvas-start"
-            tabIndex="-1"
-            id="userSidebar"
-            aria-labelledby="userSidebarLabel"
-          >
-            <div className="offcanvas-header">
-              {/* Back Button */}
-              <div className="p-3 d-flex align-items-center justify-content-between w-100">
-                <div className='d-flex align-items-center justify-content-between' ><img src={ProfilePic} style={{ width: '50px', height: '50px' }} alt="logo" className="rounded-circle" />
-                  <span><h6 className='mb-0 ms-3'>{loggedUser?.username || 'Guest user'}</h6></span></div>
-                <div>
-                  <button
-                    type="button"
-                    className='btn text-white'
-                    data-bs-dismiss="offcanvas"
-                    aria-label="Close"
-                  ><span><i className="bi bi-chevron-left text-white"></i></span> Back</button></div>
-
+        ) : (
+          <div>
+            {/* Mobile Navigation Bar */}
+            <div className="Mob-nav bg-white d-flex justify-content-between align-items-center px-3 py-3 container-fluid">
+              <div className="" style={{ width: '80px', height: '30px' }}> 
+                <button
+                  className="navbar-toggler border-0"
+                  type="button"
+                  data-bs-toggle="offcanvas"
+                  data-bs-target="#userSidebar"
+                  aria-controls="userSidebar"
+                  style={{ width: "24px", height: "24px" }}
+                >
+                  <img
+                    src={hamburger}
+                    alt="Menu"
+                    className="img-fluid"
+                  />
+                </button>
+              </div>
+  
+              <div className="d-flex align-items-center justify-content-center" 
+                   style={{ width: '70px', height: '50px' }} 
+                   onClick={handleMoveToMain}>
+                <img src={RIM} alt="RIM Logo" className="" style={{ width: '70px', height: '40px' }} />
+              </div>
+              
+              <div className="d-flex align-items-center gap-3">
+                {loggedUser && loggedUser.role === "distributor" && (
+                  <div className="addtocart-count">
+                    <span className="bg-danger text-white px-2 border rounded-circle addtocart-count-icon">
+                      {cartcount.length}
+                    </span>
+                    <a href="/User/Cart" className="text-decoration-none">
+                      <span><ShoppingCart className="me-2" color="#000" /></span>
+                    </a>
+                  </div>
+                )}
+                <img
+                  src={notify}
+                  alt="Notifications"
+                  onClick={handleClickNotify}
+                  style={{ width: "24px", height: "24px", cursor: "pointer" }}
+                />
               </div>
             </div>
-            <div className="offcanvas-body ms-3">
-              {/* Sidebar Content */}
-              <div className="text-white small fw-bold mb-3">Menu</div>
-              <ul className="list-unstyled mt-3">
-                {/* Login Link (if no loggedUser) */}
-                {!loggedUser ? (
-                  <li className="py-2">
-                    <a
-                      href="/Auth/Login"
-                      className="text-white text-decoration-none px-3 d-flex align-items-center pe-auto"
+  
+            {/* Offcanvas Sidebar */}
+            <div
+              className="offcanvas offcanvas-start"
+              tabIndex="-1"
+              id="userSidebar"
+              aria-labelledby="userSidebarLabel"
+            >
+              <div className="offcanvas-header">
+                <div className="p-3 d-flex align-items-center justify-content-between w-100">
+                  <div className='d-flex align-items-center justify-content-between'>
+                    <img src={ProfilePic} style={{ width: '50px', height: '50px' }} alt="logo" className="rounded-circle" />
+                    <span><h6 className='mb-0 ms-3'>{loggedUser?.username || 'Guest user'}</h6></span>
+                  </div>
+                  <div>
+                    <button
+                      type="button"
+                      className='btn text-white'
+                      data-bs-dismiss="offcanvas"
+                      aria-label="Close"
                     >
-                      <MdLogin className="me-2" /> {/* Login Icon */}
-                      Login
-                    </a>
-                  </li>
-                ) : (
-                  <>
-                    {/* Profile Link for Technicians */}
-                    {loggedUser.role === "technician" && (
-                      <li className="py-2">
-                        <a
-                          href="/User/ProfileInfo"
-                          className="text-white text-decoration-none px-3 d-flex align-items-center"
-                        >
-                          <MdAccountCircle className="me-2" /> {/* Profile Icon */}
-                          Profile
-                        </a>
-                      </li>
-                    )}
-                    {/* Order History and Profile Links for Distributors */}
-                    {loggedUser.role === "distributor" && (
-                      <>
-                        <li className="py-2">
-                          <a
-                            href="/User/OrderHistory"
-                            className="text-white text-decoration-none px-3 d-flex align-items-center"
-                          >
-                            <MdHistory className="me-2" /> {/* Orders Icon */}
-                            Orders
-                          </a>
-                        </li>
+                      <span><i className="bi bi-chevron-left text-white"></i></span> Back
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="offcanvas-body ms-3">
+                <div className="text-white small fw-bold mb-3">Menu</div>
+                <ul className="list-unstyled mt-3">
+                  {!loggedUser ? (
+                    <li className="py-2">
+                      <a
+                        href="/Auth/Login"
+                        className="text-white text-decoration-none px-3 d-flex align-items-center pe-auto"
+                      >
+                        <MdLogin className="me-2" />
+                        Login
+                      </a>
+                    </li>
+                  ) : (
+                    <>
+                      {loggedUser.role === "technician" && (
                         <li className="py-2">
                           <a
                             href="/User/ProfileInfo"
                             className="text-white text-decoration-none px-3 d-flex align-items-center"
                           >
-                            <MdAccountCircle className="me-2" /> {/* Profile Icon */}
+                            <MdAccountCircle className="me-2" />
                             Profile
                           </a>
                         </li>
-                      </>
-                    )}
-                    {/* Logout Link */}
-                    <li className="py-2">
-                      <a
-                        href="#"
-                        className="text-white text-decoration-none px-3 d-flex align-items-center"
-                        onClick={handleLogout}
-                      >
-                        <MdLogout className="me-2" /> {/* Logout Icon */}
-                        Logout
-                      </a>
-                    </li>
-                  </>
-                )}
-              </ul>
-
-            </div>
-
-          </div>
-        </div>
-      )}
-      {showNotifications && (
-        <div
-          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-start justify-content-end"
-          style={{ zIndex: 2000 }}
-        >
-          {/* Semi-transparent background overlay */}
-          <div
-            className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50"
-            onClick={() => setShowNotifications(false)}
-          ></div>
-
-          {/* Notification panel */}
-          <div
-            className="position-relative bg-white mt-4 mx-3 rounded shadow-lg"
-            style={{ maxWidth: '500px', width: '100%' }}
-          >
-            <div className="p-3">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <h5 className="mb-0">Notifications</h5>
-                <button
-                  className="btn btn-link border border-danger rounded-circle text-decoration-none p-0 text-danger"
-                  onClick={() => {
-                    setShowNotifications(false);
-                    setShowAllNotifications(false);
-                    setSelectedNotification(null);
-                  }}
-                >
-                  <X className="fs-5" />
-                </button>
+                      )}
+                      {loggedUser.role === "distributor" && (
+                        <>
+                          <li className="py-2">
+                            <a
+                              href="/User/OrderHistory"
+                              className="text-white text-decoration-none px-3 d-flex align-items-center"
+                            >
+                              <MdHistory className="me-2" />
+                              Orders
+                            </a>
+                          </li>
+                          <li className="py-2">
+                            <a
+                              href="/User/ProfileInfo"
+                              className="text-white text-decoration-none px-3 d-flex align-items-center"
+                            >
+                              <MdAccountCircle className="me-2" />
+                              Profile
+                            </a>
+                          </li>
+                        </>
+                      )}
+                      <li className="py-2">
+                        <a
+                          href="#"
+                          className="text-white text-decoration-none px-3 d-flex align-items-center"
+                          onClick={handleLogout}
+                        >
+                          <MdLogout className="me-2" />
+                          Logout
+                        </a>
+                      </li>
+                    </>
+                  )}
+                </ul>
               </div>
-
-              {/* Notification Details Modal */}
-              {selectedNotification && (
-                <div
-                  className="modal fade show"
-                  style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
-                  tabIndex="-1"
-                >
-                  <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Notification Details</h5>
-                        <button
-                          type="button"
-                          className="btn-close"
-                          onClick={() => setSelectedNotification(null)}
-                          aria-label="Close"
-                        ></button>
-                      </div>
-                      <div className="modal-body">
-                        <div className="table-responsive">
-                          <table className="table table-striped">
-                            <tbody>
-                              <tr>
-                                <th className="col-4 align-middle">Owner Name</th>
-                                <td className="align-middle">{selectedNotification.details?.forumOwnerId || selectedNotification.details.distributorName}</td>
-                              </tr>
-                              <tr>
-                                <th className="align-middle">Phone</th>
-                                <td className="align-middle">{selectedNotification.details?.forumOwnerPhone || selectedNotification.details.distributorPhone}</td>
-                              </tr>
-                              <tr>
-                                <th className="align-middle">Email</th>
-                                <td className="align-middle">{selectedNotification.details?.forumOwnerEmail || selectedNotification.details.distributorEmail}</td>
-                              </tr>
-                              <tr>
-                                <th className="align-middle">Address</th>
-                                <td className="align-middle">{selectedNotification.details?.forumOwnerAddress || selectedNotification.details.distributorAddress}</td>
-                              </tr>
-                              <tr>
-                                <th className="align-middle">{loggedUser.role === "technician" ? "Message" : "Products"}</th>
-                                <td className="align-middle">
-                                  {loggedUser.role === "technician" ? (
-                                    selectedNotification.details?.distributorMessage
-                                  ) : (
-                                    selectedNotification.details?.products?.length > 0 ? (
-                                      <ul className="list-unstyled">
-                                        {selectedNotification.details.products.map((product, index) => (
-                                          <li key={index}>
-                                            {product.product_name} (Quantity: {product.quantity})
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    ) : (
-                                      "No products available."
-                                    )
-                                  )}
-                                </td>
-                              </tr>
-                              <tr>
-                                <th className="align-middle">Taken At</th>
-                                <td className="align-middle">{new Date(selectedNotification.details.takenAt).toLocaleString()}</td>
-                              </tr>
-                            </tbody>
-                          </table>
-
-
+            </div>
+          </div>
+        )}
+  
+        {/* Notifications Panel */}
+        {showNotifications && (
+          <div
+            className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-start justify-content-end"
+            style={{ zIndex: 2000 }}
+          >
+            <div
+              className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50"
+              onClick={() => setShowNotifications(false)}
+            ></div>
+  
+            <div
+              className="position-relative bg-white mt-4 mx-3 rounded shadow-lg"
+              style={{ maxWidth: '500px', width: '100%' }}
+            >
+              <div className="p-3">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h5 className="mb-0">Notifications</h5>
+                  <button
+                    className="btn btn-link border border-danger rounded-circle text-decoration-none p-0 text-danger"
+                    onClick={() => {
+                      setShowNotifications(false);
+                      setShowAllNotifications(false);
+                      setSelectedNotification(null);
+                    }}
+                  >
+                    <X className="fs-5" />
+                  </button>
+                </div>
+  
+                {/* Notification Details Modal */}
+                {selectedNotification && (
+                  <div
+                    className="modal fade show"
+                    style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
+                    tabIndex="-1"
+                  >
+                    <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                      <div className="modal-content">
+                        <div className="modal-header">
+                          <h5 className="modal-title">Notification Details</h5>
+                          <button
+                            type="button"
+                            className="btn-close"
+                            onClick={() => setSelectedNotification(null)}
+                            aria-label="Close"
+                          ></button>
+                        </div>
+                        <div className="modal-body">
+                          {renderNotificationContent(selectedNotification)}
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
-
-              <div className="overflow-auto" style={{ maxHeight: '70vh' }}>
-                {loading ? (
-                  <div className="text-center py-3">Loading notifications...</div>
-                ) : error ? (
-                  <div className="text-danger text-center py-3">{error}</div>
-                ) : notifications.length === 0 ? (
-                  <div className="text-center py-3">No notifications</div>
-                ) : (
-                  <>
-                    {notifications.slice(0, 3).map((notification) => (
-                      <div
-                        key={notification.id}
-                        className="d-flex align-items-start p-3 mb-2 border-bottom position-relative"
-                      >
-                        <div className="flex-grow-1">
-                          <strong className="d-block mb-1">{notification.title}</strong>
-                          <small className="text-muted">{notification.message}</small>
-                        </div>
-                        <button
-                          className="btn btn-sm btn-outline-info ms-2"
-                          onClick={() => handleShowDetails(notification)}
-                        >
-                          <Info size={16} />
-                        </button>
-                      </div>
-                    ))}
-
-                    {notifications.length > 3 && !showAllNotifications && (
-                      <div className="text-center py-3">
-                        <button
-                          className="btn"
-                          style={{
-                            backgroundColor: "orangered",
-                            color: "white",
-                            border: "none",
-                          }}
-                          onClick={() => setShowAllNotifications(true)}
-                        >
-                          View More
-                        </button>
-                      </div>
-                    )}
-
-                    {showAllNotifications &&
-                      notifications.slice(3).map((notification) => (
+                )}
+  
+                <div className="overflow-auto" style={{ maxHeight: '70vh' }}>
+                  {loading ? (
+                    <div className="text-center py-3">Loading notifications...</div>
+                  ) : error ? (
+                    <div className="text-danger text-center py-3">{error}</div>
+                  ) : notifications.length === 0 ? (
+                    <div className="text-center py-3">No notifications</div>
+                  ) : (
+                    <>
+                      {notifications.slice(0, showAllNotifications ? undefined : 3).map((notification) => (
                         <div
                           key={notification.id}
                           className="d-flex align-items-start p-3 mb-2 border-bottom position-relative"
                         >
                           <div className="flex-grow-1">
-                            <strong className="d-block mb-1">{notification.title}</strong>
+                            <strong className="d-block mb-1">
+                              {notification.title}
+                            </strong>
                             <small className="text-muted">{notification.message}</small>
                           </div>
                           <button
@@ -627,15 +620,31 @@ const NavBar = () => {
                           </button>
                         </div>
                       ))}
-                  </>
-                )}
+  
+                      {notifications.length > 3 && !showAllNotifications && (
+                        <div className="text-center py-3">
+                          <button
+                            className="btn"
+                            style={{
+                              backgroundColor: "orangered",
+                              color: "white",
+                              border: "none",
+                            }}
+                            onClick={() => setShowAllNotifications(true)}
+                          >
+                            View More
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </nav>
-  );
-};
-
-export default NavBar;
+        )}
+      </nav>
+    );
+  };
+  
+  export default NavBar;

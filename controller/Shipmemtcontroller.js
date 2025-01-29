@@ -3,6 +3,26 @@ const OrderItem = require('../model/OrderItemModel');
 const Product = require('../model/Productmodel');
 const Order = require('../model/Ordermodel');
 const { where } = require('sequelize');
+const Notification = require('../model/NotificationModel');
+
+// Helper function for creating notifications
+const createOrderNotification = async (userId, orderId, status, message) => {
+    try {
+        await Notification.create({
+            user_id: userId,
+            order_id: orderId,
+            type: 'order',
+            title: `Order ${status}`,
+            message: message,
+            status: status,
+            is_read: false,
+            created_at: new Date()
+        });
+    } catch (error) {
+        console.error('Error creating notification:', error);
+        throw error;
+    }
+};
 
 exports.createShipments = async (req, res) => {
     try {
@@ -36,7 +56,6 @@ exports.createShipments = async (req, res) => {
         let totalPrice = 0;
 
         for (let i = 0; i < product_id.length; i++) {
-            // Check if the product is part of the order
             const orderItem = await OrderItem.findOne({ 
                 where: { 
                     order_id, 
@@ -51,14 +70,12 @@ exports.createShipments = async (req, res) => {
                 });
             }
 
-            // Validate quantity against order item
             if (quantity[i] > orderItem.quantity) {
                 return res.status(400).json({ 
-                    error: `Quantity for product ${product_id[i]} exceeds order quantity `
+                    error: `Quantity for product ${product_id[i]} exceeds order quantity`
                 });
             }
 
-            // Prepare shipment item
             shipmentItems.push({
                 product_id: product_id[i],
                 product_name: orderItem.Product.product_name,
@@ -66,14 +83,11 @@ exports.createShipments = async (req, res) => {
                 price: orderItem.price * quantity[i]
             });
 
-            // Calculate total shipment price
             totalPrice += orderItem.price * quantity[i];
         }
 
-        // Generate unique shipment ID (you might want to use a more robust method)
         const shipment_id = req.shipment_id;
 
-        // Create single shipment with multiple products
         const shipmentData = {
             shipment_id,
             order_id,
@@ -84,7 +98,7 @@ exports.createShipments = async (req, res) => {
             dispatch_address,
             transport,
             courier_id,
-            shipment_items: shipmentItems // Store product details
+            shipment_items: shipmentItems
         };
 
         // Create shipment
@@ -92,11 +106,21 @@ exports.createShipments = async (req, res) => {
 
         // Update order status
         await Order.update({ status: 'Shipping' }, { where: { order_id } });
+
+        // Create shipping notification
+        await createOrderNotification(
+            order.user_id,
+            order.order_id,
+            'Shipping',
+            `Your order #${order.order_id} is now being shipped.`
+        );
+
         const shipment = await Shipment.findOne({
-            where:{
+            where: {
                 shipment_id: shipmentData.shipment_id
             }
-        })
+        });
+
         res.status(201).json({
             message: "Shipment created successfully with multiple products",
             shipment: shipment

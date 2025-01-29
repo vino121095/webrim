@@ -35,6 +35,7 @@ const Cart = () => {
           const response = await axios.get(baseurl + `/api/user/${userId}`);
           const items = response.data.map((item) => ({
             ...item,
+            quantity: '' // Set initial quantity to empty string
           }));
           setCartItems(items);
           calculateTotal(items);
@@ -50,9 +51,6 @@ const Cart = () => {
     try {
       const response = await axios.get(`${baseurl}/api/transport`);
       if (response.data && Array.isArray(response.data)) {
-        // const validTransports = response.data.filter(
-        //   (transport) => transport && typeof transport === "object"
-        // );
         setTransports(response.data);
       } else {
         console.error("Invalid response format:", response.data);
@@ -63,31 +61,55 @@ const Cart = () => {
       setTransports([]);
     }
   };
+
   useEffect(() => {
     fetchTransport();
   }, []);
 
   const handleTransportChange = (e) => {
     const selectedTid = e.target.value;
-    console.log(selectedTid);
     const transport = transports.find(t => t.tid === Number(selectedTid));
-    console.log(transport);
     setSelectedTransport(transport);
   };
-
 
   // Calculate total cart value
   const calculateTotal = (items) => {
     const total = items.reduce(
-      (total, item) =>
-        total + Number(item.product.mrp_rate || 0) * item.quantity,
+      (total, item) => {
+        const quantity = item.quantity === '' ? 0 : Number(item.quantity);
+        return total + Number(item.product.mrp_rate || 0) * quantity;
+      },
       0
     );
     setTotalAmount(total);
   };
 
-  // Handle quantity changes
-  const handleQuantityChange = async (cartId, newQuantity) => {
+  // Handle quantity changes with validation
+  const handleQuantityChange = async (cartId, value) => {
+    // Allow empty value
+    if (value === '') {
+      const updatedItems = cartItems.map(item =>
+        item.cid === cartId ? { ...item, quantity: '' } : item
+      );
+      setCartItems(updatedItems);
+      calculateTotal(updatedItems);
+      return;
+    }
+
+    const newQuantity = parseInt(value);
+    
+    // Validate the input
+    if (isNaN(newQuantity) || newQuantity < 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Invalid Quantity',
+        text: 'Please enter a valid quantity (0 or greater)',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3085d6'
+      });
+      return;
+    }
+
     const updatedItems = await Promise.all(
       cartItems.map(async (item) => {
         if (item.cid === cartId) {
@@ -95,12 +117,17 @@ const Cart = () => {
             await axios.put(`${baseurl}/api/update/${item.cid}`, {
               quantity: newQuantity,
             });
+            return { ...item, quantity: newQuantity };
           } catch (error) {
-            alert(
-              `Error updating quantity for ${item.product_id}: ${error.message}`
-            );
+            Swal.fire({
+              icon: 'error',
+              title: 'Update Failed',
+              text: `Error updating quantity: ${error.message}`,
+              confirmButtonText: 'OK',
+              confirmButtonColor: '#d33'
+            });
+            return item;
           }
-          return { ...item, quantity: newQuantity };
         }
         return item;
       })
@@ -118,11 +145,34 @@ const Cart = () => {
       setCartItems(updatedItems);
       calculateTotal(updatedItems);
     } catch (error) {
-      alert(`Error removing item from cart: ${error.message}`);
+      Swal.fire({
+        icon: 'error',
+        title: 'Remove Failed',
+        text: `Error removing item from cart: ${error.message}`,
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#d33'
+      });
     }
   };
+
   // Handle checkout
   const handleCheckout = async () => {
+    // Check for empty or zero quantities
+    const hasInvalidQuantities = cartItems.some(item => 
+      item.quantity === '' || item.quantity === 0
+    );
+
+    if (hasInvalidQuantities) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Invalid Quantities',
+        text: 'Please enter valid quantities for all items before checkout.',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3085d6'
+      });
+      return;
+    }
+
     if (!selectedTransport) {
       Swal.fire({
         icon: 'warning',
@@ -133,6 +183,7 @@ const Cart = () => {
       });
       return;
     }
+    
     if (cartItems.length === 0) {
       Swal.fire({
         icon: 'warning',
@@ -143,81 +194,72 @@ const Cart = () => {
       });
       return;
     }
-    // Calculate total order amount
-  const totalOrderAmount = cartItems.reduce((total, item) => {
-    return total + (item.product.mrp_rate * item.quantity);
-  }, 0);
 
-  try {
-    // Fetch user's previous orders
-    const orderResponse = await axios.get(
-        `${baseurl}/api/userOrdersById/${LoggedUser.uid}`
-    );
-
-    const previousOrders = orderResponse.data.data;
-
-    // Calculate the total amount from previous orders
-    const previousOrderTotal = previousOrders.reduce((total, order) => {
-        if (order.status !== "Cancelled") {
-            return total + parseFloat(order.total_amount);
-        }
-        return total;
+    const totalOrderAmount = cartItems.reduce((total, item) => {
+      return total + (item.product.mrp_rate * item.quantity);
     }, 0);
 
-    // Fetch user profile data to get the credit limit
-    const userProfileResponse = await axios.get(
+    try {
+      const orderResponse = await axios.get(
+        `${baseurl}/api/userOrdersById/${LoggedUser.uid}`
+      );
+
+      const previousOrders = orderResponse.data.data;
+
+      const previousOrderTotal = previousOrders.reduce((total, order) => {
+        if (order.status !== "Cancelled") {
+          return total + parseFloat(order.total_amount);
+        }
+        return total;
+      }, 0);
+
+      const userProfileResponse = await axios.get(
         `${baseurl}/api/userprofile/${LoggedUser.uid}`
-    );
-    const userProfile = userProfileResponse.data.data;
+      );
+      const userProfile = userProfileResponse.data.data;
 
-    if (!userProfile || !userProfile.current_credit_limit) {
+      if (!userProfile || !userProfile.current_credit_limit) {
         Swal.fire({
-            icon: "error",
-            title: "Credit Limit Error",
-            text: "Unable to fetch user credit limit. Please try again later.",
-            confirmButtonText: "OK",
-            confirmButtonColor: "#d33",
+          icon: "error",
+          title: "Credit Limit Error",
+          text: "Unable to fetch user credit limit. Please try again later.",
+          confirmButtonText: "OK",
+          confirmButtonColor: "#d33",
         });
         return;
-    }
+      }
 
-    const userCreditLimit = parseFloat(userProfile.current_credit_limit);
+      const userCreditLimit = parseFloat(userProfile.current_credit_limit);
 
-    // Check if the new order plus previous orders exceed the credit limit
-    if (totalOrderAmount > userCreditLimit) {
+      if (totalOrderAmount > userCreditLimit) {
         Swal.fire({
-            icon: "error",
-            title: "Credit Limit Exceeded",
-            text: `Your previous order value (₹${previousOrderTotal.toFixed(
-                2
-            )}),Current Order value(₹${totalOrderAmount}) exceeds your credit limit of ₹${userCreditLimit.toFixed(2)}.`,
-            confirmButtonText: "OK",
-            confirmButtonColor: "#d33",
+          icon: "error",
+          title: "Credit Limit Exceeded",
+          text: `Your previous order value (₹${previousOrderTotal.toFixed(2)}), Current Order value(₹${totalOrderAmount}) exceeds your credit limit of ₹${userCreditLimit.toFixed(2)}.`,
+          confirmButtonText: "OK",
+          confirmButtonColor: "#d33",
         });
         return;
-    }
+      }
 
-    // Place the order
-    await axios.post(baseurl + "/api/placeOrder", {
+      await axios.post(baseurl + "/api/placeOrder", {
         user_id: LoggedUser.uid,
         transport_id: selectedTransport.tid,
-    });
+      });
 
-    // Navigate to success page after order placement
-    navigate("/User/PaymentSuccess");
-} catch (error) {
-    console.error("Error during checkout:", error);
-
-    Swal.fire({
+      navigate("/User/PaymentSuccess");
+    } catch (error) {
+      console.error("Error during checkout:", error);
+      Swal.fire({
         icon: "error",
         title: "Checkout Failed",
         text: "An error occurred during checkout. Please try again later.",
         confirmButtonText: "OK",
         confirmButtonColor: "#d33",
-    });
-}
+      });
+    }
+  };
 
-}
   return (
     <>
       <NavBar />
@@ -260,30 +302,19 @@ const Cart = () => {
                       </div>
                     </td>
                     <td>
-                      <div className="d-flex align-items-center justify-content-center">
-                        <button
-                          className="btn btn-secondary me-2"
-                          onClick={() =>
-                            handleQuantityChange(item.cid, item.quantity - 1)
-                          }
-                          disabled={item.quantity <= 1}
-                        >
-                          -
-                        </button>
-                        <span>{item.quantity}</span>
-                        <button
-                          className="btn btn-secondary ms-2"
-                          onClick={() =>
-                            handleQuantityChange(item.cid, item.quantity + 1)
-                          }
-                        >
-                          +
-                        </button>
-                      </div>
+                      <input
+                        type="number"
+                        className="form-control"
+                        value={item.quantity}
+                        min="0"
+                        onChange={(e) => handleQuantityChange(item.cid, e.target.value)}
+                        style={{ width: "80px" }}
+                        placeholder="0"
+                      />
                     </td>
                     <td>
-                      <i class="bi bi-currency-rupee"></i>{" "}
-                      {(item.product.mrp_rate * item.quantity).toFixed(2)}
+                      <i className="bi bi-currency-rupee"></i>{" "}
+                      {(item.product.mrp_rate * (item.quantity || 0)).toFixed(2)}
                     </td>
                     <td>
                       <button
@@ -318,7 +349,7 @@ const Cart = () => {
                     <h5 className="mb-2">{item.product.product_name}</h5>
                     <p className="text-muted mb-2">{item.product.brand_name}</p>
                     <p>
-                      ₹ {(item.product.mrp_rate * item.quantity).toFixed(2)}
+                      ₹ {(item.product.mrp_rate * (item.quantity || 0)).toFixed(2)}
                     </p>
                   </div>
                   <div>
@@ -328,95 +359,72 @@ const Cart = () => {
                     >
                       <i className="bi bi-trash cart-remove-item"></i>
                     </button>
-                    {item.quantity < 10 ? (
-                      <select
-                        className="form-select"
-                        value={item.quantity}
-                        onChange={(e) =>
-                          handleQuantityChange(
-                            item.cid,
-                            parseInt(e.target.value)
-                          )
-                        }
-                      >
-                        {[...Array(10).keys()].map((quantity) => (
-                          <option key={quantity + 1} value={quantity + 1}>
-                            {quantity + 1}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        type="number"
-                        className="form-control"
-                        value={item.quantity}
-                        min="10"
-                        onChange={(e) =>
-                          handleQuantityChange(
-                            item.cid,
-                            parseInt(e.target.value)
-                          )
-                        }
-                      />
-                    )}
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={item.quantity}
+                      min="0"
+                      onChange={(e) => handleQuantityChange(item.cid, e.target.value)}
+                      placeholder="0"
+                    />
                   </div>
                 </div>
-                <hr /> {/* Add horizontal line */}
+                <hr />
               </div>
             ))}
           </div>
 
           {/* Order Summary Section */}
           <div className="col-lg-4">
-      <div className="border p-4 rounded">
-        <h5>Order Summary</h5>
-        
-        {/* Transport Dropdown */}
-        <div className="mb-3">
-          <label htmlFor="transportSelect" className="form-label">Select Transport</label>
-          <select 
-            id="transportSelect"
-            className="form-select"
-            value={selectedTransport ? selectedTransport.tid : ''}
-            onChange={handleTransportChange} 
-          >
-            <option value="">Choose Transport</option>
-            {transports.map((transport) => (
-              <option 
-                key={transport.tid} 
-                value={transport.tid}
-              >
-                {transport.travels_name || 'Unnamed Transport'}
-              </option>
-            ))}
-          </select>
-        </div>
+            <div className="border p-4 rounded">
+              <h5>Order Summary</h5>
+              
+              {/* Transport Dropdown */}
+              <div className="mb-3">
+                <label htmlFor="transportSelect" className="form-label">Select Transport</label>
+                <select 
+                  id="transportSelect"
+                  className="form-select"
+                  value={selectedTransport ? selectedTransport.tid : ''}
+                  onChange={handleTransportChange} 
+                >
+                  <option value="">Choose Transport</option>
+                  {transports.map((transport) => (
+                    <option 
+                      key={transport.tid} 
+                      value={transport.tid}
+                    >
+                      {transport.travels_name || 'Unnamed Transport'}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-        <div className="d-flex justify-content-between">
-          <span>Sub total</span>
-          <span>{cartItems.length} items</span>
-        </div>
-        <div className="d-flex justify-content-between">
-          <span>Total MRP</span>
-          <span>
-            <i className="bi bi-currency-rupee"></i> {totalAmount.toFixed(2)}
-          </span>
-        </div>
-        <div className="d-flex justify-content-between fw-bold">
-          <span>Total Cart Value</span>
-          <span className="text-primary">
-            <i className="bi bi-currency-rupee"></i> {totalAmount.toFixed(2)}
-          </span>
-        </div>
-        <button
-          className="btn btn-success w-100 mt-3"
-          onClick={handleCheckout}
-          disabled={!selectedTransport}
-        >
-          Checkout
-        </button>
-      </div>
-    </div>
+              <div className="d-flex justify-content-between">
+                <span>Sub total</span>
+                <span>{cartItems.length} items</span>
+              </div>
+              <div className="d-flex justify-content-between">
+                <span>Total MRP</span>
+                <span>
+                  <i className="bi bi-currency-rupee"></i> {totalAmount.toFixed(2)}
+                </span>
+              </div>
+              <div className="d-flex justify-content-between fw-bold">
+                <span>Total Cart Value</span>
+                <span className="text-primary">
+                  <i className="bi bi-currency-rupee"></i> {totalAmount.toFixed(2)}
+                </span>
+              </div>
+              <button
+                className="btn btn-success w-100 mt-3"
+                onClick={handleCheckout}
+                disabled={!selectedTransport}
+              >
+                Checkout
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </>
