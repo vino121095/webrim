@@ -37,10 +37,20 @@ const DistributorsViewDetails = () => {
 
   const handleEditCreditLimit = async () => {
     const currentLimit = parseFloat(distributor?.current_credit_limit) || 0;
+    const maxLimit = parseFloat(distributor?.creditlimit) || 0;
     
     const { value: formValues } = await Swal.fire({
       title: 'Edit Current Credit Limit',
       html: `
+        <div class="mb-3">
+          <label class="form-label">Total Credit Limit</label>
+          <input 
+            id="swal-max-limit" 
+            class="form-control" 
+            value="${maxLimit.toFixed(2)}"
+            readonly
+          >
+        </div>
         <div class="mb-3">
           <label class="form-label">Current Credit Limit</label>
           <input 
@@ -82,8 +92,16 @@ const DistributorsViewDetails = () => {
         addAmountInput.addEventListener('input', () => {
           const addAmount = parseFloat(addAmountInput.value) || 0;
           const newTotal = currentLimit + addAmount;
-          // Ensure newTotal is a number before using toFixed
           newTotalInput.value = Number(newTotal).toFixed(2);
+          
+          // Add visual feedback if exceeding max limit
+          if (newTotal > maxLimit) {
+            newTotalInput.style.color = 'red';
+            addAmountInput.style.borderColor = 'red';
+          } else {
+            newTotalInput.style.color = '';
+            addAmountInput.style.borderColor = '';
+          }
         });
       },
       preConfirm: () => {
@@ -93,6 +111,10 @@ const DistributorsViewDetails = () => {
           return false;
         }
         const newTotal = currentLimit + addAmount;
+        if (newTotal > maxLimit) {
+          Swal.showValidationMessage('New total exceeds maximum credit limit');
+          return false;
+        }
         return Number(newTotal).toFixed(2);
       }
     });
@@ -117,9 +139,10 @@ const DistributorsViewDetails = () => {
         }
       } catch (error) {
         console.error("Error updating credit limit:", error);
+        const errorMessage = error.response?.data?.message || 'Failed to update credit limit';
         await Swal.fire({
           title: 'Error!',
-          text: error.response?.data?.message || 'Failed to update credit limit',
+          text: errorMessage,
           icon: 'error'
         });
       }
@@ -186,7 +209,7 @@ const DistributorsViewDetails = () => {
                     <strong>GST Number:</strong> {distributor?.gstnumber || "N/A"}
                   </p>
                   <p>
-                    <strong>Credit Limit:</strong> {distributor?.current_credit_limit || "N/A"}
+                    <strong>Credit Limit:</strong> {distributor?.creditlimit || "N/A"}
                   </p>
                 </div>
                 <div className="col-md-6">
