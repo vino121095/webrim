@@ -35,7 +35,7 @@ const Cart = () => {
           const response = await axios.get(baseurl + `/api/user/${userId}`);
           const items = response.data.map((item) => ({
             ...item,
-            quantity: '' // Set initial quantity to empty string
+            quantity: item.quantity || 1 
           }));
           setCartItems(items);
           calculateTotal(items);
@@ -89,7 +89,7 @@ const Cart = () => {
     // Allow empty value
     if (value === '') {
       const updatedItems = cartItems.map(item =>
-        item.cid === cartId ? { ...item, quantity: '' } : item
+        item.cid === cartId ? { ...item, quantity: 0 } : item
       );
       setCartItems(updatedItems);
       calculateTotal(updatedItems);

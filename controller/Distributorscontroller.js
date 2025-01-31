@@ -328,19 +328,22 @@ exports.updateDistributorCreditLimit = async (req, res) => {
             return res.status(404).json({ message: 'Associated user not found' });
         }
 
-        // Calculate the difference to add to credit limit
-        const creditLimitIncrease = parseFloat(current_credit_limit) - parseFloat(distributor.current_credit_limit);
+        // Validate that new current_credit_limit doesn't exceed creditlimit
+        if (parseFloat(current_credit_limit) > parseFloat(distributor.creditlimit)) {
+            return res.status(400).json({ 
+                message: 'Current credit limit cannot exceed total credit limit',
+                maxLimit: distributor.creditlimit
+            });
+        }
 
         // Update distributor
         await distributor.update({
-            current_credit_limit: current_credit_limit,
-            creditlimit: parseFloat(distributor.creditlimit) + creditLimitIncrease
+            current_credit_limit: current_credit_limit
         });
 
         // Update user
         await user.update({
-            current_credit_limit: current_credit_limit,
-            creditlimit: parseFloat(user.creditlimit) + creditLimitIncrease
+            current_credit_limit: current_credit_limit
         });
 
         res.status(200).json({
