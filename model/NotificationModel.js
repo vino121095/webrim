@@ -40,6 +40,14 @@ const Notification = sequelize.define('Notification', {
         type: DataTypes.BOOLEAN,
         defaultValue: false
     },
+    transport: {
+        type: DataTypes.STRING,
+        allowNull: true  // Nullable if not all notifications involve transport
+    },
+    courier_id: {
+        type: DataTypes.STRING,
+        allowNull: true // Nullable if not all notifications involve a courier
+    },
     created_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW

@@ -202,7 +202,7 @@ const DistributorProductView = () => {
               <div><div className="d-flex justify-content-between">
                 <h4 className="productName">{product.product_name}</h4>
                 <h3 className="productPrice text-primary">
-                  <i className="bi bi-currency-rupee"></i> {product.mrp_rate}
+                  <i className="bi bi-currency-rupee"></i> {product.distributors_rate}
                 </h3>
               </div>
                 <p>

@@ -21,7 +21,7 @@ const DistributorsViewDetails = () => {
       const response = await axios.get(
         `${baseurl}/api/getDistributorById/${id}`
       );
-      setDistributor(response.data);
+      setDistributor(response.data.data);
       setError(null);
     } catch (error) {
       console.error("Error fetching distributor details:", error);
@@ -228,6 +228,12 @@ const DistributorsViewDetails = () => {
                   </p>
                   <p>
                     <strong>Email:</strong> {distributor?.email || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Total Orders count:</strong> {distributor?.total_orders || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Total Amount:</strong> {distributor?.total_order_amount || "N/A"}
                   </p>
                 </div>
               </div>

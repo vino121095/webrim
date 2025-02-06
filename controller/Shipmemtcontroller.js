@@ -6,7 +6,7 @@ const { where } = require('sequelize');
 const Notification = require('../model/NotificationModel');
 
 // Helper function for creating notifications
-const createOrderNotification = async (userId, orderId, status, message) => {
+const createOrderNotification = async (userId, orderId, status, message,transport, courier_id) => {
     try {
         await Notification.create({
             user_id: userId,
@@ -16,7 +16,9 @@ const createOrderNotification = async (userId, orderId, status, message) => {
             message: message,
             status: status,
             is_read: false,
-            created_at: new Date()
+            created_at: new Date(),
+            transport,
+            courier_id
         });
     } catch (error) {
         console.error('Error creating notification:', error);
@@ -105,14 +107,16 @@ exports.createShipments = async (req, res) => {
         await Shipment.create(shipmentData);
 
         // Update order status
-        await Order.update({ status: 'Shipping' }, { where: { order_id } });
+        await Order.update({ status: 'Shipping', transport_name:transport, courier_id:courier_id }, { where: { order_id } });
 
         // Create shipping notification
         await createOrderNotification(
             order.user_id,
             order.order_id,
             'Shipping',
-            `Your order #${order.order_id} is now being shipped.`
+            `Your order #${order.order_id} is now being shipped.`,
+            transport,
+            courier_id
         );
 
         const shipment = await Shipment.findOne({

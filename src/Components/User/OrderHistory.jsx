@@ -20,7 +20,7 @@ const OrderHistory = () => {
     } else if (LoggedUser.role === "admin") {
       navigate("/AdminDashboard/EnterpriseAi");
     }
-    else if(LoggedUser.role === "technician"){
+    else if (LoggedUser.role === "technician") {
       navigate('/User/StoreDetails');
     }
   }, [navigate]); // Removed LoggedUser from dependency array
@@ -87,8 +87,11 @@ const OrderHistory = () => {
                 <th>#</th>
                 <th>Order ID</th>
                 <th>Total Quantity</th>
-                <th>Date</th>
+                <th>Order Date</th>
                 <th>Amount</th>
+                <th>Status</th>
+                <th>Transport</th>
+                <th>Courier ID</th>
               </tr>
             </thead>
             <tbody>
@@ -109,10 +112,13 @@ const OrderHistory = () => {
                       <td>{totalQuantity}</td>
                       <td>{order.order_date}</td>
                       <td>{order.total_amount}</td>
+                      <td>{order.status ? order.status : "Pending"}</td>
+                      <td>{order.transport_name ? order.transport_name : "Not Shipping"}</td>
+                      <td>{order.courier_id ? order.courier_id : "Not Shipping"}</td>
                     </tr>
                     {expandedOrderId === order.oid && (
                       <tr>
-                        <td colSpan="5">
+                        <td colSpan="9">
                           <div className="accordion accordion-flush">
                             {order.OrderItems.map((item, idx) => (
                               <div
@@ -120,9 +126,7 @@ const OrderHistory = () => {
                                 className="d-flex justify-content-between py-2 border-bottom"
                               >
                                 <div>
-                                  <h6 className="mb-1">
-                                    {item.Product.product_name}
-                                  </h6>
+                                  <h6 className="mb-1">{item.Product.product_name}</h6>
                                   <small className="text-muted">
                                     Quantity: {item.quantity}
                                   </small>
@@ -143,6 +147,7 @@ const OrderHistory = () => {
               })}
             </tbody>
           </table>
+
         )}
       </div>
     </>
