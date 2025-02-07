@@ -1,5 +1,6 @@
 const Distributor = require('../model/Distributorsmodel');
 const User = require('../model/UserModel');
+const Order = require('../model/Ordermodel')
 const DistributorImage = require('../model/DistributorImagesmodel');
 const { Op } = require('sequelize');
 const bcrypt = require('bcrypt');
@@ -109,23 +110,67 @@ exports.getAllDistributors = async (req, res) => {
 };
 
 // Get a distributor by ID
+const { Sequelize } = require('sequelize');
+
 exports.getDistributorById = async (req, res) => {
     try {
+        // First find the distributor
         const distributor = await Distributor.findByPk(req.params.id, {
             include: [
-                { model: DistributorImage,
+                {
+                    model: DistributorImage,
                     as: 'image',        
-                    attributes: ['image_path'],  
-                 }
+                    attributes: ['image_path']
+                }
             ]
         });
-        if (distributor) {
-            res.status(200).json(distributor);
-        } else {
-            res.status(404).json({ message: 'Distributor not found' });
+
+        if (!distributor) {
+            return res.status(404).json({ message: 'Distributor not found' });
         }
+
+        // Find all users associated with this distributor's email
+        const users = await User.findAll({
+            where: {
+                email: distributor.email
+            },
+            attributes: ['uid']
+        });
+
+        const userIds = users.map(user => user.uid);
+
+        // Get order statistics for all associated users
+        const orderStats = await Order.findOne({
+            where: {
+                user_id: {
+                    [Sequelize.Op.in]: userIds
+                }
+            },
+            attributes: [
+                [Sequelize.fn('COUNT', Sequelize.col('order_id')), 'total_orders'],
+                [Sequelize.fn('SUM', Sequelize.col('total_amount')), 'total_amount']
+            ],
+            raw: true
+        });
+
+        // Combine distributor data with order statistics
+        const response = {
+            ...distributor.toJSON(),
+            total_orders: parseInt(orderStats?.total_orders || 0),
+            total_order_amount: parseFloat(orderStats?.total_amount || 0)
+        };
+
+        res.status(200).json({
+            message: 'Distributor details retrieved successfully',
+            data: response
+        });
+
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error fetching distributor details:', error);
+        res.status(500).json({ 
+            error: 'Failed to retrieve distributor details', 
+            details: error.message 
+        });
     }
 };
 

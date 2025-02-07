@@ -19,7 +19,7 @@ const Order = db.define('orders', {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-            model: User, 
+            model: User,
             key: 'uid'
         }
     },
@@ -44,6 +44,14 @@ const Order = db.define('orders', {
             key: 'tid'
         }
     },
+    transport_name: {
+        type: DataTypes.STRING,
+        allowNull: true  // Nullable if not all notifications involve transport
+    },
+    courier_id: {
+        type: DataTypes.STRING,
+        allowNull: true // Nullable if not all notifications involve a courier
+    },
     cancelAt: {
         type: DataTypes.DATE,
         allowNull: true,
@@ -54,7 +62,7 @@ const Order = db.define('orders', {
     }
 }, {
     tableName: 'orders',
-    timestamps: true, 
+    timestamps: true,
 });
 
 // Associations with explicit cascade options

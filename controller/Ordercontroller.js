@@ -12,7 +12,7 @@ const Shipment = require('../model/Shipmentmodel');
 const Distributor = require('../model/Distributorsmodel');
 const Notification = require('../model/NotificationModel');
 
-const createOrderNotification = async (userId, orderId, status, message) => {
+const createOrderNotification = async (userId, orderId, status, message, transport, courier_id) => {
     try {
         await Notification.create({
             user_id: userId,
@@ -22,7 +22,9 @@ const createOrderNotification = async (userId, orderId, status, message) => {
             message: message,
             status: status,  // Store the status in the notification
             is_read: false,
-            created_at: new Date()
+            created_at: new Date(),
+            transport,
+            courier_id
         });
     } catch (error) {
         console.error('Error creating notification:', error);
@@ -73,7 +75,9 @@ exports.createOrder = async (req, res) => {
         if (distributor.current_credit_limit < totalAmount) {
             return res.json({ error: 'Insufficient credit limit' });
         }
-
+        const transport = await Transport.findOne({
+            where: { tid: transportId }
+        });
         // Create the order
         const newOrder = await Order.create({
             order_id: req.order_id,
@@ -81,7 +85,8 @@ exports.createOrder = async (req, res) => {
             order_date: req.order_date,
             total_amount: totalAmount,
             status: 'Received',
-            transport_id: transportId
+            transport_id: transportId,
+            transport_name: transport.travels_name
         });
 
         // Add items to the order
@@ -383,21 +388,26 @@ exports.getOrdersByUserId = async (req, res) => {
     try {
         const { id } = req.params;
         const orders = await Order.findAll({
-            where: { user_id: id }, // Assuming 'user_id' is the correct field for the user
-            include: [{
-                model: OrderItem,
-                include: [{
-                    model: Product
-                }]
-            }]
+            where: { user_id: id },
+            include: [
+                {
+                    model: OrderItem,
+                    include: [{ model: Product }]
+                },
+            ],
+            order: [['createdAt', 'DESC']]
         });
- 
+
+        // Debugging log
+        console.log('Fetched Orders:', JSON.stringify(orders, null, 2));
+
         if (orders.length === 0) {
             return res.json({
-                message: 'No orders found for this user',data : []
+                message: 'No orders found for this user',
+                data: []
             });
         }
- 
+
         res.status(200).json({
             message: 'Orders retrieved successfully',
             data: orders
@@ -407,6 +417,8 @@ exports.getOrdersByUserId = async (req, res) => {
         res.status(500).json({ error: 'Failed to retrieve orders', details: error.message });
     }
 };
+
+
 exports.getOrderById = async (req, res) => {
     try {
         const oid = req.params.id;
@@ -469,7 +481,9 @@ exports.getOrderNotifications = async (req, res) => {
                 'title', 
                 'message', 
                 'status',  // Include status in the response
-                'is_read', 
+                'is_read',
+                'transport',
+                'courier_id', 
                 'created_at'
             ]
         });

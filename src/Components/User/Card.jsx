@@ -281,7 +281,7 @@ const Card = () => {
                   <div className="card-body d-flex flex-column">
                     <h5 className="card-title" onClick={() => handleDistributorProductView (product)}>{product.product_name}</h5>
                     <span></span>
-                    <h5 className="card-text mt-3"><i class="bi bi-currency-rupee"></i> {product.mrp_rate}</h5>
+                    <h5 className="card-text mt-3"><i class="bi bi-currency-rupee"></i> {product.distributors_rate}</h5>
                     <div className='d-block d-lg-flex align-items-center justify-content-between mb-3'><small className="">{product.brand_name}</small>
                       {/* <p className={product.stocks === 0 ? 'text-danger' : ''}>
                       Stocks : {product.stocks === 0 ? 'Out of stock' : product.stocks}

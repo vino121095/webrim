@@ -92,7 +92,9 @@ const NavBar = () => {
         details: {
           orderId: item.order_id,
           status: item?.status,
-          createdAt: item.created_at
+          createdAt: item.created_at,
+          transport: item.transport ? item.transport : "Not Shipping",
+        courier_id: item.courier_id ? item.courier_id : "Not Shipping"
         }
       }));
 
@@ -293,6 +295,18 @@ const NavBar = () => {
                 <th>Status</th>
                 <td>
                     {notification.details.status}
+                </td>
+              </tr>
+              <tr>
+                <th>Transport</th>
+                <td>
+                    {notification.details.transport}
+                </td>
+              </tr>
+              <tr>
+                <th>Courier Id</th>
+                <td>
+                    {notification.details.courier_id}
                 </td>
               </tr>
               <tr>
