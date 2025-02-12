@@ -86,6 +86,7 @@ const OtpVerification = () => {
     setLoading(true);
     setServerError(null);
     const email = localStorage.getItem('verificationEmail');
+    const phone = localStorage.getItem('verificationPhone');
     if (!email) {
         Swal.fire({
             icon: 'error',
@@ -96,10 +97,21 @@ const OtpVerification = () => {
         setLoading(false);
         return;
     }
+    if (!phone) {
+      Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Email not found in storage',
+          confirmButtonText: 'OK'
+      });
+      setLoading(false);
+      return;
+  }
 
     try {
         const response = await axios.post(`${baseurl}/api/verify-otp`, {
           email,
+          phone,
           otp: otpValue
         });
         const userData = response.data.data;
@@ -112,6 +124,7 @@ const OtpVerification = () => {
                 timer: 1500
             });
             localStorage.removeItem('verificationEmail');
+            localStorage.removeItem('verificationPhone');
             localStorage.setItem('userData', JSON.stringify(userData));
             
             setTimeout(() => {
@@ -139,7 +152,8 @@ const OtpVerification = () => {
     setLoading(true);
     try {
       const response = await axios.post(`${baseurl}/api/send-otp`, {
-        email: localStorage.getItem('verificationEmail')
+        email: localStorage.getItem('verificationEmail'),
+        phone: localStorage.getItem('verificationPhone')
       });
 
       if (response.data.success) {
