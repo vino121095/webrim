@@ -414,8 +414,9 @@ const NavBar = () => {
         ) : (
           <div>
             {/* Mobile Navigation Bar */}
+            
             <div className="Mob-nav bg-white d-flex justify-content-between align-items-center px-3 py-3 container-fluid">
-              <div className="" style={{ width: '80px', height: '30px' }}> 
+              <div className="" style={{ width: loggedUser.role === "distributor" ? '80px' : '30px', height: '30px' }}> 
                 <button
                   className="navbar-toggler border-0"
                   type="button"
