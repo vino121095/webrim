@@ -211,7 +211,7 @@ exports.sendOTP = async (req, res) => {
 
         // Email Message
         const mailOptions = {
-            from: `"Your App" <${EMAIL_USER}>`,
+            from: `"FETECH" <${EMAIL_USER}>`,
             to: email,
             subject: "Your OTP for Verification",
             html: `
@@ -224,7 +224,7 @@ exports.sendOTP = async (req, res) => {
                     </div>
                     <p>This code will expire in 10 minutes.</p>
                     <p style="color: #666; font-size: 14px;">If you didn't request this code, please ignore this email.</p>
-                    <p>Best regards,<br/>Your App Team</p>
+                    <p>Best regards,<br/>FETECH Team</p>
                 </div>
             `,
         };
