@@ -84,7 +84,7 @@ exports.getCartItems = async (req, res) => {
               {
                   model: Products,
                   as: 'product', // Use the alias defined in associations
-                  attributes: ['product_id', 'product_name', 'mrp_rate', 'brand_name'],
+                  attributes: ['product_id', 'product_name', 'mrp_rate', 'brand_name', 'distributors_rate'],
                   include: [
                       {
                           model: ProductImages,

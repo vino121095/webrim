@@ -77,7 +77,7 @@ const Cart = () => {
     const total = items.reduce(
       (total, item) => {
         const quantity = item.quantity === '' ? 0 : Number(item.quantity);
-        return total + Number(item.product.mrp_rate || 0) * quantity;
+        return total + Number(item.product.distributors_rate || 0) * quantity;
       },
       0
     );
@@ -196,7 +196,7 @@ const Cart = () => {
     }
 
     const totalOrderAmount = cartItems.reduce((total, item) => {
-      return total + (item.product.mrp_rate * item.quantity);
+      return total + (item.product.distributors_rate * item.quantity);
     }, 0);
 
     try {
@@ -314,7 +314,7 @@ const Cart = () => {
                     </td>
                     <td>
                       <i className="bi bi-currency-rupee"></i>{" "}
-                      {(item.product.mrp_rate * (item.quantity || 0)).toFixed(2)}
+                      {(item.product.distributors_rate* (item.quantity || 0)).toFixed(2)}
                     </td>
                     <td>
                       <button
@@ -349,7 +349,7 @@ const Cart = () => {
                     <h5 className="mb-2">{item.product.product_name}</h5>
                     <p className="text-muted mb-2">{item.product.brand_name}</p>
                     <p>
-                      ₹ {(item.product.mrp_rate * (item.quantity || 0)).toFixed(2)}
+                      ₹ {(item.product.distributors_rate * (item.quantity || 0)).toFixed(2)}
                     </p>
                   </div>
                   <div>
