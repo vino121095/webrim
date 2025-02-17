@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Minus, Plus, ShoppingCart } from "lucide-react";
 import defaultImage from "../User/Assets/compressor-img.png";
 import baseurl from "../ApiService/ApiService";
 import NavBar from "./NavBar";
@@ -12,20 +11,19 @@ const DistributorProductView = () => {
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [mainImage, setMainImage] = useState(defaultImage);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [quantity, setQuantity] = useState('1');
   const LoggedUser = JSON.parse(localStorage.getItem('userData'));
-  const [quantity, setQuantity] = useState(1);
   const [formData, setFormData] = useState({
     distributor_name: LoggedUser?.username || "",
     phone_number: LoggedUser?.mobile_number || ""
   });
+
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
         const response = await axios.get(`${baseurl}/api/productDetail/${id}`);
         const fetchedProduct = response.data;
 
-        // Extract image paths
         if (fetchedProduct.images && Array.isArray(fetchedProduct.images)) {
           fetchedProduct.images = fetchedProduct.images.map(
             (img) => img.image_path
@@ -42,35 +40,50 @@ const DistributorProductView = () => {
     fetchProductDetails();
   }, [id]);
 
-  if (!product) {
-    return <div>Loading...</div>;
-  }
+  const handleQuantityChange = (value) => {
+    // Allow empty value for typing
+    if (value === '') {
+      setQuantity('');
+      return;
+    }
+
+    const newQuantity = parseInt(value);
+    
+    // Validate the input
+    if (isNaN(newQuantity) || newQuantity < 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Invalid Quantity',
+        text: 'Please enter a valid quantity (0 or greater)',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3085d6'
+      });
+      return;
+    }
+
+    setQuantity(value);
+  };
+
   const handleAddToCartClick = async (product) => {
-    // setSelectedProduct(product);
-    //   setFormData(prevData => ({
-    //   ...prevData,
-    //   quantity: 1,
-    // }));
-    // if (!selectedProduct || !formData.quantity || !formData.distributor_name || !formData.distributor_location || !formData.phone_number) {
-    //   Swal.fire({
-    //     icon: 'warning',
-    //     title: 'Incomplete Form',
-    //     text: 'Please fill in all required fields.',
-    //     confirmButtonText: 'OK',
-    //     confirmButtonColor: '#3085d6'
-    //   });
-    //   return;
-    // }
+    // Validate quantity before adding to cart
+    if (quantity === '' || parseInt(quantity) === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Invalid Quantity',
+        text: 'Please enter a valid quantity before adding to cart',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3085d6'
+      });
+      return;
+    }
 
     try {
-      // First, add to cart
       const cartResponse = await axios.post(`${baseurl}/api/addtocart`, {
         user_id: LoggedUser.uid,
         product_id: product.product_id,
         product_name: product.product_name,
-        quantity: quantity,
+        quantity: parseInt(quantity),
         distributor_name: formData.distributor_name,
-        // distributor_location: LoggedUser.location,
         phone_number: formData.phone_number,
       });
 
@@ -87,8 +100,6 @@ const DistributorProductView = () => {
         }).then((result) => {
           if (result.isConfirmed) {
             navigate('/User/Cart');
-          } else {
-            setIsModalOpen(false);
           }
         });
       } else {
@@ -110,50 +121,43 @@ const DistributorProductView = () => {
         confirmButtonColor: '#d33'
       });
     }
-  }
-  const incrementQuantity = () => setQuantity((prev) => prev + 1);
-  const decrementQuantity = () => {
-    if (quantity > 1) setQuantity((prev) => prev - 1); // Ensure quantity doesn't go below 1
   };
+
+  if (!product) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <>
       <NavBar />
-      <ul
-        className="breadcrumb"
-        style={{
-          padding: "10px 16px",
-          listStyle: "none",
-          backgroundColor: "#f8f9fa",
-          display: "flex",
-          gap: "10px",
-          justifyContent: "center",
-          alignItems: "center",
-          borderRadius: "5px",
-          margin: "0",
-        }}
-      >
-        {/* Active item */}
+      <ul className="breadcrumb" style={{
+        padding: "10px 16px",
+        listStyle: "none",
+        backgroundColor: "#f8f9fa",
+        display: "flex",
+        gap: "10px",
+        justifyContent: "center",
+        alignItems: "center",
+        borderRadius: "5px",
+        margin: "0",
+      }}>
         <li style={{ fontSize: "18px", margin: "0" }}>
           <a href="/" style={{ textDecoration: "none", color: "#007bff", fontWeight: "bold" }}>
             Home
           </a>
         </li>
         <li style={{ fontSize: "18px", margin: "0" }}>/</li>
-
-        {/* Disabled item */}
         <li style={{ fontSize: "17px", margin: "0", color: "#6c757d", cursor: "not-allowed" }}>
           Product View
         </li>
       </ul>
-
 
       <div className="container product-details-container my-4">
         <div className="row">
           {/* Image Section */}
           <div className="col-lg-6 mb-4 h-75">
             <div className="productImageSection bg-white w-100">
-              <div className="text-center pt-4 d-flex justify-content-center " style={{ height: '500px' }}>
+              <div className="text-center pt-4 d-flex justify-content-center" style={{ height: '500px' }}>
                 <img
                   src={mainImage}
                   alt="Main Product"
@@ -181,71 +185,47 @@ const DistributorProductView = () => {
                 )}
               </div>
             </div>
-            {/* Product Stats
-            <div className="productStatsSection d-flex flex-wrap mt-4">
-              <div className="stockInfo flex-fill bg-white p-3 border rounded shadow-sm">
-                <Package className="text-primary mb-2 me-2" size={24} />
-                <span>Stocks</span>
-                <p className="fw-bold">{product.stocks} / Pack</p>
-              </div>
-              <div className="salesInfo flex-fill bg-white p-3 border rounded shadow-sm">
-                <ShoppingCart className="text-warning mb-2 me-2" size={24} />{" "}
-                <span>Sales</span>
-                <p className="fw-bold">{product.sales} / Pack</p>
-              </div>
-            </div> */}
           </div>
 
           {/* Details Section */}
           <div className="col-lg-6">
             <div className="productInfoSection p-3 rounded shadow-sm bg-white d-flex justify-content-between flex-column">
-              <div><div className="d-flex justify-content-between">
-                <h4 className="productName">{product.product_name}</h4>
-                <h3 className="productPrice text-primary">
-                  <i className="bi bi-currency-rupee"></i> {product.distributors_rate}
-                </h3>
-              </div>
+              <div>
+                <div className="d-flex justify-content-between">
+                  <h4 className="productName">{product.product_name}</h4>
+                  <h3 className="productPrice text-primary">
+                    <i className="bi bi-currency-rupee"></i> {product.distributors_rate}
+                  </h3>
+                </div>
                 <p>
                   <strong>ID Product:</strong> {product.product_id}
                 </p>
-                {/* Add to Cart Button */}
-                <div className="d-flex flex-column flex-sm-row align-items-start justify-content-lg-center gap-2">
+                
+                {/* Quantity Input and Add to Cart */}
+                <div className="d-flex flex-column flex-sm-row align-items-start justify-content-lg-center gap-2 py-2">
                   <div className="input-group" style={{ width: 'auto' }}>
-                    <button
-                      className="btn btn-outline-secondary"
-                      type="button"
-                      onClick={decrementQuantity}
-                    >
-                      <i className="bi bi-dash"></i>
-                    </button>
-
-                    <span
-                      className="input-group-text bg-white text-dark"
-                      style={{ minWidth: '50px', justifyContent: 'center' }}
-                    >
-                      {quantity}
-                    </span>
-
-                    <button
-                      className="btn btn-outline-secondary"
-                      type="button"
-                      onClick={incrementQuantity}
-                    >
-                      <i className="bi bi-plus"></i>
-                    </button>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={quantity}
+                      onChange={(e) => handleQuantityChange(e.target.value)}
+                      min="0"
+                      style={{ width: '80px', textAlign: 'center' }}
+                      placeholder="0"
+                    />
                   </div>
 
                   <button
                     className="btn add-to-card-button d-flex align-items-center justify-content-center"
-                    style={{ minWidth: '150px' }}
-                    onClick={() => handleAddToCartClick(product, quantity)}
+                    style={{ minWidth: '150px',marginTop:'5px' }}
+                    onClick={() => handleAddToCartClick(product)}
                   >
                     <i className="bi bi-cart-plus me-2"></i>
                     Add to Cart
                   </button>
-                </div><br />
+                </div>
 
-                <div className="aboutProduct mb-3">
+                <div className="aboutProduct mb-3 mt-4">
                   <h4 style={{ fontWeight: "700" }}>About Product</h4>
                   <p style={{ textIndent: "3em", textAlign: "justify" }}>{product.product_description}</p>
                 </div>
@@ -266,10 +246,8 @@ const DistributorProductView = () => {
                   </p>
                 </div>
               </div>
-
             </div>
           </div>
-
         </div>
       </div>
     </>
