@@ -279,7 +279,9 @@ exports.completeOrder = async (req, res) => {
         order.user_id,
         order.order_id,
         'Completed',
-        `Your order #${order.order_id} has been delivered successfully.`
+        `Your order #${order.order_id} has been delivered successfully.`,
+        order.transport_name,
+        order.courier_id
       );
 
     return res.status(200).json({ 
