@@ -401,7 +401,7 @@ exports.getOrdersByUserId = async (req, res) => {
         });
 
         // Debugging log
-        console.log('Fetched Orders:', JSON.stringify(orders, null, 2));
+        // console.log('Fetched Orders:', JSON.stringify(orders, null, 2));
 
         if (orders.length === 0) {
             return res.json({

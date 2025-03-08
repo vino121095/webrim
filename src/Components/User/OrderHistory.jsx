@@ -81,6 +81,7 @@ const OrderHistory = () => {
         {orders.length === 0 ? (
           <p className="text-center text-muted">No orders found.</p>
         ) : (
+          <div className="table-container" style={{overflowX:'scroll', whiteSpace:'nowrap'}}>
           <table className="table table-hover table-bordered">
             <thead className="table-primary">
               <tr>
@@ -147,6 +148,7 @@ const OrderHistory = () => {
               })}
             </tbody>
           </table>
+          </div>
 
         )}
       </div>
